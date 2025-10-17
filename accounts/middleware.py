@@ -21,6 +21,13 @@ class SessionSecurityMiddleware:
 
         # Auto logout after inactivity
         if request.user.is_authenticated:
+            # Check user role permissions
+            if hasattr(request.user, 'role') and request.user.role == 'SUSPENDED':
+                from django.contrib.auth import logout
+                logout(request)
+                request.session.flush()
+                return redirect('login')
+                
             last_activity = request.session.get('last_activity')
             now = timezone.now().timestamp()
             timeout = getattr(settings, 'SESSION_COOKIE_AGE', 900)  # 15 minutes by default
