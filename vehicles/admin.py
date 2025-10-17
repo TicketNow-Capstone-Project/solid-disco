@@ -12,7 +12,14 @@ class DriverAdmin(admin.ModelAdmin):
 class VehicleAdmin(admin.ModelAdmin):
     list_display = ('vehicle_name', 'license_plate', 'vehicle_type', 'assigned_driver', 'qr_code_display')
     list_filter = ('vehicle_type',)
-    search_fields = ('license_plate', 'assigned_driver__name')
+    search_fields = (
+                    'license_plate', 
+                    'vehicle_name',
+                    'assigned_driver__first_name',
+                    'assigned_driver__last_name',
+                    'vehicle_type',
+)
+
     readonly_fields = ('qr_code_preview',)  # 👈 preview only
 
     exclude = ('qr_code',)  # 👈 hides the upload field
