@@ -1,0 +1,31 @@
+{% if user.role == 'admin' %}
+<!-- ✅ Admin Sidebar -->
+<div class="sidebar">
+    <h4>Admin Menu</h4>
+    <ul>
+        <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'manage_users' %}">Manage Accounts</a></li>
+        <li><a href="{% url 'manage_drivers' %}">Registered Drivers</a></li>
+        <li><a href="{% url 'manage_vehicles' %}">Registered Vehicles</a></li>
+        <li><a href="{% url 'terminal_queue' %}">Terminal Queue</a></li>
+        <li><a href="{% url 'profit_report' %}">Profit Report</a></li>
+        <li><a href="{% url 'logout' %}">Logout</a></li>
+    </ul>
+</div>
+
+{% elif user.role == 'staff_admin' %}
+<!-- ✅ Staff Sidebar -->
+<div class="sidebar">
+    <h4>Staff Menu</h4>
+    <ul>
+        <li><a href="{% url 'staff_dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'register_driver' %}">Register Driver</a></li>
+        <li><a href="{% url 'register_vehicle' %}">Register Vehicle</a></li>
+        <li><a href="{% url 'manage_drivers' %}">View Drivers</a></li>
+        <li><a href="{% url 'manage_vehicles' %}">View Vehicles</a></li>
+        <li><a href="{% url 'terminal_queue' %}">Terminal Queue</a></li>
+        <li><a href="{% url 'deposit_menu' %}">Deposit Menu</a></li>
+        <li><a href="{% url 'logout' %}">Logout</a></li>
+    </ul>
+</div>
+{% endif %}

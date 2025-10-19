@@ -18,9 +18,9 @@ class TerminalFeeBalance(models.Model):
         return f"Balance for {self.vehicle}"
 
 
-class Queue(models.Model):
+class TerminalQueue(models.Model):  # ✅ renamed
     vehicle = models.ForeignKey(
-        'vehicles.Vehicle',  # ✅ fixed here — changed from Vehicle to 'vehicles.Vehicle'
+        'vehicles.Vehicle',
         on_delete=models.CASCADE,
         related_name='queue_entries'
     )
@@ -34,4 +34,4 @@ class Queue(models.Model):
         return True
 
     def __str__(self):
-        return f"Queue for {self.vehicle}"
+        return f"{self.vehicle.license_plate} Queue Entry"

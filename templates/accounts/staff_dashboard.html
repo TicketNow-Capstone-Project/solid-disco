@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Staff Dashboard | TicketNow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Staff Dashboard</h2>
+    <p class="text-muted">Welcome, {{ user.username }}! Manage registrations, deposits, and terminal operations below.</p>
+
+    <!-- 🔹 Top Quick Actions -->
+    <div class="row g-4 mt-3">
+        <div class="col-md-3">
+            <a href="{% url 'register_driver' %}" class="text-decoration-none">
+                <div class="card text-center border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <i class="bi bi-person-plus fs-1 text-primary"></i>
+                        <h5 class="mt-2">Register Driver</h5>
+                        <p class="text-muted small">Add a new driver to the system.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a href="{% url 'register_vehicle' %}" class="text-decoration-none">
+                <div class="card text-center border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <i class="bi bi-truck-flatbed fs-1 text-success"></i>
+                        <h5 class="mt-2">Register Vehicle</h5>
+                        <p class="text-muted small">Add new vehicles and assign them to drivers.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a href="{% url 'deposit_menu' %}" class="text-decoration-none">
+                <div class="card text-center border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <i class="bi bi-wallet2 fs-1 text-warning"></i>
+                        <h5 class="mt-2">Deposit Menu</h5>
+                        <p class="text-muted small">Record driver deposits before terminal entry.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a href="{% url 'terminal_queue' %}" class="text-decoration-none">
+                <div class="card text-center border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <i class="bi bi-list-check fs-1 text-danger"></i>
+                        <h5 class="mt-2">Manage Queue</h5>
+                        <p class="text-muted small">Adjust waiting times and vehicle order.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- 🔹 Data Overview -->
+    <div class="row g-4 mt-5">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="mb-3"><i class="bi bi-person-badge"></i> Registered Drivers</h5>
+                    <h3 class="fw-bold text-primary">{{ total_drivers|default:"0" }}</h3>
+                    <p class="text-muted small">Total number of drivers registered in the system.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="mb-3"><i class="bi bi-truck"></i> Registered Vehicles</h5>
+                    <h3 class="fw-bold text-success">{{ total_vehicles|default:"0" }}</h3>
+                    <p class="text-muted small">Total number of vehicles registered.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

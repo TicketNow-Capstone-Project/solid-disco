@@ -1,6 +1,10 @@
 from django import forms
 from django.core.validators import RegexValidator
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from .models import CustomUser
 
+
+# ✅ DRIVER REGISTRATION FORM (keep as is)
 class DriverRegistrationForm(forms.Form):
     # Personal Information
     first_name = forms.CharField(
@@ -21,7 +25,7 @@ class DriverRegistrationForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-    
+
     # Contact Information
     phone_regex = RegexValidator(
         regex=r'^\+?1?\d{9,15}$',
@@ -31,7 +35,7 @@ class DriverRegistrationForm(forms.Form):
         validators=[phone_regex],
         max_length=17,
         widget=forms.TextInput(attrs={
-            'class': 'form-control', 
+            'class': 'form-control',
             'placeholder': '+639171234567',
             'pattern': '^(\\+63|0)9\\d{9}$'
         })
@@ -39,7 +43,7 @@ class DriverRegistrationForm(forms.Form):
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'email@example.com'})
     )
-    
+
     # Address (Philippine format)
     house_number = forms.CharField(
         max_length=50,
@@ -66,8 +70,8 @@ class DriverRegistrationForm(forms.Form):
         validators=[RegexValidator(regex='^[0-9]{4}$', message='Enter a valid 4-digit ZIP code')],
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ZIP Code', 'pattern': '[0-9]{4}'})
     )
-    
-    # Driver's License Information (Philippine format)
+
+    # Driver's License Information
     license_number = forms.CharField(
         max_length=15,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'N01-23-456789'})
@@ -84,7 +88,7 @@ class DriverRegistrationForm(forms.Form):
         ],
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-    
+
     # Additional Information
     birth_date = forms.DateField(
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
@@ -103,7 +107,7 @@ class DriverRegistrationForm(forms.Form):
         ],
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-    
+
     # Emergency Contact
     emergency_contact_name = forms.CharField(
         max_length=100,
@@ -113,7 +117,7 @@ class DriverRegistrationForm(forms.Form):
         validators=[phone_regex],
         max_length=17,
         widget=forms.TextInput(attrs={
-            'class': 'form-control', 
+            'class': 'form-control',
             'placeholder': '+639171234567',
             'pattern': '^(\\+63|0)9\\d{9}$'
         })
@@ -122,3 +126,45 @@ class DriverRegistrationForm(forms.Form):
         max_length=50,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Relationship'})
     )
+
+
+# ✅ SIMPLIFIED CUSTOM USER CREATION FORM
+class CustomUserCreationForm(UserCreationForm):
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('staff_admin', 'Staff Admin'),
+    ]
+    role = forms.ChoiceField(choices=ROLE_CHOICES, label="Account Role")
+
+    password1 = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter password'}),
+    )
+    password2 = forms.CharField(
+        label="Confirm Password",
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm password'}),
+    )
+
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email', 'role', 'password1', 'password2']
+
+    def clean_password2(self):
+        """
+        Simplified password validation — just ensure they match.
+        """
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
+
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("Passwords do not match.")
+        return password2
+
+
+# ✅ USER EDIT FORM
+class CustomUserEditForm(UserChangeForm):
+    password = None  # hide password field
+
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'email', 'role']
