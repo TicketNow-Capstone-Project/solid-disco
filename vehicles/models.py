@@ -188,7 +188,7 @@ class Vehicle(models.Model):
             qr_image.save(buffer, format='PNG')
 
             self.qr_code.save(
-                f"vehicle_{self.id}_qr.png",
+                f"qr_{self.license_plate.replace(' ', '_')}_{self.id}.png",
                 File(buffer),
                 save=False
             )
