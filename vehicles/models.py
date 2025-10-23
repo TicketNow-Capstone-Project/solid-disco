@@ -12,6 +12,27 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 
+def validate_license_plate(license_plate):
+    """Helper function to validate license plate format."""
+    if not license_plate:
+        raise ValidationError("License plate cannot be empty.")
+    
+    # Remove spaces and convert to uppercase for validation
+    clean_plate = license_plate.replace(" ", "").upper()
+    
+    # Basic validation - adjust pattern as needed
+    if len(clean_plate) < 3 or len(clean_plate) > 10:
+        raise ValidationError("License plate must be between 3-10 characters.")
+    
+    return clean_plate
+
+
+def generate_qr_filename(license_plate, vehicle_id):
+    """Helper function to generate consistent QR code filenames."""
+    clean_plate = license_plate.replace(' ', '_').replace('-', '_')
+    return f"qr_{clean_plate}_{vehicle_id}.png"
+
+
 # ======================================================
 # ROUTE MODEL
 # ======================================================
@@ -188,7 +209,7 @@ class Vehicle(models.Model):
             qr_image.save(buffer, format='PNG')
 
             self.qr_code.save(
-                f"qr_{self.license_plate.replace(' ', '_')}_{self.id}.png",
+                generate_qr_filename(self.license_plate, self.id),
                 File(buffer),
                 save=False
             )
