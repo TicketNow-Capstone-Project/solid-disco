@@ -1,0 +1,39 @@
+/* Mobile Responsiveness Improvements */
+
+@media (max-width: 768px) {
+    .form-control {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 12px 15px;
+    }
+    
+    .btn {
+        padding: 12px 20px;
+        font-size: 16px;
+        min-height: 44px; /* Touch target size */
+    }
+    
+    .table-responsive {
+        font-size: 14px;
+    }
+    
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    .navbar-brand {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .btn-group .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
