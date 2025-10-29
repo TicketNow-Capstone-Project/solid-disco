@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}QR Scan Entry{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-qr-code-scan me-2"></i>QR Scan Entry Validation</h5>
+        </div>
+        <div class="card-body">
+            <!-- Instructions -->
+            <p class="text-muted mb-3">
+                Scan a vehicle’s QR code using a scanner or enter the QR code manually below to validate entry.
+            </p>
+
+            <!-- Manual QR Input -->
+            <form id="qrScanForm" method="POST" class="mb-3">
+                {% csrf_token %}
+                <div class="input-group">
+                    <input type="text" name="qr_code" id="qr_code" class="form-control"
+                           placeholder="Enter or scan QR code here..." autofocus required>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>Validate
+                    </button>
+                </div>
+            </form>
+
+            <!-- Feedback alert -->
+            <div id="feedback" class="alert d-none mt-3" role="alert"></div>
+
+            <!-- Future camera scan section -->
+            <hr>
+            <div class="text-center text-muted small">
+                <i class="bi bi-camera-video me-1"></i> Camera scanning feature coming soon.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AJAX Script -->
+<script>
+document.getElementById('qrScanForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const qrCode = document.getElementById('qr_code').value.trim();
+    const feedback = document.getElementById('feedback');
+
+    feedback.classList.add('d-none');
+
+    fetch("{% url 'terminal:qr_scan_entry' %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value,
+            "X-Requested-With": "XMLHttpRequest",
+        },
+        body: new FormData(form)
+    })
+    .then(response => response.json())
+    .then(data => {
+        feedback.classList.remove('d-none');
+        feedback.textContent = data.message;
+
+        if (data.status === "success") {
+            feedback.className = "alert alert-success mt-3";
+            form.reset();
+        } else {
+            feedback.className = "alert alert-danger mt-3";
+        }
+    })
+    .catch(error => {
+        feedback.classList.remove('d-none');
+        feedback.className = "alert alert-danger mt-3";
+        feedback.textContent = "An unexpected error occurred. Please try again.";
+    });
+});
+</script>
+{% endblock %}

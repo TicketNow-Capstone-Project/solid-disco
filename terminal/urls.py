@@ -10,4 +10,7 @@ urlpatterns = [
 
     # ✅ Terminal queue page
     path('queue/', views.terminal_queue, name='terminal_queue'),
+
+    # 🟩 QR Scan Entry page (Step 2)
+    path('qr-scan-entry/', views.qr_scan_entry, name='qr_scan_entry'),
 ]
