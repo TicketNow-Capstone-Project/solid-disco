@@ -1,21 +1,21 @@
+# vehicles/urls.py
 from django.urls import path
 from . import views
 
-urlpatterns = [
-    # 🔹 Staff Dashboard
-    path('dashboard/', views.staff_dashboard, name='staff_dashboard'),
+app_name = 'vehicles'
 
-    # 🔹 Staff Registration Pages
+urlpatterns = [
+    # ✅ Dedicated registration pages
     path('register-driver/', views.register_driver, name='register_driver'),
     path('register-vehicle/', views.register_vehicle, name='register_vehicle'),
 
-    # 🔹 Standalone / Legacy Vehicle Registration
-    path('register-vehicle-old/', views.vehicle_registration, name='register_vehicle_old'),
+    # ✅ QR / printable page (staff-only)
+    path('vehicle/<int:vehicle_id>/qr/', views.vehicle_qr_view, name='vehicle_qr'),
 
-    # 🔹 OCR Endpoint for Driver License Scanning
+    # ✅ AJAX / backend helpers
     path('ocr-process/', views.ocr_process, name='ocr_process'),
-
-    # 🔹 AJAX Endpoints
     path('ajax-register-driver/', views.ajax_register_driver, name='ajax_register_driver'),
     path('ajax-register-vehicle/', views.ajax_register_vehicle, name='ajax_register_vehicle'),
+    path('get-wallet-balance/<int:driver_id>/', views.get_wallet_balance, name='get_wallet_balance'),
+    path('ajax-deposit/', views.ajax_deposit, name='ajax_deposit'),
 ]

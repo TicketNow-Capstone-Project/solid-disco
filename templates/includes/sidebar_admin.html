@@ -1,0 +1,12 @@
+<div class="sidebar">
+    <h4>Admin Menu</h4>
+    <ul>
+        <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+        <li><a href="{% url 'manage_users' %}">Manage Accounts</a></li>
+        <li><a href="{% url 'staff_dashboard' %}#driverFormSection">Register Driver</a></li>
+        <li><a href="{% url 'staff_dashboard' %}#vehicleFormSection">Register Vehicle</a></li>
+        <li><a href="{% url 'terminal_queue' %}">Terminal Queue</a></li>
+        <li><a href="{% url 'profit_report' %}">Profit Report</a></li>
+        <li><a href="{% url 'accounts:logout' %}">Logout</li>
+    </ul>
+</div>

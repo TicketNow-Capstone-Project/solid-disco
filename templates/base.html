@@ -17,20 +17,15 @@
             font-family: 'Segoe UI', sans-serif;
         }
 
-        /* Sidebar */
+        /* Sidebar (shared style only) */
         .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            height: 100%;
             background-color: #0d6efd;
             color: white;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             padding-top: 20px;
-            z-index: 100;
         }
 
         .sidebar h4 {
@@ -52,9 +47,8 @@
             background-color: #0b5ed7;
         }
 
-        /* Content area */
+        /* General content styling */
         .content {
-            margin-left: 250px;
             padding: 30px;
             min-height: 100vh;
         }
@@ -62,12 +56,9 @@
         /* Responsive fix */
         @media (max-width: 768px) {
             .sidebar {
-                position: relative;
-                width: 100%;
-                height: auto;
+                min-height: auto;
             }
             .content {
-                margin-left: 0;
                 padding: 15px;
             }
         }
@@ -75,28 +66,17 @@
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        {% if request.user.is_superuser or request.user.role == 'admin' %}
-            {% include 'includes/sidebar.html' %}
-        {% elif request.user.is_staff or request.user.role == 'staff_admin' %}
-            {% include 'includes/sidebar_staff.html' %}
-        {% else %}
-            <h4 class="text-center text-white mt-4">Access Restricted</h4>
-        {% endif %}
-    </div>
-
-    <!-- Page Content -->
+    <!-- ✅ Dynamic Page Content (Dashboards handle sidebars internally) -->
     <div class="content">
         {% block content %}
         {% endblock %}
     </div>
 
-    <!-- jQuery (required by Select2) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- jQuery (for Select2, AJAX, etc.) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- Bootstrap JS -->
-<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <!-- Bootstrap JS -->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 
 </body>
 </html>

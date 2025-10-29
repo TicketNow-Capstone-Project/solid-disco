@@ -11,13 +11,13 @@ urlpatterns = [
     # ✅ Django admin site
     path('admin/', admin.site.urls),
 
-    # ✅ Include app routes
-    path('accounts/', include('accounts.urls')),
-    path('vehicles/', include('vehicles.urls')),
-    path('terminal/', include('terminal.urls')),
-    path('reports/', include('reports.urls')),
+    # ✅ Include app routes with namespaces
+    path('accounts/', include(('accounts.urls', 'accounts'), namespace='accounts')),
+    path('vehicles/', include(('vehicles.urls', 'vehicles'), namespace='vehicles')),
+    path('terminal/', include(('terminal.urls', 'terminal'), namespace='terminal')),
+    path('reports/', include(('reports.urls', 'reports'), namespace='reports')),
 
-    # ✅ Correct dashboards (no more conflict with vehicles.urls)
+    # ✅ Dashboards (explicit routes, not included in app urls)
     path('dashboard/admin/', admin_dashboard_view, name='admin_dashboard'),
     path('dashboard/staff/', staff_dashboard_view, name='staff_dashboard'),
 ]

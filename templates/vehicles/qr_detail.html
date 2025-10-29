@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Vehicle QR | TicketNow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 col-lg-2 bg-light sidebar p-3">
+            {% include 'includes/sidebar.html' %}
+        </div>
+
+        <div class="col-md-9 col-lg-10 p-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="mb-1">Vehicle QR Code</h4>
+                    <p class="text-muted small mb-3">{{ vehicle.vehicle_name }} — {{ vehicle.license_plate }}</p>
+
+                    <div id="printArea" style="display:inline-block; padding:20px; background:white; border-radius:6px;">
+                        {% if vehicle.qr_code %}
+                            <img src="{{ vehicle.qr_code.url }}" alt="QR Code" id="qrImage" style="width:320px; height:320px; display:block; margin:0 auto;">
+                        {% else %}
+                            <div class="text-muted">No QR available.</div>
+                        {% endif %}
+
+                        <div class="mt-3 text-start">
+                            <strong>Driver:</strong> {{ vehicle.assigned_driver.first_name }} {{ vehicle.assigned_driver.last_name }}<br>
+                            <strong>Plate:</strong> {{ vehicle.license_plate }}<br>
+                            <strong>CR:</strong> {{ vehicle.cr_number }}<br>
+                            <strong>OR:</strong> {{ vehicle.or_number }}<br>
+                            <strong>VIN:</strong> {{ vehicle.vin_number }}
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button onclick="window.print()" class="btn btn-primary me-2"><i class="bi bi-printer"></i> Print QR</button>
+                        <a href="{% url 'vehicles:register_vehicle' %}" class="btn btn-secondary">Back to Vehicles</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- print-specific style -->
+<style>
+@media print {
+    body * { visibility: hidden; }
+    #printArea, #printArea * { visibility: visible; }
+    #printArea { position: absolute; left: 0; top: 0; width: 100%; padding: 0; }
+}
+</style>
+{% endblock %}

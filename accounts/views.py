@@ -69,7 +69,7 @@ def admin_dashboard_view(request):
     drivers = Driver.objects.all().order_by('last_name') if Driver else []
     vehicles = Vehicle.objects.select_related('assigned_driver').order_by('license_plate') if Vehicle else []
 
-    # 🧩 GUARANTEE NON-NULL FIELDS (for DataTables)
+    # 🧩 GUARANTEE NON-NULL FIELDS
     for d in drivers:
         d.driver_id = d.driver_id or "N/A"
         d.first_name = d.first_name or ""
@@ -104,12 +104,22 @@ def admin_dashboard_view(request):
 @user_passes_test(is_staff_admin)
 @never_cache
 def staff_dashboard_view(request):
+    """
+    Staff dashboard — now serves as a hub linking to:
+      - vehicles:register_driver
+      - vehicles:register_vehicle
+      - terminal:deposit_menu
+    """
     total_drivers = Driver.objects.count() if Driver else 0
     total_vehicles = Vehicle.objects.count() if Vehicle else 0
 
     context = {
         'total_drivers': total_drivers,
         'total_vehicles': total_vehicles,
+        # ✅ Add URLs for dashboard cards
+        'register_driver_url': 'vehicles:register_driver',
+        'register_vehicle_url': 'vehicles:register_vehicle',
+        'deposit_menu_url': 'terminal:deposit_menu',
     }
     return render(request, 'accounts/staff_dashboard.html', context)
 
@@ -123,7 +133,7 @@ def driver_registration(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Driver registered successfully!")
-            return redirect('driver_registration_success')
+            return redirect('vehicles:register_driver')
     else:
         form = DriverRegistrationForm()
     return render(request, 'driver_registration.html', {'form': form})
@@ -154,10 +164,10 @@ def create_user_view(request):
             user = form.save(commit=False)
             if user.role == 'driver':
                 messages.error(request, 'Cannot create a driver account here.')
-                return redirect('create_user')
+                return redirect('accounts:create_user')
             user.save()
             messages.success(request, f'{user.role.capitalize()} "{user.username}" created successfully!')
-            return redirect('manage_users')
+            return redirect('accounts:manage_users')
     else:
         form = CustomUserCreationForm()
     return render(request, 'accounts/create_user.html', {'form': form})
@@ -171,7 +181,7 @@ def edit_user_view(request, user_id):
     if request.method == 'POST' and form.is_valid():
         form.save()
         messages.success(request, f'Account "{user.username}" updated successfully!')
-        return redirect('manage_users')
+        return redirect('accounts:manage_users')
     return render(request, 'accounts/edit_user.html', {'form': form, 'user_obj': user})
 
 
@@ -183,5 +193,5 @@ def delete_user_view(request, user_id):
         username = user.username
         user.delete()
         messages.success(request, f'Account "{username}" has been deleted.')
-        return redirect('manage_users')
+        return redirect('accounts:manage_users')
     return render(request, 'accounts/delete_user.html', {'user_obj': user})

@@ -5,15 +5,16 @@ import numpy as np
 import pytesseract
 import re
 import json
+from decimal import Decimal
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 
-from .models import Driver, Vehicle
+from .models import Driver, Vehicle, Wallet, Deposit
 from .forms import DriverRegistrationForm, VehicleRegistrationForm
 
 # ✅ Path for your installed Tesseract OCR (adjust if needed)
@@ -47,11 +48,12 @@ def ocr_process(request):
 
         # OCR text extraction
         raw_text = pytesseract.image_to_string(thresh)
+        # Debug printing available in shell if needed
         print("🧾 OCR RAW TEXT:", raw_text)
 
         text = re.sub(r'[^A-Za-z0-9\s:/-]', ' ', raw_text).upper()
 
-        # Extract data
+        # Extract data patterns (best-effort; adjust regex as needed)
         license_number = re.search(r'([A-Z]{1,2}\d{2,3}-\d{2}-\d{6,7})', text)
         if not license_number:
             license_number = re.search(r'(?:[A-Z]{3}-?\d{6,7})', text)
@@ -80,13 +82,12 @@ def ocr_process(request):
 # -------------------------
 @login_required
 def staff_dashboard(request):
-    """Main staff dashboard showing driver + vehicle registration forms."""
+    """Main staff dashboard showing driver + vehicle registration quick links (kept lightweight)."""
     driver_form = DriverRegistrationForm(request.POST or None, request.FILES or None)
     vehicle_form = VehicleRegistrationForm(request.POST or None)
 
-    # Handle submissions (non-AJAX fallback)
+    # Handle submissions (non-AJAX fallback) - keep minimal, but prefer dedicated pages.
     if request.method == 'POST':
-        # Driver registration (button name driver_submit)
         if 'driver_submit' in request.POST:
             if driver_form.is_valid():
                 driver_form.save()
@@ -94,18 +95,12 @@ def staff_dashboard(request):
                 return redirect('staff_dashboard')
             else:
                 messages.error(request, "❌ Driver form contains errors. See details below.")
-                # fall through to render with errors shown
 
-        # Vehicle registration (button name vehicle_submit)
         elif 'vehicle_submit' in request.POST:
             if vehicle_form.is_valid():
-                # Use cleaned_data where possible
                 try:
                     vehicle = vehicle_form.save(commit=False)
-                    # If your vehicle form already includes cr_number/or_number/vin/year_model,
-                    # they will already be in cleaned_data; use them as authoritative.
                     cd = vehicle_form.cleaned_data
-                    # only overwrite if present in cleaned_data
                     if 'cr_number' in cd:
                         vehicle.cr_number = cd.get('cr_number') or vehicle.cr_number
                     if 'or_number' in cd:
@@ -115,21 +110,17 @@ def staff_dashboard(request):
                     if 'year_model' in cd:
                         vehicle.year_model = cd.get('year_model') or vehicle.year_model
 
-                    # Validate model-level constraints (calls clean())
                     vehicle.full_clean()
                     vehicle.save()
                     messages.success(request, f"✅ Vehicle '{vehicle.vehicle_name}' registered successfully!")
                     return redirect('staff_dashboard')
                 except ValidationError as ve:
-                    # Show the model validation errors to the user
                     vehicle_form.add_error(None, ve)
                     messages.error(request, "❌ Vehicle data invalid. See form errors.")
                 except Exception as e:
                     messages.error(request, f"❌ Unexpected error saving vehicle: {e}")
             else:
-                # surface form errors
                 messages.error(request, "❌ Vehicle form contains errors. See details below.")
-
         else:
             messages.error(request, "❌ Unknown submission. Try again.")
 
@@ -148,7 +139,6 @@ def staff_dashboard(request):
 
 # -------------------------
 # STANDALONE VEHICLE REGISTRATION (dedicated page)
-# (keeps backward compatibility with your earlier template)
 # -------------------------
 @login_required
 def vehicle_registration(request):
@@ -170,7 +160,7 @@ def vehicle_registration(request):
                 vehicle.full_clean()
                 vehicle.save()
                 messages.success(request, f"✅ Vehicle '{vehicle.vehicle_name}' registered successfully!")
-                return redirect('register_vehicle')
+                return redirect('vehicles:register_vehicle')
             except ValidationError as ve:
                 form.add_error(None, ve)
                 messages.error(request, "❌ Vehicle data invalid. See form errors.")
@@ -184,7 +174,7 @@ def vehicle_registration(request):
 
 
 # -------------------------
-# AJAX endpoints
+# AJAX endpoints for registration (Driver & Vehicle)
 # -------------------------
 @login_required
 @csrf_exempt
@@ -245,7 +235,7 @@ def register_driver(request):
         if form.is_valid():
             form.save()
             messages.success(request, "✅ Driver registered successfully!")
-            return redirect('register_driver')
+            return redirect('vehicles:register_driver')
         else:
             messages.error(request, "❌ Driver form contains errors. See details below.")
 
@@ -277,7 +267,7 @@ def register_vehicle(request):
                 vehicle.full_clean()
                 vehicle.save()
                 messages.success(request, f"✅ Vehicle '{vehicle.vehicle_name}' registered successfully!")
-                return redirect('register_vehicle')
+                return redirect('vehicles:register_vehicle')
             except ValidationError as ve:
                 form.add_error(None, ve)
                 messages.error(request, "❌ Vehicle data invalid. See form errors.")
@@ -294,3 +284,83 @@ def register_vehicle(request):
         'vehicles': vehicles,
         'total_vehicles': total_vehicles,
     })
+
+
+# -------------------------
+# Wallet / Deposit / QR helpers & endpoints
+# -------------------------
+@login_required
+def get_wallet_balance(request, driver_id):
+    """
+    Return the wallet balance for a given driver (JSON).
+    NOTE: This selects the first vehicle for that driver; change logic if your flow chooses vehicle instead.
+    """
+    try:
+        driver = get_object_or_404(Driver, pk=driver_id)
+        vehicle = driver.vehicles.first()
+        if not vehicle:
+            return JsonResponse({'success': False, 'message': 'Driver has no vehicle.'})
+        wallet = getattr(vehicle, 'wallet', None)
+        if not wallet:
+            # Wallet should be auto-created by post_save signal, but handle gracefully
+            wallet = Wallet.objects.create(vehicle=vehicle)
+        return JsonResponse({'success': True, 'balance': float(wallet.balance)})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@login_required
+def vehicle_qr_view(request, vehicle_id):
+    """
+    Staff-only page to view/print a vehicle's QR code.
+    Access: staff users only (is_staff or role == 'staff_admin').
+    """
+    # enforce staff-only access (admin can view list but not print)
+    user_role = getattr(request.user, 'role', '')
+    if not (request.user.is_staff or user_role == 'staff_admin'):
+        messages.error(request, "You do not have permission to view this page.")
+        return redirect('vehicles:register_vehicle')
+
+    vehicle = get_object_or_404(Vehicle, pk=vehicle_id)
+    return render(request, 'vehicles/qr_detail.html', {'vehicle': vehicle})
+
+
+@login_required
+@csrf_exempt
+def ajax_deposit(request):
+    """
+    AJAX endpoint to create a Deposit record and update wallet if appropriate.
+    Expects POST: driver (id) OR vehicle (id) depending on frontend; here it expects 'driver'
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+    driver_id = request.POST.get('driver') or request.POST.get('driver_id')
+    amount = request.POST.get('amount')
+    payment_method = request.POST.get('payment_method', 'manual')
+
+    if not driver_id or not amount:
+        return JsonResponse({'success': False, 'message': 'Missing driver or amount.'})
+    try:
+        driver = get_object_or_404(Driver, pk=driver_id)
+        vehicle = driver.vehicles.first()
+        if not vehicle:
+            return JsonResponse({'success': False, 'message': 'Driver has no vehicle.'})
+
+        wallet = getattr(vehicle, 'wallet', None)
+        if not wallet:
+            wallet = Wallet.objects.create(vehicle=vehicle)
+
+        amt = Decimal(amount)
+        if amt <= 0:
+            return JsonResponse({'success': False, 'message': 'Amount must be greater than zero.'})
+
+        # create deposit (Deposit.save handles reference_number and wallet credit when status == 'successful')
+        deposit = Deposit.objects.create(wallet=wallet, amount=amt, payment_method=payment_method)
+
+        # After save, wallet may have been updated by Deposit.save (if status == 'successful')
+        new_balance = float(wallet.balance)
+
+        return JsonResponse({'success': True, 'message': 'Deposit recorded.', 'new_balance': new_balance})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})

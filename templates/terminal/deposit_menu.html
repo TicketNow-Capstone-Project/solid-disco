@@ -1,13 +1,152 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Deposit Menu | TicketNow{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2><i class="bi bi-wallet2"></i> Deposit Menu</h2>
-    <p class="text-muted">This page will handle driver deposits and balances before entering the terminal.</p>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 bg-light sidebar p-3">
+            {% include 'includes/sidebar.html' %}
+        </div>
 
-    <div class="alert alert-info mt-4">
-        🚧 Deposit system under development.
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 p-4">
+            <h2><i class="bi bi-wallet2"></i> Deposit Menu</h2>
+            <p class="text-muted">Record driver deposits and update wallet balances before terminal entry.</p>
+
+            <!-- ✅ Deposit Form -->
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-body">
+                    <form id="depositForm" method="POST" action="{% url 'terminal:deposit_menu' %}">
+                        {% csrf_token %}
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Select Driver</label>
+                                {{ deposit_form.driver }}
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">Current Balance</label>
+                                <input type="text" id="walletBalance" class="form-control" value="₱0.00" readonly>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Deposit Amount</label>
+                                {{ deposit_form.amount }}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Payment Method</label>
+                                {{ deposit_form.payment_method }}
+                            </div>
+                        </div>
+
+                        <button type="submit" name="deposit_submit" class="btn btn-warning mt-3 w-100">
+                            <i class="bi bi-cash-coin"></i> Record Deposit
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ✅ Recent Deposits Table -->
+            <div class="mt-4 card shadow-sm">
+                <div class="card-header bg-light fw-bold">
+                    <i class="bi bi-clock-history"></i> Recent Deposits
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Driver</th>
+                                    <th>Vehicle</th>
+                                    <th>Amount</th>
+                                    <th>Payment</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="depositHistory">
+                                {% for dep in recent_deposits %}
+                                <tr>
+                                    <td>{{ dep.wallet.vehicle.assigned_driver.first_name }} {{ dep.wallet.vehicle.assigned_driver.last_name }}</td>
+                                    <td>{{ dep.wallet.vehicle.license_plate }}</td>
+                                    <td>₱{{ dep.amount }}</td>
+                                    <td>{{ dep.get_payment_method_display }}</td>
+                                    <td>{{ dep.status|title }}</td>
+                                    <td>{{ dep.created_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="6" class="text-center text-muted">No deposits yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ✅ Flash Messages -->
+            {% if messages %}
+            <div class="mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
+
+<!-- ✅ Script Section -->
+<script>
+function getCSRFToken() {
+    const el = document.querySelector('#depositForm [name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
+}
+
+// update wallet balance when driver selected
+document.addEventListener('DOMContentLoaded', function() {
+    const driverSelect = document.querySelector('#id_driver');
+    if (driverSelect) {
+        driverSelect.addEventListener('change', async function() {
+            const driverId = this.value;
+            if (!driverId) {
+                document.getElementById('walletBalance').value = '₱0.00';
+                return;
+            }
+            const res = await fetch(`{% url 'vehicles:get_wallet_balance' 0 %}`.replace('0', driverId));
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('walletBalance').value = `₱${parseFloat(data.balance).toFixed(2)}`;
+            } else {
+                document.getElementById('walletBalance').value = '₱0.00';
+            }
+        });
+    }
+
+    // ✅ Handle deposit form via AJAX
+    const depositForm = document.getElementById('depositForm');
+    if (depositForm) {
+        depositForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(depositForm);
+            const res = await fetch("{% url 'vehicles:ajax_deposit' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCSRFToken() },
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                document.getElementById('walletBalance').value = `₱${parseFloat(data.new_balance).toFixed(2)}`;
+                depositForm.reset();
+                location.reload();
+            } else {
+                alert(data.message || 'Deposit failed. Please check fields.');
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

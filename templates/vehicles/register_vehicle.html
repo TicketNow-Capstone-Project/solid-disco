@@ -3,217 +3,157 @@
 {% block title %}Register Vehicle | TicketNow{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h3 class="mb-3"><i class="bi bi-truck"></i> Register Vehicle</h3>
-    <p class="text-muted">Add a new vehicle and link it to a registered driver.</p>
-
-    <!-- ✅ Success & Error Messages -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
-    <!-- ✅ Vehicle Registration Form -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body">
-            <form method="POST">
-                {% csrf_token %}
-
-                <!-- 🚨 Show validation errors -->
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {{ form.non_field_errors }}
-                    </div>
-                {% endif %}
-
-                <!-- 🔹 Driver Selection -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Assign Driver</label>
-                    {{ form.assigned_driver }}
-                    {% if form.assigned_driver.errors %}
-                        <div class="text-danger small">{{ form.assigned_driver.errors|striptags }}</div>
-                    {% endif %}
-                    <div class="form-text text-muted">Select a registered driver.</div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Vehicle Name</label>
-                        {{ form.vehicle_name }}
-                        {% if form.vehicle_name.errors %}
-                            <div class="text-danger small">{{ form.vehicle_name.errors|striptags }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Vehicle Type</label>
-                        {{ form.vehicle_type }}
-                        {% if form.vehicle_type.errors %}
-                            <div class="text-danger small">{{ form.vehicle_type.errors|striptags }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Ownership Type</label>
-                        {{ form.ownership_type }}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Manufacturer / Make</label>
-                        {{ form.manufacturer }}
-                    </div>
-
-                    <!-- 🔹 Registration & Identification -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">CR Number</label>
-                        {{ form.cr_number }}
-                        {% if form.cr_number.errors %}
-                            <div class="text-danger small">{{ form.cr_number.errors|striptags }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">OR Number</label>
-                        {{ form.or_number }}
-                        {% if form.or_number.errors %}
-                            <div class="text-danger small">{{ form.or_number.errors|striptags }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">VIN Number</label>
-                        {{ form.vin_number }}
-                        {% if form.vin_number.errors %}
-                            <div class="text-danger small">{{ form.vin_number.errors|striptags }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Year Model</label>
-                        {{ form.year_model }}
-                    </div>
-
-                    <!-- 🔹 License & Registration -->
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">License Plate</label>
-                        {{ form.license_plate }}
-                        {% if form.license_plate.errors %}
-                            <div class="text-danger small">{{ form.license_plate.errors|striptags }}</div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Registration Number</label>
-                        {{ form.registration_number }}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Registration Expiry</label>
-                        {{ form.registration_expiry }}
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-bold">Seat Capacity</label>
-                        {{ form.seat_capacity }}
-                    </div>
-                </div>
-
-                <div class="text-end mt-3">
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="bi bi-save"></i> Register Vehicle
-                    </button>
-                    <a href="{% url 'staff_dashboard' %}" class="btn btn-secondary btn-lg">Back to Dashboard</a>
-                </div>
-            </form>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 bg-light sidebar p-3">
+            {% include 'includes/sidebar.html' %}
         </div>
-    </div>
 
-    <!-- ✅ Registered Vehicles Table -->
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-primary text-white">
-            <i class="bi bi-list-ul"></i> Registered Vehicles
-        </div>
-        <div class="card-body table-responsive">
-            {% if vehicles %}
-                <table class="table table-bordered table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Driver</th>
-                            <th>Vehicle Name</th>
-                            <th>Type</th>
-                            <th>Plate</th>
-                            <th>CR No.</th>
-                            <th>OR No.</th>
-                            <th>Year</th>
-                            <th>VIN</th>
-                            <th>Expiry</th>
-                            <th>QR</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for vehicle in vehicles %}
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ vehicle.assigned_driver }}</td>
-                                <td>{{ vehicle.vehicle_name }}</td>
-                                <td>{{ vehicle.get_vehicle_type_display }}</td>
-                                <td>{{ vehicle.license_plate }}</td>
-                                <td>{{ vehicle.cr_number|default:"-" }}</td>
-                                <td>{{ vehicle.or_number|default:"-" }}</td>
-                                <td>{{ vehicle.year_model|default:"-" }}</td>
-                                <td>{{ vehicle.vin_number|default:"-" }}</td>
-                                <td>
-                                    {% if vehicle.registration_expiry %}
-                                        {{ vehicle.registration_expiry|date:"M d, Y" }}
-                                    {% else %}
-                                        <span class="text-muted">N/A</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if vehicle.qr_code %}
-                                        <img src="{{ vehicle.qr_code.url }}" alt="QR" width="70" height="70">
-                                    {% else %}
-                                        <span class="text-muted">No QR</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p class="text-center text-muted mb-0">No vehicles registered yet.</p>
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 p-4">
+            <h3 class="mb-3"><i class="bi bi-truck"></i> Register Vehicle</h3>
+            <p class="text-muted">Add a new vehicle and link it to a registered driver.</p>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
             {% endif %}
+
+            <!-- Vehicle Registration Form -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <form method="POST" action="{% url 'vehicles:register_vehicle' %}" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Assign Driver</label>
+                            {{ form.assigned_driver }}
+                            {% if form.assigned_driver.errors %}
+                                <div class="text-danger small mt-1">{{ form.assigned_driver.errors|striptags }}</div>
+                            {% endif %}
+                            <div class="form-text text-muted">Select a registered driver.</div>
+                        </div>
+
+                        <div class="row">
+                            {% for field in form %}
+                                {% if field.name != 'assigned_driver' %}
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">{{ field.label }}</label>
+                                    {% if field.errors %}
+                                        <div class="form-control border-danger">
+                                            {{ field }}
+                                        </div>
+                                        <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                                    {% else %}
+                                        {{ field }}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-save"></i> Register Vehicle
+                            </button>
+                            <a href="{% url 'staff_dashboard' %}" class="btn btn-secondary btn-lg">Back to Dashboard</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Registered Vehicles Table -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-list-ul"></i> Registered Vehicles
+                </div>
+                <div class="card-body table-responsive">
+                    {% if vehicles %}
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Driver</th>
+                                    <th>Vehicle Name</th>
+                                    <th>Type</th>
+                                    <th>Plate</th>
+                                    <th>CR No.</th>
+                                    <th>OR No.</th>
+                                    <th>Year</th>
+                                    <th>VIN</th>
+                                    <th>Expiry</th>
+                                    <th>QR</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vehicle in vehicles %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ vehicle.assigned_driver }}</td>
+                                    <td>{{ vehicle.vehicle_name }}</td>
+                                    <td>{{ vehicle.get_vehicle_type_display }}</td>
+                                    <td>{{ vehicle.license_plate }}</td>
+                                    <td>{{ vehicle.cr_number|default:"-" }}</td>
+                                    <td>{{ vehicle.or_number|default:"-" }}</td>
+                                    <td>{{ vehicle.year_model|default:"-" }}</td>
+                                    <td>{{ vehicle.vin_number|default:"-" }}</td>
+                                    <td>
+                                        {% if vehicle.registration_expiry %}
+                                            {{ vehicle.registration_expiry|date:"M d, Y" }}
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if vehicle.qr_code %}
+                                            <a href="{% url 'vehicles:vehicle_qr' vehicle.id %}" class="btn btn-outline-secondary btn-sm">
+                                                View / Print
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">No QR</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="text-center text-muted mb-0">No vehicles registered yet.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-{% load static %}
-
-<!-- ✅ Load CSS first -->
+<!-- Select2 Enhancement -->
 <link href="{% static 'css/select2.min.css' %}" rel="stylesheet">
-
-<!-- ✅ Load JS in correct order -->
 <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'js/select2.min.js' %}"></script>
-
-<!-- ✅ Initialize Select2 -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    console.log("✅ DOM ready — initializing Select2...");
-
-    if (typeof jQuery === 'undefined') {
-        console.error("❌ jQuery NOT loaded — check path or static files.");
-        return;
-    }
-    if (typeof $.fn.select2 === 'undefined') {
-        console.error("❌ Select2 NOT loaded — check static/js/select2.min.js");
-        return;
+    if (window.$ && $.fn && $.fn.select2) {
+        $('#id_assigned_driver').select2({
+            placeholder: "Search driver...",
+            allowClear: true,
+            width: '100%'
+        });
     }
 
-    $('#id_assigned_driver').select2({
-        placeholder: "Search driver...",
-        allowClear: true,
-        width: '100%'
-    });
-
-    console.log("🎯 Select2 initialized successfully!");
+    // Auto focus first invalid field
+    const invalidField = document.querySelector('.border-danger input, .border-danger select');
+    if (invalidField) invalidField.focus();
 });
 </script>
 {% endblock %}

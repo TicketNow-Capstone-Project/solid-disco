@@ -4,220 +4,105 @@
 
 {% block content %}
 <div class="container-fluid">
-    <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Staff Dashboard</h2>
-    <p class="text-muted">Welcome, {{ user.username }}! Manage registrations, deposits, and terminal operations below.</p>
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 bg-light sidebar p-3">
+            {% include 'includes/sidebar.html' %}
+        </div>
 
-    <!-- 🔹 Quick Actions -->
-    <div class="row g-4 mt-3">
-        <div class="col-md-3">
-            <a href="{% url 'register_driver' %}" class="text-decoration-none">
-                <div class="card text-center border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <i class="bi bi-person-plus fs-1 text-primary"></i>
-                        <h5 class="mt-2">Register Driver</h5>
-                        <p class="text-muted small">Fill out driver details below.</p>
+        <!-- Main content -->
+        <div class="col-md-9 col-lg-10 p-4">
+            <h2 class="mb-4"><i class="bi bi-speedometer2"></i> Staff Dashboard</h2>
+            <p class="text-muted">Welcome, {{ user.username }}! Use the quick links to manage drivers, vehicles, and deposits.</p>
+
+            <!-- Quick Access Cards -->
+            <div class="row g-4 mt-3">
+                <!-- Register Driver -->
+                <div class="col-md-3">
+                    <a href="{% url 'vehicles:register_driver' %}" class="text-decoration-none">
+                        <div class="card text-center border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <i class="bi bi-person-plus fs-1 text-primary"></i>
+                                <h5 class="mt-2">Register Driver</h5>
+                                <p class="text-muted small">Open driver registration page.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Register Vehicle -->
+                <div class="col-md-3">
+                    <a href="{% url 'vehicles:register_vehicle' %}" class="text-decoration-none">
+                        <div class="card text-center border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <i class="bi bi-truck-flatbed fs-1 text-success"></i>
+                                <h5 class="mt-2">Register Vehicle</h5>
+                                <p class="text-muted small">Open vehicle registration page.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Deposit Menu -->
+                <div class="col-md-3">
+                    <a href="{% url 'terminal:deposit_menu' %}" class="text-decoration-none">
+                        <div class="card text-center border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <i class="bi bi-wallet2 fs-1 text-warning"></i>
+                                <h5 class="mt-2">Deposit Menu</h5>
+                                <p class="text-muted small">Open deposit management page.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Manage Queue -->
+                <div class="col-md-3">
+                    <a href="{% url 'terminal:terminal_queue' %}" class="text-decoration-none">
+                        <div class="card text-center border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <i class="bi bi-list-check fs-1 text-danger"></i>
+                                <h5 class="mt-2">Manage Queue</h5>
+                                <p class="text-muted small">Queue controls & ordering.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="row g-4 mt-5">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100 text-center">
+                        <div class="card-body">
+                            <i class="bi bi-person-badge fs-1 text-primary"></i>
+                            <h5 class="mb-3">Registered Drivers</h5>
+                            <h3 class="fw-bold text-primary">{{ total_drivers|default:"0" }}</h3>
+                        </div>
                     </div>
                 </div>
-            </a>
-        </div>
-
-        <div class="col-md-3">
-            <a href="{% url 'register_vehicle' %}" class="text-decoration-none">
-                <div class="card text-center border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <i class="bi bi-truck-flatbed fs-1 text-success"></i>
-                        <h5 class="mt-2">Register Vehicle</h5>
-                        <p class="text-muted small">Add new vehicles and link drivers.</p>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm h-100 text-center">
+                        <div class="card-body">
+                            <i class="bi bi-truck fs-1 text-success"></i>
+                            <h5 class="mb-3">Registered Vehicles</h5>
+                            <h3 class="fw-bold text-success">{{ total_vehicles|default:"0" }}</h3>
+                        </div>
                     </div>
                 </div>
-            </a>
-        </div>
+            </div>
 
-        <div class="col-md-3">
-            <a href="{% url 'deposit_menu' %}" class="text-decoration-none">
-                <div class="card text-center border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <i class="bi bi-wallet2 fs-1 text-warning"></i>
-                        <h5 class="mt-2">Deposit Menu</h5>
-                        <p class="text-muted small">Record driver deposits before terminal entry.</p>
-                    </div>
+            {% if messages %}
+            <div class="mt-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-            </a>
-        </div>
-
-        <div class="col-md-3">
-            <a href="{% url 'terminal_queue' %}" class="text-decoration-none">
-                <div class="card text-center border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <i class="bi bi-list-check fs-1 text-danger"></i>
-                        <h5 class="mt-2">Manage Queue</h5>
-                        <p class="text-muted small">Adjust waiting times and vehicle order.</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <!-- 🔹 Statistics -->
-    <div class="row g-4 mt-5">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100 text-center">
-                <div class="card-body">
-                    <i class="bi bi-person-badge fs-1 text-primary"></i>
-                    <h5 class="mb-3">Registered Drivers</h5>
-                    <h3 id="driverCount" class="fw-bold text-primary">{{ total_drivers|default:"0" }}</h3>
-                    <p class="text-muted small">Total number of drivers registered.</p>
-                </div>
+                {% endfor %}
             </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100 text-center">
-                <div class="card-body">
-                    <i class="bi bi-truck fs-1 text-success"></i>
-                    <h5 class="mb-3">Registered Vehicles</h5>
-                    <h3 id="vehicleCount" class="fw-bold text-success">{{ total_vehicles|default:"0" }}</h3>
-                    <p class="text-muted small">Total number of vehicles registered.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<hr class="my-5">
-
-<!-- 🔹 Registration Forms -->
-<div class="row g-4">
-    <!-- 🧍 Driver Registration -->
-    <div class="col-md-6" id="driverFormSection">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white">
-                <i class="bi bi-person-plus"></i> Register Driver
-            </div>
-            <div class="card-body">
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    {{ driver_form.as_p }}
-                    <button type="submit" name="driver_submit" class="btn btn-primary w-100 mt-3">
-                        <i class="bi bi-save"></i> Register Driver
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- 🚗 Vehicle Registration -->
-    <div class="col-md-6" id="vehicleFormSection">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-success text-white">
-                <i class="bi bi-truck"></i> Register Vehicle
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    {% csrf_token %}
-                    {{ vehicle_form.as_p }}
-                    <button type="submit" name="vehicle_submit" class="btn btn-success w-100 mt-3">
-                        <i class="bi bi-save"></i> Register Vehicle
-                    </button>
-                </form>
-            </div>
+            {% endif %}
         </div>
     </div>
 </div>
-
-<!-- 🔹 Alerts -->
-{% if messages %}
-<div class="mt-4">
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    {% endfor %}
-</div>
-{% endif %}
-
-<!-- Smooth scroll for form navigation -->
-<script>
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    });
-});
-</script>
-
-<!-- 🔹 AJAX Submission for Driver & Vehicle Forms -->
-<script>
-function getCSRFToken() {
-    return document.querySelector('[name=csrfmiddlewaretoken]').value;
-}
-
-// 🔹 Helper to show alerts dynamically
-function showAlert(container, type, message) {
-    const alertBox = document.createElement('div');
-    alertBox.classList.add('alert', `alert-${type}`, 'alert-dismissible', 'fade', 'show', 'mt-3');
-    alertBox.setAttribute('role', 'alert');
-    alertBox.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-    container.appendChild(alertBox);
-}
-
-// 🔹 Handle Driver Registration
-document.querySelector('#driverFormSection form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-
-    const response = await fetch("{% url 'ajax_register_driver' %}", {
-        method: "POST",
-        headers: { 'X-CSRFToken': getCSRFToken() },
-        body: formData
-    });
-    const data = await response.json();
-
-    const cardBody = form.parentElement;
-    cardBody.querySelectorAll('.alert').forEach(a => a.remove());
-
-    if (data.success) {
-        showAlert(cardBody, 'success', data.message);
-        form.reset();
-
-        // update count
-        const countElem = document.getElementById('driverCount');
-        countElem.textContent = parseInt(countElem.textContent) + 1;
-    } else {
-        showAlert(cardBody, 'danger', "❌ Please check all required fields and try again.");
-    }
-});
-
-// 🔹 Handle Vehicle Registration
-document.querySelector('#vehicleFormSection form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-
-    const response = await fetch("{% url 'ajax_register_vehicle' %}", {
-        method: "POST",
-        headers: { 'X-CSRFToken': getCSRFToken() },
-        body: formData
-    });
-    const data = await response.json();
-
-    const cardBody = form.parentElement;
-    cardBody.querySelectorAll('.alert').forEach(a => a.remove());
-
-    if (data.success) {
-        showAlert(cardBody, 'success', data.message);
-        form.reset();
-
-        // update count
-        const countElem = document.getElementById('vehicleCount');
-        countElem.textContent = parseInt(countElem.textContent) + 1;
-    } else {
-        showAlert(cardBody, 'danger', "❌ Please check all required fields and try again.");
-    }
-});
-</script>
 {% endblock %}

@@ -1,29 +1,46 @@
-<div>
-    <h4><i class="bi bi-bus-front"></i> TicketNow</h4>
+{# templates/includes/sidebar_staff.html #}
+<div class="sidebar">
+    <h4>Staff Menu</h4>
+    <ul>
+        <!-- ✅ Dashboard -->
+        <li>
+            <a href="{% url 'staff_dashboard' %}" 
+               class="{% if request.path == '/dashboard/staff/' %}active{% endif %}">
+               <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </li>
 
-    <a href="{% url 'staff_dashboard' %}" class="{% if request.path == '/vehicles/dashboard/' %}active{% endif %}">
-        <i class="bi bi-speedometer2"></i> Dashboard
-    </a>
+        <!-- ✅ Separate registration pages -->
+        <li>
+            <a href="{% url 'vehicles:register_driver' %}">
+                <i class="bi bi-person-plus"></i> Register Driver
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'vehicles:register_vehicle' %}">
+                <i class="bi bi-truck"></i> Register Vehicle
+            </a>
+        </li>
 
-    <a href="{% url 'register_driver' %}">
-        <i class="bi bi-person-plus"></i> Register Driver
-    </a>
+        <!-- ✅ Deposit Menu (Step 🟩) -->
+        <li>
+            <a href="{% url 'terminal:deposit_menu' %}">
+                <i class="bi bi-wallet2"></i> Deposit Menu
+            </a>
+        </li>
 
-    <a href="{% url 'register_vehicle' %}">
-        <i class="bi bi-truck"></i> Register Vehicle
-    </a>
+        <!-- 🕓 Terminal Queue (Step 🟨, future) -->
+        <li>
+            <a href="{% url 'terminal:terminal_queue' %}">
+                <i class="bi bi-list-check"></i> Manage Queue
+            </a>
+        </li>
 
-    <a href="{% url 'deposit_menu' %}">
-        <i class="bi bi-wallet2"></i> Deposit Menu
-    </a>
-
-    <a href="{% url 'terminal_queue' %}">
-        <i class="bi bi-list-check"></i> Manage Queue
-    </a>
-</div>
-
-<div>
-    <a href="{% url 'logout' %}">
-        <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
+        <!-- 🚪 Logout -->
+        <li>
+            <a href="{% url 'accounts:logout' %}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </li>
+    </ul>
 </div>
