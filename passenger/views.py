@@ -173,3 +173,55 @@ def public_queue_data(request):
             })
 
     return JsonResponse({"entries": data})
+
+
+def trip_history(request):
+    """
+    API endpoint to get passenger trip history.
+    Returns recent trips for public viewing.
+    """
+    from django.core.paginator import Paginator
+    
+    # Get trips from the last 30 days
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    
+    trips = (
+        EntryLog.objects.select_related('vehicle', 'vehicle__route', 'vehicle__assigned_driver')
+        .filter(
+            created_at__gte=thirty_days_ago,
+            status=EntryLog.STATUS_SUCCESS
+        )
+        .order_by('-created_at')
+    )
+    
+    # Pagination
+    paginator = Paginator(trips, 20)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    
+    trip_data = []
+    for trip in page_obj:
+        vehicle = trip.vehicle
+        trip_data.append({
+            'id': trip.id,
+            'vehicle_plate': vehicle.license_plate if vehicle else 'N/A',
+            'route': f"{vehicle.route.origin} → {vehicle.route.destination}" if vehicle and vehicle.route else 'N/A',
+            'driver': f"{vehicle.assigned_driver.first_name} {vehicle.assigned_driver.last_name}" if vehicle and vehicle.assigned_driver else 'N/A',
+            'entry_time': timezone.localtime(trip.created_at).strftime('%Y-%m-%d %H:%M'),
+            'departed_time': timezone.localtime(trip.departed_at).strftime('%Y-%m-%d %H:%M') if trip.departed_at else 'N/A',
+            'status': 'Completed' if trip.departed_at else 'Active'
+        })
+    
+    if request.headers.get('Accept') == 'application/json':
+        return JsonResponse({
+            'trips': trip_data,
+            'has_next': page_obj.has_next(),
+            'has_previous': page_obj.has_previous(),
+            'current_page': page_obj.number,
+            'total_pages': paginator.num_pages
+        })
+    
+    return render(request, 'passenger/trip_history.html', {
+        'trips': trip_data,
+        'page_obj': page_obj
+    })
