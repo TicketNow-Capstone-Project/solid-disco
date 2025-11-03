@@ -75,7 +75,7 @@ class DepositAdmin(admin.ModelAdmin):
         'wallet__vehicle__vehicle_name',
         'payment_method',
     )
-    readonly_fields = ('reference_number', 'created_at', 'updated_at')  # 👈 Added reference_number here
+    readonly_fields = ('reference_number', 'created_at')  # ✅ removed updated_at
     list_per_page = 20
     
     def wallet_display(self, obj):

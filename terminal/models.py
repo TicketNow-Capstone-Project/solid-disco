@@ -61,7 +61,7 @@ class EntryLog(models.Model):
     message = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # 🟩 New fields for Step 3.2
+    # 🟩 Step 3.2 fields
     is_active = models.BooleanField(default=True, help_text="Indicates if vehicle is still in terminal queue.")
     departed_at = models.DateTimeField(null=True, blank=True, help_text="Time the vehicle exited the terminal.")
 
@@ -80,6 +80,13 @@ class SystemSettings(models.Model):
     terminal_fee = models.DecimalField(max_digits=10, decimal_places=2, default=50.00)
     min_deposit_amount = models.DecimalField(max_digits=10, decimal_places=2, default=100.00)
     entry_cooldown_minutes = models.PositiveIntegerField(default=5)
+    
+    # 🟢 NEW FIELD: Departure Duration Setting
+    departure_duration_minutes = models.PositiveIntegerField(
+        default=30,
+        help_text="Default duration (in minutes) before a vehicle departs automatically."
+    )
+
     theme_preference = models.CharField(
         max_length=10,
         choices=[('light', 'Light Mode'), ('dark', 'Dark Mode')],
@@ -89,7 +96,11 @@ class SystemSettings(models.Model):
     updated_at = models.DateTimeField(auto_now=True)  # 🕒 Track last change
 
     def __str__(self):
-        return f"System Settings (Fee: ₱{self.terminal_fee}, Min Deposit: ₱{self.min_deposit_amount})"
+        return (
+            f"System Settings (Fee: ₱{self.terminal_fee}, "
+            f"Min Deposit: ₱{self.min_deposit_amount}, "
+            f"Stay: {self.departure_duration_minutes} mins)"
+        )
 
     @classmethod
     def get_solo(cls):

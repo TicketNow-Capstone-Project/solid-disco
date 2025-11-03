@@ -23,6 +23,10 @@ urlpatterns = [
     # 📜 Queue History page
     path('queue-history/', views.queue_history, name='queue_history'),
 
+    path('simple-queue/', views.simple_queue_view, name='simple_queue_view'),
+
+
+
 
     # ⚙️ Admin-only System Settings
     path('system-settings/', views.system_settings, name='system_settings'),

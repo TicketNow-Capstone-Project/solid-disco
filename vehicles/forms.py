@@ -207,25 +207,23 @@ class DriverRegistrationForm(forms.ModelForm):
         return zip_code
 
 
-# 💰 Deposit Form
+# ✅ CASH-ONLY UPDATED VERSION
 class DepositForm(forms.ModelForm):
-    driver = forms.ModelChoiceField(
-        queryset=Driver.objects.filter(vehicles__isnull=False).distinct().order_by('first_name'),
-        widget=forms.Select(attrs={'class': 'form-select searchable-select'}),
-        label="Select Driver"
-    )
+    class Meta:
+        model = Deposit
+        fields = ['amount']  # Only amount needed (cash only)
+
     amount = forms.DecimalField(
-        max_digits=12,
-        decimal_places=2,
+        label="Deposit Amount (₱)",
         min_value=1,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter deposit amount'}),
-        label="Deposit Amount"
+        decimal_places=2,
+        max_digits=12,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter deposit amount'
+        })
     )
-    payment_method = forms.ChoiceField(
-        choices=Deposit.PAYMENT_METHOD_CHOICES,
-        widget=forms.Select(attrs={'class': 'form-select'}),
-        label="Payment Method"
-    )
+
 
     class Meta:
         model = Deposit

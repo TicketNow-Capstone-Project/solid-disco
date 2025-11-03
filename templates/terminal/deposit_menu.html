@@ -13,7 +13,15 @@
         <!-- Main Content -->
         <div class="col-md-9 col-lg-10 p-4">
             <h2><i class="bi bi-wallet2"></i> Deposit Menu</h2>
-            <p class="text-muted">Search for a driver and record their deposit to update wallet balance before terminal entry.</p>
+            <p class="text-muted">
+                Record deposits for drivers to update their wallet balances before terminal entry.
+            </p>
+
+            <!-- 🟩 Info Alert for Minimum Deposit -->
+            <div class="alert alert-info d-flex align-items-center">
+                <i class="bi bi-info-circle me-2"></i>
+                <div>Minimum deposit required before entry: <strong>₱{{ min_deposit }}</strong></div>
+            </div>
 
             <!-- ✅ Deposit Form -->
             <div class="card shadow-sm border-0 mt-4">
@@ -43,21 +51,15 @@
                                 <label class="form-label fw-bold">Deposit Amount</label>
                                 <input type="number" name="amount" step="0.01" min="1" class="form-control" placeholder="₱ Amount" required>
                             </div>
-
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Payment Method</label>
-                                <select name="payment_method" class="form-select" required>
-                                    <option value="cash">Cash</option>
-                                    <option value="gcash">GCash</option>
-                                    <option value="bank">Bank Transfer</option>
-                                </select>
-                            </div>
                         </div>
 
                         <button type="submit" class="btn btn-warning mt-3 w-100">
                             <i class="bi bi-cash-coin"></i> Record Deposit
                         </button>
                     </form>
+
+                    <!-- 🟩 Feedback Message -->
+                    <div id="depositFeedback" class="alert mt-3 d-none" role="alert"></div>
                 </div>
             </div>
 
@@ -120,33 +122,32 @@ function getCSRFToken() {
     return el ? el.value : '';
 }
 
-// 🟩 Update wallet balance when driver is selected
 document.addEventListener('DOMContentLoaded', function() {
     const driverSelect = document.getElementById('driverSelect');
     const balanceDisplay = document.getElementById('walletBalance');
+    const feedback = document.getElementById('depositFeedback');
 
-    if (driverSelect) {
-        driverSelect.addEventListener('change', async function() {
-            const driverId = this.value;
-            if (!driverId) {
-                balanceDisplay.value = '₱0.00';
-                return;
-            }
-            try {
-                const res = await fetch(`{% url 'vehicles:get_wallet_balance' 0 %}`.replace('0', driverId));
-                const data = await res.json();
-                if (data.success) {
-                    balanceDisplay.value = `₱${parseFloat(data.balance).toFixed(2)}`;
-                } else {
-                    balanceDisplay.value = '₱0.00';
-                }
-            } catch {
+    // 🟩 Update wallet balance dynamically
+    driverSelect.addEventListener('change', async function() {
+        const driverId = this.value;
+        if (!driverId) {
+            balanceDisplay.value = '₱0.00';
+            return;
+        }
+        try {
+            const res = await fetch(`{% url 'vehicles:get_wallet_balance' 0 %}`.replace('0', driverId));
+            const data = await res.json();
+            if (data.success) {
+                balanceDisplay.value = `₱${parseFloat(data.balance).toFixed(2)}`;
+            } else {
                 balanceDisplay.value = '₱0.00';
             }
-        });
-    }
+        } catch {
+            balanceDisplay.value = '₱0.00';
+        }
+    });
 
-    // 🟨 Handle deposit form submission via AJAX
+    // 🟨 Handle deposit via AJAX
     const depositForm = document.getElementById('depositForm');
     depositForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -157,13 +158,17 @@ document.addEventListener('DOMContentLoaded', function() {
             body: formData
         });
         const data = await res.json();
+
+        feedback.classList.remove('d-none', 'alert-success', 'alert-danger');
         if (data.success) {
-            alert(data.message);
+            feedback.classList.add('alert-success');
+            feedback.textContent = data.message || 'Deposit successful!';
             depositForm.reset();
             balanceDisplay.value = `₱${parseFloat(data.new_balance).toFixed(2)}`;
-            location.reload();
+            setTimeout(() => location.reload(), 1500);
         } else {
-            alert(data.message || 'Deposit failed. Please check fields.');
+            feedback.classList.add('alert-danger');
+            feedback.textContent = data.message || 'Deposit failed. Please check inputs.';
         }
     });
 });

@@ -64,13 +64,11 @@ class Vehicle(models.Model):
     ownership_type = models.CharField(max_length=20, choices=OWNERSHIP_TYPES, default='owned')
     assigned_driver = models.ForeignKey('Driver', on_delete=models.CASCADE, related_name='vehicles')
 
-    # 🔹 Registration details
     cr_number = models.CharField(max_length=50, unique=True, verbose_name="Certificate of Registration")
     or_number = models.CharField(max_length=50, unique=True, verbose_name="Official Receipt")
     vin_number = models.CharField(max_length=50, unique=True, verbose_name="Vehicle Identification Number (VIN)")
     year_model = models.PositiveIntegerField(default=2024)
 
-    # 🔹 Vehicle info
     registration_number = models.CharField(max_length=50, unique=True)
     registration_expiry = models.DateField(blank=True, null=True)
     license_plate = models.CharField(max_length=50, unique=True)
@@ -79,109 +77,73 @@ class Vehicle(models.Model):
     qr_code = models.ImageField(upload_to='qrcodes/', null=True, blank=True)
     qr_value = models.CharField(max_length=255, unique=True, blank=True, null=True)
 
-    # 🔹 Auto timestamps
     date_registered = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
 
     def clean(self):
-        """Validate license plate format (e.g., ABC 123)."""
         if self.license_plate and not re.match(r'^[A-Z]{3}\s\d{3,4}$', self.license_plate, re.IGNORECASE):
             raise ValidationError("License plate must be in format XXX 123 or XXX 1234 (e.g., ABC 123).")
 
     def save(self, *args, **kwargs):
-        """Generate QR code with unique text (for scanning validation)."""
         creating = self.pk is None
         super().save(*args, **kwargs)
 
-        if creating or not self.qr_code:
-            # ✅ Generate a short unique text for the QR
-            qr_text = f"VEH-{self.id}-{self.license_plate}".replace(" ", "-").upper()
-            self.qr_value = qr_text
-
-            # ✅ Create QR image from qr_value
-            qr_image = qrcode.make(qr_text)
+        expected_qr_value = f"VEH-{self.id}-{self.license_plate}".replace(" ", "-").upper()
+        if creating or not self.qr_code or self.qr_value != expected_qr_value:
+            self.qr_value = expected_qr_value
+            qr_image = qrcode.make(self.qr_value)
             buffer = BytesIO()
             qr_image.save(buffer, format='PNG')
             filename = f"vehicle_{self.id}_qr.png"
             self.qr_code.save(filename, File(buffer), save=False)
-
-            # ✅ Save both fields
             super().save(update_fields=['qr_code', 'qr_value'])
-
 
     def __str__(self):
         return f"{self.vehicle_name} ({self.license_plate})"
 
 
 class Wallet(models.Model):
-    STATUS_CHOICES = [
-        ('active', 'Active'),
-        ('suspended', 'Suspended'),
-    ]
-
     vehicle = models.OneToOneField(Vehicle, on_delete=models.CASCADE, related_name='wallet')
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     currency = models.CharField(max_length=10, default='PHP')
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
+    status = models.CharField(max_length=10, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.vehicle.assigned_driver}'s Wallet - {self.balance} {self.currency}"
+        return f"{self.vehicle.assigned_driver}'s Wallet - ₱{self.balance}"
 
 
 class Deposit(models.Model):
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('successful', 'Successful'),
-        ('failed', 'Failed'),
-    ]
-
-    PAYMENT_METHOD_CHOICES = [
-        ('manual', 'Manual Payment (In-Station)'),
-        ('online', 'Online Payment'),
-        ('bank_transfer', 'Bank Transfer'),
-        ('gcash', 'GCash'),
-        ('maya', 'Maya'),
-    ]
-
-    wallet = models.ForeignKey('Wallet', on_delete=models.CASCADE, related_name='deposits')
+    """Cash-only deposits: automatically successful and instantly added to wallet."""
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='deposits')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, default='manual')
     reference_number = models.CharField(max_length=50, unique=True, blank=True)
-    status = models.CharField(max_length=15, choices=STATUS_CHOICES, blank=True)
+    status = models.CharField(max_length=15, default='successful')
+    payment_method = models.CharField(max_length=20, default='cash')
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        """Auto-generate reference number and set status automatically."""
         is_new = self.pk is None
 
         if not self.reference_number:
             unique_code = uuid.uuid4().hex[:6].upper()
             self.reference_number = f"DEP-{timezone.now().strftime('%Y%m%d')}-{unique_code}"
 
-        if not self.status:
-            if self.payment_method in ['manual', 'bank_transfer']:
-                self.status = 'pending'
-            elif self.payment_method in ['gcash', 'maya', 'online']:
-                self.status = 'successful'
-            else:
-                self.status = 'failed'
+        self.status = 'successful'
+        self.payment_method = 'cash'
 
         super().save(*args, **kwargs)
 
-        if is_new and self.status == 'successful':
+        if is_new:
             self.wallet.balance += self.amount
-            self.wallet.save()
+            self.wallet.save(update_fields=['balance'])
 
     def __str__(self):
-        return f"Deposit {self.reference_number} - {self.amount} ({self.status})"
+        return f"Deposit {self.reference_number} - ₱{self.amount} (Cash)"
 
 
-# 🔔 SIGNALS
 @receiver(post_save, sender=Vehicle)
 def create_wallet_for_vehicle(sender, instance, created, **kwargs):
-    """Auto-create a wallet once a Vehicle is created."""
     if created:
         Wallet.objects.create(vehicle=instance)

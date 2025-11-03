@@ -9,6 +9,7 @@ from django import forms
 from django.contrib import messages
 from django.utils import timezone
 import csv
+from datetime import timedelta
 
 
 # 🔐 Helper: Check if user is staff
@@ -81,23 +82,70 @@ def queue_data(request):
     logs = (
         EntryLog.objects
         .filter(status=EntryLog.STATUS_SUCCESS, is_active=True)
-        .select_related("vehicle", "staff")
+        .select_related("vehicle__assigned_driver", "staff")
         .order_by("-created_at")[:20]
     )
 
     data = []
     for log in logs:
         vehicle = log.vehicle
+        driver = vehicle.assigned_driver if vehicle else None
+
         data.append({
             "id": log.id,
-            "vehicle_plate": getattr(vehicle, "plate_number", "N/A") if vehicle else "—",
-            "driver_name": getattr(vehicle, "assigned_driver", "N/A") if vehicle else "—",
+            "vehicle_plate": getattr(vehicle, "license_plate", "N/A") if vehicle else "—",
+            "vehicle_name": getattr(vehicle, "vehicle_name", "—") if vehicle else "—",
+            "driver_name": f"{driver.first_name} {driver.last_name}" if driver else "—",
             "fee": float(log.fee_charged),
             "staff": log.staff.username if log.staff else "—",
             "time": log.created_at.strftime("%Y-%m-%d %H:%M:%S"),
         })
 
     return JsonResponse({"entries": data})
+
+
+
+
+@login_required(login_url='login')
+@user_passes_test(is_staff_admin)
+@never_cache
+def simple_queue_view(request):
+    """
+    Display-only view for the terminal TV screens.
+    Shows plate, driver, entry time, and calculated departure time.
+    """
+    settings = SystemSettings.get_solo()
+    duration = getattr(settings, "departure_duration_minutes", 30)
+
+    logs = (
+        EntryLog.objects
+        .filter(is_active=True, status=EntryLog.STATUS_SUCCESS)
+        .select_related("vehicle__assigned_driver")
+        .order_by("-created_at")
+    )
+
+    queue = []
+    for log in logs:
+        vehicle = log.vehicle
+        driver = vehicle.assigned_driver if vehicle else None
+        departure_time = log.created_at + timedelta(minutes=duration)
+
+        queue.append({
+            "plate": getattr(vehicle, "license_plate", "N/A"),
+            "driver": f"{driver.first_name} {driver.last_name}" if driver else "N/A",
+            "entry_time": timezone.localtime(log.created_at).strftime("%I:%M %p"),
+            "departure_time": timezone.localtime(departure_time).strftime("%I:%M %p"),
+        })
+
+    context = {
+        "queue": queue,
+        "stay_duration": duration,
+        "now": timezone.localtime(timezone.now()),  # 🕒 pass current time
+    }
+    return render(request, "terminal/simple_queue.html", context)
+
+
+
 
 
 # 🟩 STEP 2.2: QR Scan Entry Validation + Enhanced Error Feedback
@@ -216,7 +264,13 @@ def system_settings(request):
     class SettingsForm(forms.ModelForm):
         class Meta:
             model = SystemSettings
-            fields = ['terminal_fee', 'min_deposit_amount', 'entry_cooldown_minutes', 'theme_preference']
+            fields = [
+                'terminal_fee',
+                'min_deposit_amount',
+                'entry_cooldown_minutes',
+                'departure_duration_minutes',  # 🟢 NEW FIELD
+                'theme_preference',
+            ]
             widgets = {
                 'terminal_fee': forms.NumberInput(attrs={
                     'class': 'form-control',
@@ -232,6 +286,11 @@ def system_settings(request):
                     'class': 'form-control',
                     'min': '1', 'step': '1',
                     'placeholder': 'Entry cooldown (minutes)',
+                }),
+                'departure_duration_minutes': forms.NumberInput(attrs={
+                    'class': 'form-control',
+                    'min': '1', 'step': '1',
+                    'placeholder': 'Default stay duration (minutes)',
                 }),
                 'theme_preference': forms.Select(attrs={'class': 'form-select'}),
             }

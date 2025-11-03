@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Live Terminal Queue | TicketNow{% endblock %}
+
+{% block content %}
+<style>
+  body {
+    background: #f4f6f8;
+    font-size: 1.2rem;
+  }
+  .tv-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  th, td {
+    text-align: center;
+    vertical-align: middle;
+  }
+  .departure-soon {
+    color: #dc3545;
+    font-weight: bold;
+  }
+</style>
+
+<div class="container-fluid mt-4">
+  <div class="tv-card p-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h2 class="mb-0 text-primary"><i class="bi bi-tv me-2"></i>Terminal Queue Display</h2>
+        <small class="text-muted">Auto-refreshes every 10 seconds</small>
+      </div>
+      <div class="text-end">
+        <h4 class="text-secondary mb-0">
+          <i class="bi bi-clock"></i> {{ now|date:"h:i A" }}
+        </h4>
+      </div>
+    </div>
+
+    <table class="table table-striped align-middle table-bordered">
+      <thead class="table-primary">
+        <tr>
+          <th>#</th>
+          <th>Plate Number</th>
+          <th>Driver</th>
+          <th>Entry Time</th>
+          <th>Departure Time</th>
+        </tr>
+      </thead>
+      <tbody id="queue-body">
+        {% if queue %}
+          {% for q in queue %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td><strong>{{ q.plate }}</strong></td>
+              <td>{{ q.driver }}</td>
+              <td>{{ q.entry_time }}</td>
+              <td class="{% if q.departure_time|time < now|time %}departure-soon{% endif %}">
+                {{ q.departure_time }}
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-4">
+              <i class="bi bi-info-circle"></i> No active vehicles currently in the terminal.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // Auto-refresh every 10 seconds for live display
+  setInterval(() => location.reload(), 10000);
+</script>
+{% endblock %}

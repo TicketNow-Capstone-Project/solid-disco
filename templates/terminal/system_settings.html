@@ -39,6 +39,8 @@
         <div class="card-body">
           <form method="POST" id="settingsForm" novalidate>
             {% csrf_token %}
+
+            <!-- Terminal Fee -->
             <div class="mb-3">
               <label class="form-label fw-bold">New Terminal Entry Fee (₱)</label>
               {{ form.terminal_fee }}
@@ -47,6 +49,7 @@
               {% endif %}
             </div>
 
+            <!-- Minimum Deposit -->
             <div class="mb-3">
               <label class="form-label fw-bold">Minimum Deposit Required (₱)</label>
               {{ form.min_deposit_amount }}
@@ -55,6 +58,7 @@
               {% endif %}
             </div>
 
+            <!-- Entry Cooldown -->
             <div class="mb-3">
               <label class="form-label fw-bold">Entry Cooldown (minutes)</label>
               {{ form.entry_cooldown_minutes }}
@@ -63,6 +67,19 @@
               {% endif %}
             </div>
 
+            <!-- 🟩 NEW FIELD: Vehicle Stay Duration -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Vehicle Stay Duration (minutes before departure)</label>
+              {{ form.departure_duration_minutes }}
+              {% if form.departure_duration_minutes.errors %}
+                <div class="text-danger small mt-1">{{ form.departure_duration_minutes.errors|striptags }}</div>
+              {% endif %}
+              <small class="form-text text-muted">
+                Determines how long a vehicle can stay in the terminal after entry before being marked as departed.
+              </small>
+            </div>
+
+            <!-- Theme -->
             <div class="mb-3">
               <label class="form-label fw-bold">System Theme</label>
               {{ form.theme_preference }}
@@ -71,7 +88,7 @@
               {% endif %}
             </div>
 
-
+            <!-- Buttons -->
             <div class="text-end">
               <button type="button" class="btn btn-success" id="openConfirmModal">
                 <i class="bi bi-save"></i> Save Settings
@@ -97,7 +114,7 @@
       </div>
       <div class="modal-body">
         <p class="fw-semibold">Are you sure you want to update the system settings?</p>
-        <p class="text-muted small mb-0">This will immediately apply the new terminal entry fee for all future vehicle entries.</p>
+        <p class="text-muted small mb-0">This will immediately apply the new settings for all future vehicle entries.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
