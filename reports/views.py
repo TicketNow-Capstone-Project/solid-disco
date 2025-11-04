@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
 from datetime import timedelta, datetime
 from decimal import Decimal
+import pytz
 from accounts.utils import is_admin
 from vehicles.models import Deposit
 from terminal.models import EntryLog, SystemSettings
@@ -131,17 +132,28 @@ def profit_report_view(request):
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
             end_dt = datetime.strptime(end_date, "%Y-%m-%d")
-            end_dt = timezone.make_aware(datetime.combine(end_dt, datetime.max.time()))
-            start_dt = timezone.make_aware(datetime.combine(start_dt, datetime.min.time()))
+            
+            # Properly handle timezone conversion
+            local_tz = timezone.get_current_timezone()
+            end_dt = timezone.make_aware(
+                datetime.combine(end_dt, datetime.max.time()), 
+                timezone=local_tz
+            )
+            start_dt = timezone.make_aware(
+                datetime.combine(start_dt, datetime.min.time()), 
+                timezone=local_tz
+            )
+            
             profits = profits.filter(date_recorded__range=[start_dt, end_dt])
             total = profits.aggregate(Sum("amount"))["amount__sum"] or 0
         except ValueError:
             pass
 
-    # Prepare data for chart
+    # Prepare data for chart with proper timezone handling
     chart_labels, profit_values = [], []
     for p in profits.order_by("date_recorded"):
-        chart_labels.append(p.date_recorded.strftime("%b %d"))
+        local_date = timezone.localtime(p.date_recorded)
+        chart_labels.append(local_date.strftime("%b %d"))
         profit_values.append(float(p.amount))
 
     context = {
