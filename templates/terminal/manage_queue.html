@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Queue | TicketNow{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Manage Queue (Staff Panel)</h5>
+        <small class="text-light opacity-75">Monitor and manage active vehicles inside the terminal.</small>
+      </div>
+      <a href="{% url 'terminal:qr_scan_entry' %}" class="btn btn-light btn-sm">
+        <i class="bi bi-qr-code-scan me-1"></i> QR Scan Entry
+      </a>
+    </div>
+
+    <div class="card-body">
+      <!-- 🟩 Active Vehicles -->
+      <div class="alert alert-info py-2 d-flex justify-content-between align-items-center">
+        <div>
+          <i class="bi bi-car-front me-2"></i>
+          <strong>Currently Active Vehicles:</strong> <span id="vehicleCount">0</span>
+        </div>
+        <small class="text-muted">Auto-refreshes every 5 seconds</small>
+      </div>
+
+      <!-- 🟩 Table -->
+      <div class="table-responsive">
+        <table class="table table-striped align-middle" id="manage-queue-table">
+          <thead class="table-primary">
+            <tr>
+              <th>#</th>
+              <th>Plate Number</th>
+              <th>Driver</th>
+              <th>Validated By</th>
+              <th>Entry Time</th>
+              <th>Expected Departure</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="queue-body">
+            <tr><td colspan="7" class="text-center text-muted">Loading queue...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div id="no-data" class="alert alert-secondary text-center d-none mt-3">
+        <i class="bi bi-info-circle me-1"></i> No active vehicles found.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🟦 Live Queue Auto Refresh -->
+<script>
+async function fetchQueueData() {
+  try {
+    const response = await fetch("{% url 'terminal:queue_data' %}");
+    const data = await response.json();
+
+    const tbody = document.getElementById('queue-body');
+    const noData = document.getElementById('no-data');
+    const countDisplay = document.getElementById('vehicleCount');
+    tbody.innerHTML = '';
+
+    if (data.entries && data.entries.length > 0) {
+      noData.classList.add('d-none');
+      countDisplay.textContent = data.entries.length;
+
+      data.entries.forEach((item, index) => {
+        const expectedDeparture = calculateExpectedDeparture(item.time);
+        const row = `
+          <tr id="row-${item.id}">
+            <td>${index + 1}</td>
+            <td><strong>${item.vehicle_plate}</strong></td>
+            <td>${item.driver_name}</td>
+            <td>${item.staff}</td>
+            <td>${formatTime(item.time)}</td>
+            <td>${expectedDeparture}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-danger" onclick="markDeparted(${item.id})">
+                <i class="bi bi-box-arrow-right"></i> Mark Departed
+              </button>
+            </td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
+    } else {
+      noData.classList.remove('d-none');
+      countDisplay.textContent = '0';
+    }
+  } catch (error) {
+    console.error("Error fetching queue data:", error);
+  }
+}
+
+// 🕒 Helper: format entry time
+function formatTime(datetime) {
+  const date = new Date(datetime);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// 🕒 Helper: calculate expected departure time (+30 mins default)
+function calculateExpectedDeparture(entryTime) {
+  const date = new Date(entryTime);
+  date.setMinutes(date.getMinutes() + 30);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// 🟥 Manual Depart (override button)
+async function markDeparted(entryId) {
+  if (!confirm("Are you sure you want to mark this vehicle as departed?")) return;
+  try {
+    const response = await fetch(`/terminal/mark-departed/${entryId}/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+      }
+    });
+    const data = await response.json();
+
+    if (data.success) {
+      alert(data.message);
+      fetchQueueData();
+    } else {
+      alert(data.message || "Failed to mark as departed.");
+    }
+  } catch (err) {
+    alert("Network error while marking as departed.");
+  }
+}
+
+// 🕒 Auto-refresh queue every 5 seconds
+fetchQueueData();
+setInterval(fetchQueueData, 5000);
+</script>
+
+<!-- CSRF Token for AJAX -->
+<form style="display:none;">{% csrf_token %}</form>
+{% endblock %}

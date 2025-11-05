@@ -22,4 +22,6 @@ urlpatterns = [
     path('ajax-register-vehicle/', views.ajax_register_vehicle, name='ajax_register_vehicle'),
     path('get-wallet-balance/<int:driver_id>/', views.get_wallet_balance, name='get_wallet_balance'),
     path('ajax-deposit/', views.ajax_deposit, name='ajax_deposit'),
+    path('get-by-driver/<int:driver_id>/', views.get_vehicles_by_driver, name='get_vehicles_by_driver'),
+
 ]

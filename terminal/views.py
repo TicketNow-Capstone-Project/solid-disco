@@ -17,22 +17,19 @@ def is_staff_admin(user):
     return user.is_authenticated and (user.is_staff or getattr(user, 'role', '') == 'staff_admin')
 
 
-# ✅ Deposit Menu View (Improved + Safe Handling)
 @login_required(login_url='login')
 @user_passes_test(is_staff_admin)
 @never_cache
 def deposit_menu(request):
     """
-    Allows staff to select a driver (only those with registered vehicles),
-    view wallet balance, and record deposits.
+    Allows staff to record cash-only deposits instantly to a driver's wallet.
+    Automatically updates the wallet balance and logs the transaction.
     """
 
     settings = SystemSettings.get_solo()
     min_deposit = settings.min_deposit_amount
 
-
-
-    # 🟩 Only drivers who have at least one registered vehicle
+    # 🟩 Drivers that have at least one registered vehicle
     drivers_with_vehicles = (
         Driver.objects
         .filter(vehicles__isnull=False)
@@ -40,14 +37,55 @@ def deposit_menu(request):
         .order_by('last_name', 'first_name')
     )
 
-    # 🟩 Fetch the 10 most recent deposits
+    # 🟩 Recent deposits (for display)
     recent_deposits = (
         Deposit.objects
         .select_related('wallet__vehicle__assigned_driver')
         .order_by('-created_at')[:10]
     )
 
-    # 🧠 Optional: Context info for debugging if no drivers found
+    # 🟩 Deposit form submission
+    if request.method == "POST":
+        driver_id = request.POST.get("driver_id")
+        vehicle_id = request.POST.get("vehicle_id")
+        amount_str = request.POST.get("amount", "").strip()
+
+        # Validation
+        if not all([driver_id, vehicle_id, amount_str]):
+            messages.error(request, "⚠️ Please fill in all required fields.")
+            return redirect('terminal:deposit_menu')
+
+        try:
+            amount = Decimal(amount_str)
+        except:
+            messages.error(request, "❌ Invalid deposit amount.")
+            return redirect('terminal:deposit_menu')
+
+        if amount <= 0:
+            messages.error(request, "⚠️ Deposit amount must be greater than zero.")
+            return redirect('terminal:deposit_menu')
+
+        # Get the driver, vehicle, and wallet
+        vehicle = Vehicle.objects.filter(id=vehicle_id).first()
+        if not vehicle:
+            messages.error(request, "❌ Vehicle not found.")
+            return redirect('terminal:deposit_menu')
+
+        wallet, _ = Wallet.objects.get_or_create(vehicle=vehicle)
+
+        # 💰 Create Deposit (cash-only, instantly applied)
+        deposit = Deposit.objects.create(
+            wallet=wallet,
+            amount=amount,
+        )
+
+        messages.success(
+            request,
+            f"✅ Successfully deposited ₱{amount} to {vehicle.license_plate}."
+        )
+        return redirect('terminal:deposit_menu')
+
+    # 🟦 Context for template
     context_message = "" if drivers_with_vehicles.exists() else \
         "No registered drivers with vehicles found. Please register a vehicle first."
 
@@ -146,19 +184,64 @@ def simple_queue_view(request):
 
 
 
+# 🟢 Manage Queue View (Staff Control Panel)
+@login_required(login_url='login')
+@user_passes_test(is_staff_admin)
+@never_cache
+def manage_queue(request):
+    """
+    Staff view for managing active terminal entries.
+    Displays all active vehicles, allows marking as departed
+    or adjusting departure time manually.
+    """
+    settings = SystemSettings.get_solo()
+    duration = getattr(settings, "departure_duration_minutes", 30)
+
+    logs = (
+        EntryLog.objects
+        .filter(is_active=True, status=EntryLog.STATUS_SUCCESS)
+        .select_related("vehicle__assigned_driver", "staff")
+        .order_by("-created_at")
+    )
+
+    queue = []
+    for log in logs:
+        vehicle = log.vehicle
+        driver = vehicle.assigned_driver if vehicle else None
+        departure_time = log.created_at + timedelta(minutes=duration)
+
+        queue.append({
+            "id": log.id,
+            "plate": getattr(vehicle, "license_plate", "N/A"),
+            "driver": f"{driver.first_name} {driver.last_name}" if driver else "N/A",
+            "entry_time": timezone.localtime(log.created_at).strftime("%I:%M %p"),
+            "departure_time": timezone.localtime(departure_time).strftime("%I:%M %p"),
+            "staff": log.staff.username if log.staff else "—",
+        })
+
+    context = {
+        "queue": queue,
+        "stay_duration": duration,
+    }
+    return render(request, "terminal/manage_queue.html", context)
 
 
-# 🟩 STEP 2.2: QR Scan Entry Validation + Enhanced Error Feedback
+
+
+
+
+
+
+# 🟩 STEP 4.1: QR Scan Entry + Departure Logic
 @login_required(login_url='login')
 @user_passes_test(is_staff_admin)
 @never_cache
 def qr_scan_entry(request):
     """
-    Handles QR scans for vehicle entry validation.
-    Deducts terminal fee if balance is sufficient and cooldown has passed.
-    Prevents re-entry within the configured cooldown.
+    Handles QR scans for both ENTRY and DEPARTURE validation.
+    - If vehicle has no active entry → process as ENTRY (deduct fee, create log)
+    - If vehicle already has an active entry → process as DEPARTURE (mark departed)
     """
-    # 🧩 Load dynamic settings (defaults if missing)
     settings = SystemSettings.get_solo()
     entry_fee = settings.terminal_fee
     cooldown_minutes = settings.entry_cooldown_minutes
@@ -173,16 +256,36 @@ def qr_scan_entry(request):
 
         try:
             vehicle = Vehicle.objects.filter(qr_value__iexact=qr_code.strip()).first()
-            print("Scanned QR:", qr_code)
             if not vehicle:
                 return JsonResponse({
                     "status": "error",
                     "message": "No vehicle found for this QR code. Please make sure it's valid."
                 })
 
-            # ⏱ Prevent re-entry within cooldown
+            wallet = Wallet.objects.filter(vehicle=vehicle).first()
+            if not wallet:
+                return JsonResponse({
+                    "status": "error",
+                    "message": "No wallet found for this vehicle. Please deposit funds first."
+                })
+
             from datetime import timedelta, timezone, datetime
             now = datetime.now(timezone.utc)
+
+            # 🟦 Check if vehicle has an active log → DEPARTURE
+            active_log = EntryLog.objects.filter(vehicle=vehicle, is_active=True).first()
+            if active_log:
+                active_log.is_active = False
+                active_log.departed_at = timezone.now()
+                active_log.message = f"Vehicle '{vehicle.license_plate}' departed at {timezone.localtime(active_log.departed_at).strftime('%I:%M %p')}."
+                active_log.save(update_fields=["is_active", "departed_at", "message"])
+
+                return JsonResponse({
+                    "status": "success",
+                    "message": f"✅ Vehicle '{vehicle.license_plate}' successfully departed at {timezone.localtime(active_log.departed_at).strftime('%I:%M %p')}."
+                })
+
+            # 🟩 Otherwise, process ENTRY logic
             recent_entry = (
                 EntryLog.objects.filter(vehicle=vehicle, status=EntryLog.STATUS_SUCCESS)
                 .order_by("-created_at")
@@ -195,13 +298,6 @@ def qr_scan_entry(request):
                                f"Please wait {cooldown_minutes} minute(s) before re-entry."
                 })
 
-            wallet = Wallet.objects.filter(vehicle=vehicle).first()
-            if not wallet:
-                return JsonResponse({
-                    "status": "error",
-                    "message": "No wallet found for this vehicle. Please deposit funds first."
-                })
-
             # 💰 Check minimum deposit requirement
             if wallet.balance < min_deposit:
                 return JsonResponse({
@@ -210,7 +306,7 @@ def qr_scan_entry(request):
                                "Please add funds at the deposit counter."
                 })
 
-            # ✅ Check if sufficient for entry fee
+            # ✅ Check sufficient balance for entry fee
             if wallet.balance >= entry_fee:
                 wallet.balance -= entry_fee
                 wallet.save()
@@ -220,12 +316,12 @@ def qr_scan_entry(request):
                     staff=staff_user,
                     fee_charged=entry_fee,
                     status=EntryLog.STATUS_SUCCESS,
-                    message=f"Vehicle '{vehicle.license_plate}' validated. ₱{entry_fee} deducted."
+                    message=f"Vehicle '{vehicle.license_plate}' entered terminal. ₱{entry_fee} deducted."
                 )
 
                 return JsonResponse({
                     "status": "success",
-                    "message": f"✅ Vehicle '{vehicle.license_plate}' validated successfully! ₱{entry_fee} deducted."
+                    "message": f"🚗 Vehicle '{vehicle.license_plate}' successfully entered terminal. ₱{entry_fee} deducted."
                 })
             else:
                 EntryLog.objects.create(
@@ -244,7 +340,6 @@ def qr_scan_entry(request):
         except Exception as e:
             return JsonResponse({"status": "error", "message": f"Unexpected error: {str(e)}"})
 
-    # 🟦 Display current settings at top of page
     context = {
         "terminal_fee": entry_fee,
         "min_deposit": min_deposit,
@@ -332,6 +427,52 @@ def mark_departed(request, entry_id):
         })
     except Exception as e:
         return JsonResponse({"success": False, "message": f"Error: {str(e)}"})
+
+
+
+# 🟢 STEP 3.6: Adjust Departure Time (AJAX)
+@login_required(login_url='login')
+@user_passes_test(is_staff_admin)
+@never_cache
+def update_departure_time(request, entry_id):
+    """
+    Allows staff to manually adjust a vehicle's departure time from the manage queue page.
+    """
+    from django.utils.dateparse import parse_datetime
+    import json
+
+    if request.method != "POST":
+        return JsonResponse({"success": False, "message": "Invalid request method."})
+
+    try:
+        log = get_object_or_404(EntryLog, id=entry_id, is_active=True)
+
+        data = json.loads(request.body)
+        new_time_str = data.get("departure_time", "")
+
+        if not new_time_str:
+            return JsonResponse({"success": False, "message": "No departure time provided."})
+
+        new_time = parse_datetime(new_time_str)
+        if not new_time:
+            return JsonResponse({"success": False, "message": "Invalid datetime format."})
+
+        # ✅ Save new departure time
+        log.departed_at = timezone.make_aware(new_time)
+        log.save(update_fields=["departed_at"])
+
+        return JsonResponse({
+            "success": True,
+            "message": f"Departure time for '{log.vehicle.license_plate}' updated successfully.",
+            "new_departure": timezone.localtime(log.departed_at).strftime("%I:%M %p")
+        })
+
+    except Exception as e:
+        return JsonResponse({"success": False, "message": f"Error: {str(e)}"})
+
+
+
+
 
 
 

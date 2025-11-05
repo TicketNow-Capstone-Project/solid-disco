@@ -400,3 +400,16 @@ def registered_drivers(request):
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'vehicles/registered_drivers.html', {'page_obj': page_obj})
+
+
+
+@login_required
+def get_vehicles_by_driver(request, driver_id):
+    vehicles = Vehicle.objects.filter(assigned_driver_id=driver_id)
+    data = {
+        "vehicles": [
+            {"id": v.id, "license_plate": v.license_plate, "vehicle_name": v.vehicle_name}
+            for v in vehicles
+        ]
+    }
+    return JsonResponse(data)

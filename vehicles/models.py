@@ -122,19 +122,24 @@ class Deposit(models.Model):
     status = models.CharField(max_length=15, default='successful')
     payment_method = models.CharField(max_length=20, default='cash')
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)  # ✅ ADDED — fixes NOT NULL error
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
 
         if not self.reference_number:
+            import uuid
+            from django.utils import timezone
             unique_code = uuid.uuid4().hex[:6].upper()
             self.reference_number = f"DEP-{timezone.now().strftime('%Y%m%d')}-{unique_code}"
 
+        # Force all deposits to be cash & successful
         self.status = 'successful'
         self.payment_method = 'cash'
 
         super().save(*args, **kwargs)
 
+        # ✅ Only add to wallet on creation
         if is_new:
             self.wallet.balance += self.amount
             self.wallet.save(update_fields=['balance'])
