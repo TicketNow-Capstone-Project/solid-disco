@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}QR Exit Validation | TicketNow{% endblock %}
+
+{% block content %}
+<div class="alert alert-warning text-start small">
+  <strong>Exit Validation:</strong> Scan a vehicle’s QR to mark it as departed.
+</div>
+
+<div class="container mt-4">
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-danger text-white">
+      <h5 class="mb-0"><i class="bi bi-qr-code-scan me-2"></i>QR Exit Validation</h5>
+    </div>
+
+    <div class="card-body text-center">
+      <p class="text-muted mb-3">
+        Use the camera to scan a vehicle’s QR code. The system will automatically
+        mark it as <strong>departed</strong> if currently inside the terminal.
+      </p>
+
+      <!-- 🟩 QR Scanner -->
+      <div id="qr-reader" style="width:100%; max-width:400px; margin:auto;"></div>
+
+      <!-- ✅ Live feedback -->
+      <div id="feedback" class="alert d-none mt-3 fw-semibold text-center" role="alert"></div>
+
+      <div class="mt-3">
+        <a href="{% url 'terminal:terminal_queue' %}" class="btn btn-outline-danger btn-sm">
+          <i class="bi bi-list-ul me-1"></i> View Terminal Queue
+        </a>
+      </div>
+
+      <!-- Hidden CSRF token -->
+      <form style="display:none;">{% csrf_token %}</form>
+    </div>
+  </div>
+</div>
+
+<!-- 🟦 html5-qrcode CDN -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<script>
+/**
+ * 🟩 Show dynamic feedback without stopping the camera
+ */
+function showFeedback(message, kind = "info") {
+  const fb = document.getElementById("feedback");
+  fb.className = "alert mt-3 fw-semibold text-center";
+  fb.textContent = message;
+  fb.classList.remove("d-none", "alert-success", "alert-danger", "alert-warning", "alert-info");
+
+  if (kind === "success") fb.classList.add("alert-success");
+  else if (kind === "danger") fb.classList.add("alert-danger");
+  else if (kind === "warning") fb.classList.add("alert-warning");
+  else fb.classList.add("alert-info");
+}
+
+/**
+ * 🟨 Send scanned QR to backend for exit validation
+ */
+async function postQRCode(qrCode) {
+  try {
+    const response = await fetch("{% url 'terminal:qr_exit_validation' %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: new URLSearchParams({ qr_code: qrCode }),
+    });
+
+    const data = await response.json();
+
+    if (data.status === "success") {
+      showFeedback(data.message, "success");
+      pauseScanTemporarily(4000);
+    } else {
+      showFeedback(data.message, "danger");
+      pauseScanTemporarily(3000);
+    }
+  } catch (err) {
+    showFeedback("Network error — please check your connection.", "danger");
+  }
+}
+
+/**
+ * 🕒 Temporarily pause scanning to prevent double reads
+ */
+function pauseScanTemporarily(ms) {
+  scanningPaused = true;
+  setTimeout(() => {
+    scanningPaused = false;
+    showFeedback("📷 Ready for next scan...", "info");
+  }, ms);
+}
+
+/**
+ * 🟦 Initialize camera QR scanner (same config as Entry)
+ */
+const html5QrCode = new Html5Qrcode("qr-reader");
+const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+let lastScanned = "";
+let scanningPaused = false;
+
+html5QrCode.start(
+  { facingMode: "environment" },
+  config,
+  (decodedText) => {
+    if (scanningPaused || decodedText === lastScanned) return;
+    lastScanned = decodedText;
+    postQRCode(decodedText);
+  },
+  (errorMessage) => {
+    // ignore small read errors
+  }
+).catch(err => {
+  showFeedback("❌ Failed to access camera: " + err, "danger");
+});
+</script>
+{% endblock %}

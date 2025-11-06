@@ -44,7 +44,7 @@
             </a>
         </li>
 
-        <!-- 🕓 Terminal Queue (future feature) -->
+        <!-- 🕓 Terminal Queue -->
         <li>
             <a href="{% url 'terminal:terminal_queue' %}">
                 <i class="bi bi-list-check"></i> Manage Queue
@@ -65,6 +65,22 @@
         </li>
         {% endif %}
 
+        <!-- 🚗 QR Operations -->
+        <li class="nav-item mt-3">
+            <span class="nav-link text-uppercase text-muted small fw-bold">QR Operations</span>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'terminal:qr_scan_entry' %}">
+                <i class="bi bi-box-arrow-in-right me-2"></i> QR Entry
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'terminal:qr_exit_page' %}">
+                <i class="bi bi-box-arrow-right me-2"></i> QR Exit
+            </a>
+        </li>
 
         <!-- 🚪 Logout -->
         <li>

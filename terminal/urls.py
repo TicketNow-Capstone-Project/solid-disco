@@ -14,6 +14,12 @@ urlpatterns = [
     # ✅ QR Scan Entry page (Step 2)
     path('qr-scan-entry/', views.qr_scan_entry, name='qr_scan_entry'),
 
+    # 🟩 Auto-Depart via QR Re-Scan
+    path('qr-exit/', views.qr_exit_validation, name='qr_exit_validation'),
+
+    # 🟢 Exit QR Validation Page (frontend page)
+    path('qr-exit-page/', views.qr_exit_page, name='qr_exit_page'),
+
     # 🆕 AJAX endpoint for auto-refresh queue (Step 3.5)
     path('queue-data/', views.queue_data, name='queue_data'),
 

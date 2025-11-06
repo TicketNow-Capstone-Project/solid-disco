@@ -348,6 +348,75 @@ def qr_scan_entry(request):
     return render(request, "terminal/qr_scan_entry.html", context)
 
 
+# 🟩 STEP 4.1: QR Exit Validation (Auto-Depart via Re-Scan)
+@login_required(login_url='login')
+@user_passes_test(is_staff_admin)
+@never_cache
+def qr_exit_validation(request):
+    """
+    Handles QR scan for vehicle EXIT validation only.
+    Detects active EntryLog and marks vehicle as departed automatically.
+    Returns JSON suitable for AJAX use.
+    """
+    if request.method != "POST":
+        return JsonResponse({
+            "status": "error",
+            "message": "Invalid request method. Use POST."
+        })
+
+    qr_code = request.POST.get("qr_code", "").strip()
+    if not qr_code:
+        return JsonResponse({
+            "status": "error",
+            "message": "QR code is missing or invalid."
+        })
+
+    try:
+        vehicle = Vehicle.objects.filter(qr_value__iexact=qr_code).first()
+        if not vehicle:
+            return JsonResponse({
+                "status": "error",
+                "message": "❌ No vehicle found for this QR code."
+            })
+
+        # 🟩 Check if there’s an active entry
+        active_log = EntryLog.objects.filter(vehicle=vehicle, is_active=True).first()
+        if not active_log:
+            return JsonResponse({
+                "status": "error",
+                "message": f"⚠️ Vehicle '{vehicle.license_plate}' is not currently inside the terminal."
+            })
+
+        # ✅ Mark as departed
+        active_log.is_active = False
+        active_log.departed_at = timezone.now()
+        active_log.message = (
+            f"Vehicle '{vehicle.license_plate}' departed at "
+            f"{timezone.localtime(active_log.departed_at).strftime('%I:%M %p')}."
+        )
+        active_log.save(update_fields=["is_active", "departed_at", "message"])
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"✅ Vehicle '{vehicle.license_plate}' successfully departed at "
+                       f"{timezone.localtime(active_log.departed_at).strftime('%I:%M %p')}."
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": f"Unexpected error: {str(e)}"
+        })
+
+
+@login_required(login_url='login')
+@user_passes_test(is_staff_admin)
+@never_cache
+def qr_exit_page(request):
+    """Renders the separate page for Exit QR Scanning."""
+    return render(request, "terminal/qr_exit_validation.html")
+
+
 
 @login_required(login_url='login')
 @user_passes_test(is_staff_admin)
