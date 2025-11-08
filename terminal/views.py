@@ -14,32 +14,57 @@ from accounts.utils import is_staff_admin_or_admin, is_admin   # ✅ imported sh
 
 
 # ===============================
-#   DEPOSIT MENU
+#   DEPOSIT MENU (Role-based)
 # ===============================
 @login_required(login_url='login')
 @user_passes_test(is_staff_admin_or_admin)
 @never_cache
 def deposit_menu(request):
-    """Allows staff to record cash-only deposits instantly."""
+    """Admin sees history with filters; staff can record new deposits."""
     settings = SystemSettings.get_solo()
     min_deposit = settings.min_deposit_amount
+    user = request.user
 
+    # 🟩 Base Query
+    deposits = Deposit.objects.select_related('wallet__vehicle__assigned_driver').order_by('-created_at')
+
+    # 🧠 If user is ADMIN → show history & filters
+    if user.role == "admin":
+        start_date = request.GET.get("start_date", "")
+        end_date = request.GET.get("end_date", "")
+        vehicle_plate = request.GET.get("vehicle_plate", "")
+
+        if start_date:
+            deposits = deposits.filter(created_at__date__gte=start_date)
+        if end_date:
+            deposits = deposits.filter(created_at__date__lte=end_date)
+        if vehicle_plate:
+            deposits = deposits.filter(wallet__vehicle__license_plate__icontains=vehicle_plate)
+
+        context = {
+            "role": "admin",
+            "deposits": deposits[:200],
+            "start_date": start_date,
+            "end_date": end_date,
+            "vehicle_plate": vehicle_plate,
+            "min_deposit": min_deposit,
+        }
+        return render(request, "terminal/deposit_menu.html", context)
+
+    # 🟦 If user is STAFF ADMIN → show form + recent deposits
     drivers_with_vehicles = (
         Driver.objects.filter(vehicles__isnull=False)
-        .distinct().order_by('last_name', 'first_name')
+        .distinct()
+        .order_by('last_name', 'first_name')
     )
 
-    recent_deposits = (
-        Deposit.objects.select_related('wallet__vehicle__assigned_driver')
-        .order_by('-created_at')[:10]
-    )
+    recent_deposits = deposits[:10]
 
     if request.method == "POST":
-        driver_id = request.POST.get("driver_id")
         vehicle_id = request.POST.get("vehicle_id")
         amount_str = request.POST.get("amount", "").strip()
 
-        if not all([driver_id, vehicle_id, amount_str]):
+        if not vehicle_id or not amount_str:
             messages.error(request, "⚠️ Please fill in all required fields.")
             return redirect('terminal:deposit_menu')
 
@@ -65,6 +90,7 @@ def deposit_menu(request):
         return redirect('terminal:deposit_menu')
 
     context = {
+        "role": "staff_admin",
         "drivers": drivers_with_vehicles,
         "recent_deposits": recent_deposits,
         "context_message": "" if drivers_with_vehicles.exists() else
@@ -72,6 +98,7 @@ def deposit_menu(request):
         "min_deposit": min_deposit,
     }
     return render(request, "terminal/deposit_menu.html", context)
+
 
 
 # ===============================
@@ -282,30 +309,44 @@ def qr_exit_page(request):
 @user_passes_test(is_admin)
 @never_cache
 def system_settings(request):
-    """Admin-only configuration page."""
+    """Admin-only configuration page with seat capacity limits."""
     settings = SystemSettings.get_solo()
 
     class SettingsForm(forms.ModelForm):
         class Meta:
             model = SystemSettings
-            fields = ['terminal_fee', 'min_deposit_amount', 'entry_cooldown_minutes',
-                      'departure_duration_minutes', 'theme_preference']
+            fields = [
+                'terminal_fee',
+                'min_deposit_amount',
+                'entry_cooldown_minutes',
+                'departure_duration_minutes',
+                # 🟢 Added new fields
+                'jeepney_max_seats',
+                'van_max_seats',
+                'bus_max_seats',
+                'theme_preference',
+            ]
             widgets = {
                 'terminal_fee': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.01'}),
                 'min_deposit_amount': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.01'}),
                 'entry_cooldown_minutes': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
                 'departure_duration_minutes': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+                'jeepney_max_seats': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+                'van_max_seats': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+                'bus_max_seats': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
                 'theme_preference': forms.Select(attrs={'class': 'form-select'}),
             }
 
     form = SettingsForm(request.POST or None, instance=settings)
+
     if request.method == "POST":
         if form.is_valid():
             form.save()
             messages.success(request, "✅ System settings updated successfully!")
             return redirect('terminal:system_settings')
         else:
-            messages.error(request, "❌ Please correct the errors.")
+            messages.error(request, "❌ Please correct the errors below.")
+
     return render(request, "terminal/system_settings.html", {"form": form})
 
 

@@ -6,22 +6,18 @@
 <div class="container-fluid">
   <div class="row">
     <!-- Sidebar -->
-    <div class="col-md-3 col-lg-2 bg-light sidebar p-3">
+    <div class="col-md-3 col-lg-2 sidebar">
       {% include 'includes/sidebar.html' %}
     </div>
 
     <!-- Main Content -->
     <div class="col-md-9 col-lg-10 p-4">
-      <h2><i class="bi bi-wallet2"></i> Deposit Menu</h2>
-      <p class="text-muted">Record cash deposits for drivers to update their wallet balances before terminal entry.</p>
-
-      <!-- Minimum Deposit Info -->
-      <div class="alert alert-info d-flex align-items-center">
-        <i class="bi bi-info-circle me-2"></i>
-        <div>Minimum deposit required before entry: <strong>₱{{ min_deposit }}</strong></div>
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="fw-bold text-primary"><i class="bi bi-wallet2 me-2"></i> Deposit Menu</h3>
+        <span class="text-muted">Minimum required before entry: <strong>₱{{ min_deposit }}</strong></span>
       </div>
 
-      <!-- Flash Messages -->
+      <!-- Alerts -->
       {% if messages %}
         {% for message in messages %}
           <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -31,55 +27,100 @@
         {% endfor %}
       {% endif %}
 
-      <!-- Deposit Form -->
-      <div class="card shadow-sm border-0 mt-4">
+      {% if user.role == 'admin' %}
+      <!-- ======================== ADMIN VIEW ======================== -->
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white fw-semibold">
+          <i class="bi bi-clock-history me-2"></i> Deposit History
+        </div>
         <div class="card-body">
-          <form method="POST">
+          <form method="get" class="row g-3 mb-4">
+            <div class="col-md-4">
+              <label class="form-label">Start Date</label>
+              <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">End Date</label>
+              <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-funnel"></i> Apply Filter
+              </button>
+            </div>
+          </form>
+
+          <div class="table-responsive">
+            <table id="depositTable" class="table table-striped table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Reference</th>
+                  <th>Driver</th>
+                  <th>Vehicle</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for deposit in recent_deposits %}
+                  <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td><strong>{{ deposit.reference_number }}</strong></td>
+                    <td>{{ deposit.wallet.vehicle.assigned_driver.last_name }}, {{ deposit.wallet.vehicle.assigned_driver.first_name }}</td>
+                    <td>{{ deposit.wallet.vehicle.license_plate }}</td>
+                    <td>₱{{ deposit.amount|floatformat:2 }}</td>
+                    <td>{{ deposit.created_at|date:"M d, Y h:i A" }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="6" class="text-center text-muted">No deposits found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {% else %}
+      <!-- ======================== STAFF VIEW ======================== -->
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-success text-white fw-semibold">
+          <i class="bi bi-plus-circle"></i> Add Deposit
+        </div>
+        <div class="card-body">
+          <form method="POST" onsubmit="showLoader()">
             {% csrf_token %}
-            <div class="row g-3 align-items-end">
-              <!-- Driver Dropdown -->
-              <div class="col-md-4">
-                <label class="form-label fw-bold">Select Driver</label>
-                <select id="driverSelect" name="driver_id" class="form-select" required>
-                  <option value="">-- Choose Driver --</option>
+            <div class="row g-3">
+              <div class="col-md-5">
+                <label class="form-label fw-semibold">Select Vehicle</label>
+                <select id="vehicleSelect" name="vehicle_id" class="form-select" required>
+                  <option value="">-- Choose Vehicle --</option>
                   {% for driver in drivers %}
-                    <option value="{{ driver.id }}">{{ driver.last_name }}, {{ driver.first_name }}</option>
+                    {% for vehicle in driver.vehicles.all %}
+                      <option value="{{ vehicle.id }}">{{ vehicle.license_plate }} — {{ driver.last_name }}, {{ driver.first_name }}</option>
+                    {% endfor %}
                   {% endfor %}
                 </select>
               </div>
-
-              <!-- Vehicle Dropdown -->
               <div class="col-md-4">
-                <label class="form-label fw-bold">Select Vehicle</label>
-                <select id="vehicleSelect" name="vehicle_id" class="form-select" required disabled>
-                  <option value="">-- Select Driver First --</option>
-                </select>
-              </div>
-
-              <!-- Amount Input -->
-              <div class="col-md-3">
-                <label class="form-label fw-bold">Deposit Amount (₱)</label>
+                <label class="form-label fw-semibold">Deposit Amount (₱)</label>
                 <input type="number" name="amount" min="1" step="0.01" class="form-control" required placeholder="Enter amount">
               </div>
-
-              <div class="col-md-1 text-end">
-                <button type="submit" class="btn btn-success w-100">
-                  <i class="bi bi-cash-stack"></i> Add
-                </button>
+              <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100"><i class="bi bi-cash-stack"></i> Add Deposit</button>
               </div>
             </div>
           </form>
         </div>
       </div>
 
-      <!-- Recent Deposits -->
-      <div class="mt-4 card shadow-sm">
+      <div class="card shadow-sm border-0">
         <div class="card-header bg-light fw-bold">
           <i class="bi bi-clock-history"></i> Recent Deposits
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-striped align-middle table-sm">
+            <table id="depositTable" class="table table-striped align-middle">
               <thead class="table-primary">
                 <tr>
                   <th>#</th>
@@ -110,55 +151,23 @@
           </div>
         </div>
       </div>
+      {% endif %}
     </div>
   </div>
 </div>
 
-<!-- Select2 CDN -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
+<!-- DataTables -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // Make dropdowns searchable
-  $('#driverSelect').select2({ placeholder: "Search driver...", width: '100%' });
+document.addEventListener("DOMContentLoaded", function() {
   $('#vehicleSelect').select2({ placeholder: "Search vehicle...", width: '100%' });
-
-  // Driver → Vehicle dynamic fetch
-  const driverSelect = document.getElementById("driverSelect");
-  const vehicleSelect = document.getElementById("vehicleSelect");
-
-  driverSelect.addEventListener("change", async () => {
-    const driverId = driverSelect.value;
-    vehicleSelect.innerHTML = '<option>Loading...</option>';
-    vehicleSelect.disabled = true;
-
-    if (!driverId) {
-      vehicleSelect.innerHTML = '<option value="">-- Select Driver First --</option>';
-      vehicleSelect.disabled = true;
-      return;
-    }
-
-    try {
-      const response = await fetch(`/vehicles/get-by-driver/${driverId}/`);
-      const data = await response.json();
-      vehicleSelect.innerHTML = "";
-
-      if (data.vehicles && data.vehicles.length > 0) {
-        data.vehicles.forEach(v => {
-          const opt = document.createElement("option");
-          opt.value = v.id;
-          opt.textContent = `${v.license_plate} — ${v.vehicle_name}`;
-          vehicleSelect.appendChild(opt);
-        });
-        vehicleSelect.disabled = false;
-      } else {
-        vehicleSelect.innerHTML = '<option value="">No vehicles found</option>';
-      }
-    } catch (err) {
-      console.error("Error loading vehicles:", err);
-      vehicleSelect.innerHTML = '<option value="">Error loading vehicles</option>';
-    }
+  $('#depositTable').DataTable({
+    pageLength: 5,
+    lengthMenu: [5, 10, 25, 50],
+    order: [[5, 'desc']],
+    language: { search: "_INPUT_", searchPlaceholder: "Search deposits..." }
   });
 });
 </script>

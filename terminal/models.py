@@ -4,11 +4,6 @@ from django.core.exceptions import ValidationError
 
 
 class TerminalFeeBalance(models.Model):
-    """
-    Optional per-vehicle fee balance table.
-    If your project already uses a Wallet model in vehicles app,
-    you can keep this for compatibility or remove it later.
-    """
     vehicle = models.OneToOneField(
         'vehicles.Vehicle',
         on_delete=models.CASCADE,
@@ -26,10 +21,6 @@ class TerminalFeeBalance(models.Model):
 
 
 class EntryLog(models.Model):
-    """
-    Records each QR validation attempt at the terminal and tracks
-    whether the vehicle is still inside or has departed.
-    """
     STATUS_SUCCESS = 'success'
     STATUS_FAILED = 'failed'
     STATUS_INSUFFICIENT = 'insufficient'
@@ -60,10 +51,8 @@ class EntryLog(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_FAILED)
     message = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    # 🟩 Step 3.2 fields
-    is_active = models.BooleanField(default=True, help_text="Indicates if vehicle is still in terminal queue.")
-    departed_at = models.DateTimeField(null=True, blank=True, help_text="Time the vehicle exited the terminal.")
+    is_active = models.BooleanField(default=True)
+    departed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -80,12 +69,12 @@ class SystemSettings(models.Model):
     terminal_fee = models.DecimalField(max_digits=10, decimal_places=2, default=50.00)
     min_deposit_amount = models.DecimalField(max_digits=10, decimal_places=2, default=100.00)
     entry_cooldown_minutes = models.PositiveIntegerField(default=5)
-    
-    # 🟢 NEW FIELD: Departure Duration Setting
-    departure_duration_minutes = models.PositiveIntegerField(
-        default=30,
-        help_text="Default duration (in minutes) before a vehicle departs automatically."
-    )
+    departure_duration_minutes = models.PositiveIntegerField(default=30)
+
+    # 🟢 NEW: Seat capacity limits (editable by admin)
+    jeepney_max_seats = models.PositiveIntegerField(default=25)
+    van_max_seats = models.PositiveIntegerField(default=15)
+    bus_max_seats = models.PositiveIntegerField(default=60)
 
     theme_preference = models.CharField(
         max_length=10,
@@ -93,7 +82,7 @@ class SystemSettings(models.Model):
         default='light'
     )
 
-    updated_at = models.DateTimeField(auto_now=True)  # 🕒 Track last change
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return (

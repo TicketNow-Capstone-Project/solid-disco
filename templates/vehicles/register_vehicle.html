@@ -67,7 +67,13 @@
                     <div class="form-control border-danger p-0">{{ field }}</div>
                     <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
                   {% else %}
-                    {{ field }}
+                    {% if field.name == 'manufacturer' %}
+                      <div class="manufacturer-wrapper">
+                        {{ field }}
+                      </div>
+                    {% else %}
+                      {{ field }}
+                    {% endif %}
                   {% endif %}
                 </div>
                 {% endif %}
@@ -98,7 +104,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-  // Enable Select2 for driver dropdown
+  // ✅ Enable Select2 only for the driver dropdown
   if (window.$ && $.fn && $.fn.select2) {
     $('#id_assigned_driver').select2({
       placeholder: "Search driver...",
@@ -107,9 +113,48 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // Auto-focus the first invalid field if any
+  // 🛑 Disable Select2 on manufacturer dropdown to keep native look
+  if ($('#id_manufacturer').data('select2')) {
+    $('#id_manufacturer').select2('destroy');
+  }
+
+  // 🧾 Force visible width and text color
+  const manufacturerSelect = document.getElementById("id_manufacturer");
+  if (manufacturerSelect) {
+    manufacturerSelect.style.display = "block";
+    manufacturerSelect.style.width = "100%";
+    manufacturerSelect.style.color = "#212529";
+    manufacturerSelect.style.backgroundColor = "#fff";
+    manufacturerSelect.style.border = "1px solid #ced4da";
+    manufacturerSelect.style.padding = "0.5rem";
+  }
+
+  // Auto-focus first invalid field
   const invalidField = document.querySelector('.border-danger input, .border-danger select');
   if (invalidField) invalidField.focus();
 });
 </script>
+
+<style>
+select,
+select.form-select,
+select.form-control {
+  width: 100% !important;
+  min-width: 200px !important;
+  max-width: 100% !important;
+  height: auto !important;
+  color: #212529 !important;
+  background-color: #fff !important;
+  border: 1px solid #ced4da !important;
+  border-radius: 0.375rem !important;
+  padding: 0.5rem !important;
+  display: block !important;
+}
+
+option {
+  color: #000 !important;
+  background-color: #fff !important;
+}
+</style>
+
 {% endblock %}

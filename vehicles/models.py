@@ -29,7 +29,7 @@ class Driver(models.Model):
     province = models.CharField(max_length=100, blank=True, null=True)
     license_number = models.CharField(max_length=20, blank=True, null=True)
     license_expiry = models.DateField(blank=True, null=True)
-    license_type = models.CharField(max_length=20, blank=True, null=True)
+    license_type = models.CharField(max_length=50, blank=True, null=True)
     license_image = models.ImageField(upload_to='licenses/', blank=True, null=True)
     emergency_contact_name = models.CharField(max_length=100, blank=True, null=True)
     emergency_contact_number = models.CharField(max_length=20, blank=True, null=True)
@@ -47,10 +47,8 @@ class Driver(models.Model):
 class Vehicle(models.Model):
     VEHICLE_TYPES = [
         ('jeepney', 'Jeepney'),
-        ('bus', 'Bus'),
         ('van', 'Van'),
-        ('tricycle', 'Tricycle'),
-        ('taxi', 'Taxi'),
+        ('bus', 'Bus'),
     ]
 
     OWNERSHIP_TYPES = [
@@ -58,6 +56,12 @@ class Vehicle(models.Model):
         ('leased', 'Leased'),
         ('private', 'Private'),
     ]
+
+    SEAT_LIMITS = {
+        'jeepney': 25,
+        'van': 20,
+        'bus': 70,
+    }
 
     vehicle_name = models.CharField(max_length=100, default="Unnamed Vehicle")
     vehicle_type = models.CharField(max_length=50, choices=VEHICLE_TYPES)
@@ -83,6 +87,13 @@ class Vehicle(models.Model):
     def clean(self):
         if self.license_plate and not re.match(r'^[A-Z]{3}\s\d{3,4}$', self.license_plate, re.IGNORECASE):
             raise ValidationError("License plate must be in format XXX 123 or XXX 1234 (e.g., ABC 123).")
+
+        if self.seat_capacity:
+            max_limit = self.SEAT_LIMITS.get(self.vehicle_type, 100)
+            if self.seat_capacity > max_limit:
+                raise ValidationError(
+                    f"Seat capacity exceeds LTO standard for {self.get_vehicle_type_display()} (max {max_limit})."
+                )
 
     def save(self, *args, **kwargs):
         creating = self.pk is None
@@ -122,7 +133,7 @@ class Deposit(models.Model):
     status = models.CharField(max_length=15, default='successful')
     payment_method = models.CharField(max_length=20, default='cash')
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)  # ✅ ADDED — fixes NOT NULL error
+    updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -133,13 +144,13 @@ class Deposit(models.Model):
             unique_code = uuid.uuid4().hex[:6].upper()
             self.reference_number = f"DEP-{timezone.now().strftime('%Y%m%d')}-{unique_code}"
 
-        # Force all deposits to be cash & successful
+        # Always cash & successful
         self.status = 'successful'
         self.payment_method = 'cash'
 
         super().save(*args, **kwargs)
 
-        # ✅ Only add to wallet on creation
+        # Add to wallet on creation only
         if is_new:
             self.wallet.balance += self.amount
             self.wallet.save(update_fields=['balance'])

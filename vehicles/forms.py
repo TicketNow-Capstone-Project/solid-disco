@@ -4,36 +4,47 @@ from django.core.exceptions import ValidationError
 from datetime import date
 import re
 from .models import Driver, Vehicle, Deposit, Wallet
-
+from terminal.models import SystemSettings
 
 # ✅ Placeholder for potential extended form
 class FullVehicleDetailsForm(forms.Form):
     pass
 
 
-# 🟩 Enhanced Vehicle Registration Form (Strict + Fixed)
 class VehicleRegistrationForm(forms.ModelForm):
     VIN_PATTERN = r"^[A-HJ-NPR-Z0-9]{17}$"  # 17 chars, excludes I, O, Q
     PLATE_PATTERN = r"^[A-Z]{3}\s?\d{3,4}$"  # ABC 1234
-    OR_CR_PATTERN = r"^[A-Z0-9]{6,12}$"  # 6–12 alphanumeric
-    REG_NUM_PATTERN = r"^[A-Z0-9\-]{6,12}$"
+    OR_CR_PATTERN = r"^[A-Z0-9]{6,12}$"      # 6–12 alphanumeric
+    REG_NUM_PATTERN = r"^[A-Z0-9\-]{6,12}$"  # Alphanumeric registration
 
+    # 🇵🇭 Common Jeepney, Van, and Bus brands in the Philippines
     MANUFACTURER_CHOICES = [
         ('', 'Select Manufacturer'),
-        ('Toyota', 'Toyota'),
-        ('Mitsubishi', 'Mitsubishi'),
-        ('Nissan', 'Nissan'),
-        ('Hyundai', 'Hyundai'),
-        ('Kia', 'Kia'),
+        # 🚌 Bus brands
+        ('Hino', 'Hino'),
         ('Isuzu', 'Isuzu'),
-        ('Honda', 'Honda'),
-        ('Ford', 'Ford'),
-        ('Suzuki', 'Suzuki'),
-        ('Chevrolet', 'Chevrolet'),
+        ('Fuso', 'Fuso'),
+        ('Daewoo', 'Daewoo'),
+        ('Hyundai', 'Hyundai'),
+        ('King Long', 'King Long'),
+        ('Yutong', 'Yutong'),
+        ('Golden Dragon', 'Golden Dragon'),
+        # 🚐 Van brands
+        ('Toyota', 'Toyota'),
+        ('Nissan', 'Nissan'),
+        ('Hyundai (Van)', 'Hyundai'),
+        ('Kia', 'Kia'),
+        ('Foton', 'Foton'),
+        ('Maxus', 'Maxus'),
+        # 🚙 Jeepney / Modern Jeepney brands
+        ('Sarao', 'Sarao Motors'),
+        ('Francisco', 'Francisco Motors'),
+        ('Hyundai Modern Jeepney', 'Hyundai Modern Jeepney'),
+        ('Isuzu Modern Jeepney', 'Isuzu Modern Jeepney'),
+        ('Foton Modern Jeepney', 'Foton Modern Jeepney'),
+        ('Hino Modern Jeepney', 'Hino Modern Jeepney'),
         ('Other', 'Other'),
     ]
-
-    YEAR_CHOICES = [(year, year) for year in range(2000, date.today().year + 1)]
 
     class Meta:
         model = Vehicle
@@ -53,28 +64,104 @@ class VehicleRegistrationForm(forms.ModelForm):
             'seat_capacity',
         ]
         widgets = {
-            'vehicle_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter vehicle name (optional)'}),
-            'vehicle_type': forms.Select(attrs={'class': 'form-select', 'required': 'required'}),
-            'ownership_type': forms.Select(attrs={'class': 'form-select', 'required': 'required'}),
-            'assigned_driver': forms.Select(attrs={'class': 'form-select searchable-select', 'required': 'required'}),
-            'cr_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'CR Number', 'required': 'required'}),
-            'or_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'OR Number', 'required': 'required'}),
-            'vin_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '17-character VIN', 'required': 'required'}),
-            'year_model': forms.Select(attrs={'class': 'form-select', 'required': 'required'}),
-            'registration_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Registration Number', 'required': 'required'}),
-            'registration_expiry': forms.DateInput(attrs={'type': 'date', 'class': 'form-control', 'required': 'required'}),
-            'license_plate': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ABC 1234', 'required': 'required'}),
-            'manufacturer': forms.Select(attrs={'class': 'form-select', 'required': 'required'}),
-            'seat_capacity': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'placeholder': 'Number of seats'}),
+            'vehicle_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter vehicle name (optional)'
+            }),
+            'vehicle_type': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'ownership_type': forms.Select(attrs={
+                'class': 'form-select',
+                'required': 'required'
+            }),
+            'assigned_driver': forms.Select(attrs={
+                'class': 'form-select searchable-select',
+                'required': 'required'
+            }),
+            'cr_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'CR Number',
+                'required': 'required'
+            }),
+            'or_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'OR Number',
+                'required': 'required'
+            }),
+            'vin_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '17-character VIN',
+                'required': 'required'
+            }),
+            # ✅ Typable year model
+            'year_model': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. 2024',
+                'min': '1900',
+                'max': '2100',
+                'required': 'required'
+            }),
+            'registration_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Registration Number',
+                'required': 'required'
+            }),
+            'registration_expiry': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'license_plate': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'ABC 1234',
+                'required': 'required'
+            }),
+            # 🟩 visible and clean manufacturer dropdown
+            'manufacturer': forms.Select(attrs={
+                'class': 'form-select text-dark bg-white border',
+                'style': 'color:black;background-color:white;',
+                'required': 'required'
+            }),
+            'seat_capacity': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'placeholder': 'Number of seats'
+            }),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['year_model'].choices = self.YEAR_CHOICES
         self.fields['manufacturer'].choices = self.MANUFACTURER_CHOICES
         self.fields['assigned_driver'].queryset = Driver.objects.all().order_by('first_name')
         self.fields['assigned_driver'].label_from_instance = lambda obj: f"{obj.first_name} {obj.last_name} ({obj.driver_id})"
         self.fields['vehicle_name'].required = False
+
+    def clean_seat_capacity(self):
+        seat_capacity = self.cleaned_data.get('seat_capacity')
+        vehicle_type = self.cleaned_data.get('vehicle_type')
+
+        if not seat_capacity:
+            raise ValidationError("Seat capacity is required.")
+        if seat_capacity < 1:
+            raise ValidationError("Seat capacity must be at least 1.")
+
+        settings = SystemSettings.get_solo()
+        limits = {
+            'jeepney': getattr(settings, 'jeepney_max_seats', 25),
+            'van': getattr(settings, 'van_max_seats', 15),
+            'bus': getattr(settings, 'bus_max_seats', 60),
+        }
+
+        if vehicle_type:
+            vehicle_type = vehicle_type.lower()
+            max_allowed = limits.get(vehicle_type)
+            if max_allowed and seat_capacity > max_allowed:
+                raise ValidationError(
+                    f"{vehicle_type.title()} seat capacity cannot exceed {max_allowed} seats (LTO limit)."
+                )
+        return seat_capacity
 
     def clean_cr_number(self):
         cr = self.cleaned_data.get('cr_number', '').upper()
@@ -113,7 +200,7 @@ class VehicleRegistrationForm(forms.ModelForm):
         return plate
 
 
-# 🧍 Enhanced Driver Registration Form (Fixed Scope)
+# 🧍 Enhanced Driver Registration Form (unchanged)
 class DriverRegistrationForm(forms.ModelForm):
     BLOOD_TYPE_CHOICES = [
         ('', 'Select Blood Type'),
@@ -129,11 +216,6 @@ class DriverRegistrationForm(forms.ModelForm):
         ('Non-Professional Driver\'s License', 'Non-Professional Driver\'s License'),
     ]
 
-    phone_validator = RegexValidator(
-        regex=r'^(?:\+63|0)9\d{9}$',
-        message="Contact number must start with +63 or 09 and be 11 digits long."
-    )
-
     class Meta:
         model = Driver
         exclude = ['driver_id']
@@ -146,6 +228,7 @@ class DriverRegistrationForm(forms.ModelForm):
             'birth_place': forms.TextInput(attrs={'class': 'form-control'}),
             'mobile_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+63 or 09...', 'required': 'required'}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'example@email.com', 'required': 'required'}),
+            'street': forms.TextInput(attrs={'class': 'form-control', 'required': 'required'}),
             'barangay': forms.TextInput(attrs={'class': 'form-control', 'required': 'required'}),
             'zip_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 6600', 'required': 'required'}),
             'city_municipality': forms.TextInput(attrs={'class': 'form-control', 'required': 'required'}),
@@ -176,43 +259,9 @@ class DriverRegistrationForm(forms.ModelForm):
             raise ValidationError("Driver's license is expired. Please renew before registering.")
         return expiry
 
-    def clean_mobile_number(self):
-        number = self.cleaned_data.get('mobile_number', '')
-        if number and not number.startswith(('+63', '09')):
-            raise ValidationError("Mobile number must start with +63 or 09.")
-        if len(number.replace('+', '').replace(' ', '')) not in [11, 12, 13]:
-            raise ValidationError("Invalid mobile number length.")
-        return number
 
-    def clean_emergency_contact_number(self):
-        number = self.cleaned_data.get('emergency_contact_number', '')
-        if number and not number.startswith(('+63', '09')):
-            raise ValidationError("Emergency contact must start with +63 or 09.")
-        if len(number.replace('+', '').replace(' ', '')) not in [11, 12, 13]:
-            raise ValidationError("Invalid emergency contact number length.")
-        return number
-
-    def clean_email(self):
-        email = self.cleaned_data.get('email', '')
-        if not email or ('.' not in email.split('@')[-1]):
-            raise ValidationError("Enter a valid email address with a domain (e.g., .com, .ph).")
-        return email
-
-    def clean_zip_code(self):
-        zip_code = self.cleaned_data.get('zip_code', '').strip()
-        if not zip_code:
-            raise ValidationError("ZIP Code is required.")
-        if not zip_code.isdigit() or len(zip_code) != 4:
-            raise ValidationError("ZIP Code must be a 4-digit number.")
-        return zip_code
-
-
-# ✅ CASH-ONLY UPDATED VERSION
+# ✅ Simplified Cash-Only Deposit Form
 class DepositForm(forms.ModelForm):
-    class Meta:
-        model = Deposit
-        fields = ['amount']  # Only amount needed (cash only)
-
     amount = forms.DecimalField(
         label="Deposit Amount (₱)",
         min_value=1,
@@ -224,33 +273,6 @@ class DepositForm(forms.ModelForm):
         })
     )
 
-
     class Meta:
         model = Deposit
-        fields = ['amount', 'payment_method']
-
-    def save(self, commit=True):
-        driver = self.cleaned_data['driver']
-        amount = self.cleaned_data['amount']
-        method = self.cleaned_data['payment_method']
-
-        vehicle = Vehicle.objects.filter(assigned_driver=driver).first()
-        if not vehicle:
-            raise forms.ValidationError("No vehicle linked to this driver.")
-
-        wallet = Wallet.objects.filter(vehicle=vehicle).first()
-        if not wallet:
-            raise forms.ValidationError("Wallet not found for this driver’s vehicle.")
-
-        deposit = Deposit.objects.create(
-            wallet=wallet,
-            amount=amount,
-            payment_method=method,
-            status='successful' if method != 'manual' else 'pending'
-        )
-
-        if deposit.status == 'successful':
-            wallet.balance += amount
-            wallet.save()
-
-        return deposit
+        fields = ['amount']

@@ -13,7 +13,7 @@
     <!-- Main Content -->
     <div class="col-md-9 col-lg-10 p-4">
       <h3><i class="bi bi-gear"></i> System Settings</h3>
-      <p class="text-muted">Manage terminal-wide configurations such as entry fee.</p>
+      <p class="text-muted">Manage terminal-wide configurations such as entry fee and vehicle seat limits.</p>
 
       <!-- 🟩 Current Fee Display -->
       <div class="alert alert-info d-flex align-items-center justify-content-between">
@@ -67,8 +67,8 @@
               {% endif %}
             </div>
 
-            <!-- 🟩 NEW FIELD: Vehicle Stay Duration -->
-            <div class="mb-3">
+            <!-- 🟩 Vehicle Stay Duration -->
+            <div class="mb-4">
               <label class="form-label fw-bold">Vehicle Stay Duration (minutes before departure)</label>
               {{ form.departure_duration_minutes }}
               {% if form.departure_duration_minutes.errors %}
@@ -79,8 +79,41 @@
               </small>
             </div>
 
+            <!-- 🟧 NEW SECTION: Seat Capacity Limits -->
+            <div class="border-top pt-3 mt-4">
+              <h5 class="fw-bold mb-3"><i class="bi bi-bus-front-fill"></i> Seat Capacity Limits</h5>
+              <p class="text-muted small mb-4">
+                Define the maximum number of seats allowed for each vehicle type based on LTO standards.
+                These values are used when validating new vehicle registrations.
+              </p>
+
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label fw-semibold">Jeepney (max seats)</label>
+                  {{ form.jeepney_max_seats }}
+                  {% if form.jeepney_max_seats.errors %}
+                    <div class="text-danger small mt-1">{{ form.jeepney_max_seats.errors|striptags }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label fw-semibold">Van (max seats)</label>
+                  {{ form.van_max_seats }}
+                  {% if form.van_max_seats.errors %}
+                    <div class="text-danger small mt-1">{{ form.van_max_seats.errors|striptags }}</div>
+                  {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label fw-semibold">Bus (max seats)</label>
+                  {{ form.bus_max_seats }}
+                  {% if form.bus_max_seats.errors %}
+                    <div class="text-danger small mt-1">{{ form.bus_max_seats.errors|striptags }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
             <!-- Theme -->
-            <div class="mb-3">
+            <div class="mt-4 border-top pt-3">
               <label class="form-label fw-bold">System Theme</label>
               {{ form.theme_preference }}
               {% if form.theme_preference.errors %}
@@ -89,7 +122,7 @@
             </div>
 
             <!-- Buttons -->
-            <div class="text-end">
+            <div class="text-end mt-4">
               <button type="button" class="btn btn-success" id="openConfirmModal">
                 <i class="bi bi-save"></i> Save Settings
               </button>
@@ -136,11 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("settingsForm");
 
   // Open confirmation modal
-  openConfirmBtn.addEventListener("click", () => {
-    confirmModal.show();
-  });
-
-  // When confirmed, submit the form
+  openConfirmBtn.addEventListener("click", () => confirmModal.show());
   confirmSaveBtn.addEventListener("click", () => {
     confirmModal.hide();
     form.submit();
