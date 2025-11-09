@@ -56,6 +56,7 @@ def public_queue_view(request):
     - Shows active vehicles created today.
     - Shows recently departed entries.
     - Applies live maintenance and strict route filtering.
+    - Optimized with select_related for better performance.
     """
     now = timezone.now()
     _maintenance_task(now=now)
@@ -67,9 +68,14 @@ def public_queue_view(request):
     keep_departed_for = timedelta(minutes=DEPARTED_VISIBLE_MINUTES)
     departed_cutoff = now - keep_departed_for
 
-    # Base queryset (active today OR recently departed)
+    # Optimized queryset with select_related to reduce database queries
     queue_entries = (
-        EntryLog.objects.select_related('vehicle', 'vehicle__assigned_driver', 'vehicle__route')
+        EntryLog.objects.select_related(
+            'vehicle', 
+            'vehicle__assigned_driver', 
+            'vehicle__route'
+        )
+        .prefetch_related('vehicle__assigned_driver')
         .filter(
             Q(is_active=True, created_at__date=timezone.localtime(now).date()) |
             Q(departed_at__gte=departed_cutoff)
@@ -127,7 +133,7 @@ def public_queue_view(request):
 
 
 def public_queue_data(request):
-    """AJAX endpoint for live smooth refresh."""
+    """AJAX endpoint for live smooth refresh with optimized queries."""
     now = timezone.now()
     _maintenance_task(now=now)
 
@@ -137,8 +143,13 @@ def public_queue_data(request):
     ten_mins_ago = now - timedelta(minutes=10)
     route_filter = request.GET.get("route", "all")
 
+    # Optimized query with select_related and prefetch_related
     queue_entries = (
-        EntryLog.objects.select_related("vehicle", "vehicle__assigned_driver", "vehicle__route")
+        EntryLog.objects.select_related(
+            "vehicle", 
+            "vehicle__assigned_driver", 
+            "vehicle__route"
+        )
         .filter(
             status=EntryLog.STATUS_SUCCESS,
             created_at__gte=ten_mins_ago - timedelta(minutes=departure_duration)
