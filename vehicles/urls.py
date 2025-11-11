@@ -27,5 +27,8 @@ urlpatterns = [
     path('drivers/delete/<int:driver_id>/', views.delete_driver, name='delete_driver'),
     path('vehicles/delete/<int:vehicle_id>/', views.delete_vehicle, name='delete_vehicle'),
 
-
+    # ✅ QR Entry/Exit and Queue History
+    path('qr-entry/', views.qr_entry, name='qr_entry'),
+    path('qr-exit/', views.qr_exit, name='qr_exit'),
+    path('queue-history/', views.queue_history, name='queue_history'),
 ]

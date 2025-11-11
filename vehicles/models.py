@@ -1,13 +1,15 @@
+#para maka hibaw ko og kani ba na save og wani kadtong main nga naay bugs ang na save
 import qrcode
 from io import BytesIO
 from django.core.files import File
-from django.db import models
+from django.db import models, transaction
 import re
 from django.core.exceptions import ValidationError
 import uuid
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.db.models import F
 
 
 # ======================================================
@@ -92,6 +94,13 @@ class Vehicle(models.Model):
         'bus': 70,
     }
 
+    STATUS_CHOICES = [
+        ('idle', 'Idle'),
+        ('queued', 'Queued'),
+        ('boarding', 'Boarding'),
+        ('departed', 'Departed'),
+    ]
+
     vehicle_name = models.CharField(max_length=100, default="Unnamed Vehicle")
     vehicle_type = models.CharField(max_length=50, choices=VEHICLE_TYPES)
     ownership_type = models.CharField(max_length=20, choices=OWNERSHIP_TYPES, default='owned')
@@ -106,12 +115,18 @@ class Vehicle(models.Model):
     registration_expiry = models.DateField(blank=True, null=True)
     license_plate = models.CharField(max_length=50, unique=True)
 
-    # 🔁 REPLACED manufacturer → route
+    # route relationship
     route = models.ForeignKey(Route, on_delete=models.SET_NULL, null=True, blank=True, related_name='vehicles')
 
     seat_capacity = models.PositiveIntegerField(blank=True, null=True)
     qr_code = models.ImageField(upload_to='qrcodes/', null=True, blank=True)
     qr_value = models.CharField(max_length=255, unique=True, blank=True, null=True)
+
+    # New fields to support queue history and passenger view rules
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='idle')
+    last_enter_time = models.DateTimeField(blank=True, null=True)
+    last_exit_time = models.DateTimeField(blank=True, null=True)
+    departure_time = models.DateTimeField(blank=True, null=True)  # set when vehicle enters (or by admin logic)
 
     date_registered = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
@@ -158,7 +173,10 @@ class Wallet(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.vehicle.assigned_driver}'s Wallet - ₱{self.balance}"
+        # Added safe access in case driver gets deleted (unlikely) to avoid errors in admin list
+        driver = getattr(self.vehicle, 'assigned_driver', None)
+        driver_name = f"{driver.first_name} {driver.last_name}" if driver else "Unknown Driver"
+        return f"{driver_name}'s Wallet - ₱{self.balance}"
 
 
 # ======================================================
@@ -178,24 +196,48 @@ class Deposit(models.Model):
         is_new = self.pk is None
 
         if not self.reference_number:
-            import uuid
-            from django.utils import timezone
             unique_code = uuid.uuid4().hex[:6].upper()
             self.reference_number = f"DEP-{timezone.now().strftime('%Y%m%d')}-{unique_code}"
 
-        # Always cash & successful
+        # Always cash & successful for now (business rule)
         self.status = 'successful'
         self.payment_method = 'cash'
 
-        super().save(*args, **kwargs)
+        with transaction.atomic():
+            super().save(*args, **kwargs)
 
-        # Add to wallet on creation only
-        if is_new:
-            self.wallet.balance += self.amount
-            self.wallet.save(update_fields=['balance'])
+            # Add to wallet on creation only — use F() to avoid race conditions
+            if is_new:
+                Wallet.objects.filter(pk=self.wallet.pk).update(balance=F('balance') + self.amount)
+                # Refresh self.wallet in memory to reflect DB change if needed downstream
+                self.wallet.refresh_from_db()
 
     def __str__(self):
         return f"Deposit {self.reference_number} - ₱{self.amount} (Cash)"
+
+
+# ======================================================
+# QUEUE / HISTORY MODEL
+# ======================================================
+class QueueHistory(models.Model):
+    ACTION_CHOICES = [
+        ('enter', 'Enter'),
+        ('exit', 'Exit'),
+    ]
+
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE, related_name='queue_history')
+    driver = models.ForeignKey(Driver, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    # capture the departure_time snapshot and wallet balance snapshot for auditing
+    departure_time_snapshot = models.DateTimeField(blank=True, null=True)
+    wallet_balance_snapshot = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.vehicle} - {self.get_action_display()} at {self.timestamp}"
 
 
 # ======================================================
@@ -203,5 +245,9 @@ class Deposit(models.Model):
 # ======================================================
 @receiver(post_save, sender=Vehicle)
 def create_wallet_for_vehicle(sender, instance, created, **kwargs):
+    # Create wallet only if it doesn't already exist, to avoid duplicates on re-save
     if created:
         Wallet.objects.create(vehicle=instance)
+    else:
+        # Ensure wallet exists for older vehicles (in case previous migration didn't create one)
+        Wallet.objects.get_or_create(vehicle=instance)

@@ -116,17 +116,21 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+  const profitEl = document.querySelector(".bg-danger h3");
+  const driversEl = document.querySelector(".bg-primary h3");
+  const vehiclesEl = document.querySelector(".bg-success h3");
+  const queueEl = document.querySelector(".bg-warning h3");
   const ctx = document.getElementById("profitChart");
-  if (!ctx) return;
-  new Chart(ctx, {
+
+  let profitChart = new Chart(ctx, {
     type: "line",
     data: {
-      labels: {{ chart_labels|safe }},
+      labels: [],
       datasets: [{
         label: "Profit (₱)",
-        data: {{ chart_data|safe }},
+        data: [],
         borderColor: "#007bff",
-        backgroundColor: "rgba(0, 123, 255, 0.2)",
+        backgroundColor: "rgba(0,123,255,0.2)",
         fill: true,
         tension: 0.4,
         borderWidth: 2
@@ -141,16 +145,31 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     }
   });
+
+  async function fetchDashboardData() {
+    try {
+      const res = await fetch("/vehicles/admin_dashboard_data/");
+      if (!res.ok) throw new Error("Network error");
+      const data = await res.json();
+
+      // Update summary cards
+      driversEl.textContent = data.total_drivers;
+      vehiclesEl.textContent = data.total_vehicles;
+      profitEl.textContent = "₱" + data.total_profit.toFixed(2);
+      queueEl.textContent = data.recent_queues.length;
+
+      // Update 7-day chart
+      profitChart.data.labels = data.chart_labels;
+      profitChart.data.datasets[0].data = data.chart_data;
+      profitChart.update();
+    } catch (err) {
+      console.error("Dashboard update failed:", err);
+    }
+  }
+
+  // Initial load + refresh every 10 seconds
+  fetchDashboardData();
+  setInterval(fetchDashboardData, 10000);
 });
 </script>
-
-<style>
-  .hover-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .hover-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
-  }
-</style>
 {% endblock %}

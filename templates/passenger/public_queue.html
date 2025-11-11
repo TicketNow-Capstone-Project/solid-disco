@@ -204,7 +204,6 @@ function updateCountdowns() {
     const departureTime = new Date(span.dataset.departure).getTime();
     const diff = departureTime - now;
     const bar = span.parentElement.querySelector('.progress-bar');
-
     if (!bar) return;
 
     if (diff <= 0) {
@@ -217,7 +216,6 @@ function updateCountdowns() {
       span.textContent = `⏳ Leaving in ${mins} min${mins !== 1 ? 's' : ''}`;
       const progress = 100 - (diff / thirtyMin) * 100;
       bar.style.width = progress + "%";
-
       if (progress < 50) bar.style.backgroundColor = "#0d6efd";
       else if (progress < 80) bar.style.backgroundColor = "#fd7e14";
       else {
@@ -234,13 +232,98 @@ function updateCountdowns() {
   });
 }
 
-// Initial + smooth update loop
+// 🌀 Simple loading spinner overlay
+function showSpinner() {
+  if (!document.getElementById("loadingSpinner")) {
+    $("body").append(`
+      <div id="loadingSpinner" style="
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(255,255,255,0.7); z-index: 9999; display: flex;
+        justify-content: center; align-items: center; font-size: 1.2rem; color: #0d6efd;
+        font-weight: 600; backdrop-filter: blur(2px);
+      ">
+        <div><i class='bi bi-arrow-repeat spin'></i> Updating schedule...</div>
+      </div>
+    `);
+    $(".spin").css({
+      "animation": "spin 1s linear infinite",
+      "display": "inline-block"
+    });
+    $("<style>@keyframes spin {from {transform: rotate(0deg);} to {transform: rotate(360deg);}}</style>").appendTo("head");
+  }
+  $("#loadingSpinner").fadeIn(150);
+}
+
+function hideSpinner() {
+  $("#loadingSpinner").fadeOut(300);
+}
+
+// 🔁 Smooth queue refresh (every 15s)
+function refreshQueue() {
+  showSpinner();
+  $.get("/passenger/data/", function(response) {
+    const tbody = $("table tbody");
+    const mobileContainer = $(".vehicle-card").parent();
+    tbody.empty();
+    mobileContainer.find(".vehicle-card").remove();
+
+    if (response.entries.length === 0) {
+      tbody.append(`<tr><td colspan="7" class="text-center text-muted">No vehicles currently scheduled.</td></tr>`);
+      mobileContainer.append(`<p class="text-center text-muted">No vehicles currently scheduled.</p>`);
+      hideSpinner();
+      return;
+    }
+
+    response.entries.forEach((item, index) => {
+      const countdownHTML = `
+        <span class="countdown" data-departure="${item.departure}"></span>
+        <div class="progress"><div class="progress-bar" role="progressbar" style="width: 0%;" data-departure="${item.departure}"></div></div>
+      `;
+      const row = `
+        <tr>
+          <td>${index + 1}</td>
+          <td><strong>${item.plate}</strong></td>
+          <td><span class="route-pill">${item.route}</span></td>
+          <td>${item.driver}</td>
+          <td><span class="badge ${item.status === 'Boarding' ? 'bg-success' : 'bg-secondary'}">${item.status}</span></td>
+          <td>${new Date(item.departure).toLocaleString()}</td>
+          <td>${countdownHTML}</td>
+        </tr>`;
+      tbody.append(row);
+
+      // Mobile Card
+      const card = `
+        <div class="vehicle-card card shadow-sm mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="mb-0"><i class="bi bi-truck"></i> ${item.plate}</h5>
+              <span class="badge ${item.status === 'Boarding' ? 'bg-success' : 'bg-secondary'}">${item.status}</span>
+            </div>
+            <p class="mb-1 text-muted small"><i class="bi bi-signpost-split"></i> ${item.route}</p>
+            <p class="mb-1 text-muted small"><i class="bi bi-person-badge"></i> ${item.driver}</p>
+            <p class="mb-1 text-muted small"><i class="bi bi-clock"></i> ${new Date(item.departure).toLocaleString()}</p>
+            <p class="mb-1 text-danger small"><i class="bi bi-hourglass-split"></i>
+              <span class="countdown" data-departure="${item.departure}"></span>
+            </p>
+            <div class="progress"><div class="progress-bar" role="progressbar" style="width: 0%;" data-departure="${item.departure}"></div></div>
+          </div>
+        </div>`;
+      mobileContainer.append(card);
+    });
+
+    // Refresh countdowns after updating DOM
+    updateCountdowns();
+    hideSpinner();
+  });
+}
+
+// Initialize countdown loop + first refresh
 updateCountdowns();
 setInterval(updateCountdowns, 5000);
-
-// Auto-refresh every 15s for data updates
-setInterval(() => location.reload(), 15000);
+refreshQueue();
+setInterval(refreshQueue, 15000);
 </script>
+
 
 </body>
 </html>

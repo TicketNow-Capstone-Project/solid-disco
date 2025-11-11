@@ -47,8 +47,19 @@
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <script>
+/* =====================================================
+   🟢 Real-Time QR Scanner with Logs & Balance Display
+   ===================================================== */
+
+// 🔊 Sound feedback (short & professional)
+const successBeep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+const errorBeep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+
+// 🧾 Store last 5 scans
+let recentScans = [];
+
 /**
- * 🟩 Show dynamic feedback without stopping the camera
+ * 💬 Show feedback message with optional color flash
  */
 function showFeedback(message, kind = "info") {
   const fb = document.getElementById("feedback");
@@ -58,12 +69,21 @@ function showFeedback(message, kind = "info") {
 
   if (kind === "success") fb.classList.add("alert-success");
   else if (kind === "danger") fb.classList.add("alert-danger");
-  else if (kind === "warning") fb.classList.add("alert-warning");
   else fb.classList.add("alert-info");
+
+  const body = document.body;
+  body.classList.remove("flash-success", "flash-error");
+  if (kind === "success") {
+    body.classList.add("flash-success");
+    successBeep.play().catch(() => {});
+  } else if (kind === "danger") {
+    body.classList.add("flash-error");
+    errorBeep.play().catch(() => {});
+  }
 }
 
 /**
- * 🟨 Send scanned QR to backend for entry/departure validation
+ * 📬 Send QR code to backend for validation
  */
 async function postQRCode(qrCode) {
   try {
@@ -78,37 +98,84 @@ async function postQRCode(qrCode) {
 
     const data = await response.json();
 
+    let balanceText = data.balance !== undefined 
+        ? ` (Remaining Balance: ₱${parseFloat(data.balance).toFixed(2)})` 
+        : "";
+
+    const message = data.message + balanceText;
+
     if (data.status === "success") {
-      showFeedback(data.message, "success");
+      showFeedback(message, "success");
+      addToLog("✅ Success", message, "success");
       pauseScanTemporarily(4000);
     } else {
-      showFeedback(data.message, "danger");
+      showFeedback(message, "danger");
+      addToLog("❌ Failed", message, "danger");
       pauseScanTemporarily(3000);
     }
   } catch (err) {
-    showFeedback("Network error — please check your connection.", "danger");
+    showFeedback("⚠️ Network error — please check your connection.", "danger");
+    addToLog("⚠️ Error", "Network failure", "danger");
   }
 }
 
 /**
- * 🕒 Temporarily pause scanning to prevent spam/double scans
+ * ⏸️ Temporarily pause scanning
  */
 function pauseScanTemporarily(ms) {
   scanningPaused = true;
   setTimeout(() => {
     scanningPaused = false;
+    document.body.classList.remove("flash-success", "flash-error");
     showFeedback("📷 Ready for next scan...", "info");
   }, ms);
 }
 
 /**
- * 🟦 Initialize camera QR scanner
+ * 🧾 Add scan result to live log (last 5)
+ */
+function addToLog(status, message, type) {
+  const time = new Date().toLocaleTimeString();
+  if (recentScans.length >= 5) recentScans.shift();
+  recentScans.push({ status, message, time, type });
+  renderLogs();
+}
+
+/**
+ * 🖋️ Render recent scans below scanner
+ */
+function renderLogs() {
+  const logContainer = document.getElementById("scanLog");
+  if (!logContainer) return;
+  logContainer.innerHTML = `
+    <table class="table table-sm table-hover align-middle mt-3 mb-0">
+      <thead class="table-light"><tr><th>Time</th><th>Status</th><th>Message</th></tr></thead>
+      <tbody>
+        ${recentScans
+          .map(
+            s => `
+              <tr class="${s.type === 'success' ? 'table-success' : 'table-danger'}">
+                <td>${s.time}</td>
+                <td>${s.status}</td>
+                <td>${s.message}</td>
+              </tr>
+            `
+          )
+          .reverse()
+          .join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+/**
+ * 📸 Initialize QR Scanner
  */
 document.addEventListener("DOMContentLoaded", function() {
   const html5QrCode = new Html5Qrcode("qr-reader");
   const config = { fps: 10, qrbox: { width: 250, height: 250 } };
   let lastScanned = "";
-  let scanningPaused = false;
+  scanningPaused = false;
 
   html5QrCode.start(
     { facingMode: "environment" },
@@ -118,12 +185,28 @@ document.addEventListener("DOMContentLoaded", function() {
       lastScanned = decodedText;
       postQRCode(decodedText);
     },
-    (errorMessage) => {
-      // ignore minor read errors, continue scanning
-    }
+    (errorMessage) => {}
   ).catch(err => {
     showFeedback("❌ Failed to access camera: " + err, "danger");
   });
 });
 </script>
+
+<style>
+/* 🌈 Flash background animation */
+@keyframes flash-green {
+  0% { background-color: #19875420; }
+  50% { background-color: #19875480; }
+  100% { background-color: transparent; }
+}
+@keyframes flash-red {
+  0% { background-color: #dc354520; }
+  50% { background-color: #dc354580; }
+  100% { background-color: transparent; }
+}
+.flash-success { animation: flash-green 1.5s ease; }
+.flash-error { animation: flash-red 1.5s ease; }
+</style>
+
+
 {% endblock %}

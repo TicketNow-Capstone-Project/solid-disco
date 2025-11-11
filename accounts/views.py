@@ -159,13 +159,28 @@ def admin_dashboard_view(request):
     from django.db.models import Sum
     from datetime import datetime, timedelta
     from django.utils import timezone
+    # Import QueueHistory from vehicles so the admin view and vehicles app are consistent
+    try:
+        from vehicles.models import QueueHistory
+    except Exception:
+        QueueHistory = None
 
     total_drivers = Driver.objects.count()
     total_vehicles = Vehicle.objects.count()
-    total_queue = EntryLog.objects.filter(status=EntryLog.STATUS_SUCCESS).count()
+
+    # Prefer QueueHistory if available; fall back to EntryLog if your terminal app still uses it.
+    total_queue = 0
+    if QueueHistory is not None:
+        total_queue = QueueHistory.objects.filter().count()
+    else:
+        try:
+            total_queue = EntryLog.objects.filter(status=EntryLog.STATUS_SUCCESS).count()
+        except Exception:
+            total_queue = 0
+
     total_profit = Profit.objects.aggregate(Sum('amount'))['amount__sum'] or 0
 
-    # Chart data for last 7 days
+    # Chart data for last 7 days (server-side)
     today = timezone.now().date()
     last_7_days = [today - timedelta(days=i) for i in range(6, -1, -1)]
     chart_labels = [d.strftime("%b %d") for d in last_7_days]
@@ -184,8 +199,10 @@ def admin_dashboard_view(request):
         'total_profit': total_profit,
         'chart_labels': chart_labels,
         'chart_data': chart_data,
+        'now': timezone.now(),
     }
     return render(request, 'accounts/admin_dashboard.html', context)
+
 
 
 # ===============================

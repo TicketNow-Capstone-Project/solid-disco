@@ -168,7 +168,7 @@ def manage_queue(request):
 @user_passes_test(is_staff_admin_or_admin)
 @never_cache
 def qr_scan_entry(request):
-    """Handles QR scan for both entry & departure validation."""
+    """Handles QR scan for both entry & departure validation with live balance feedback."""
     settings = SystemSettings.get_solo()
     entry_fee = settings.terminal_fee
     cooldown_minutes = settings.entry_cooldown_minutes
@@ -177,55 +177,115 @@ def qr_scan_entry(request):
     if request.method == "POST":
         qr_code = request.POST.get("qr_code", "").strip()
         if not qr_code:
-            return JsonResponse({"status": "error", "message": "QR code is empty."})
+            return JsonResponse({
+                "status": "error",
+                "message": "QR code is empty.",
+                "balance": None
+            })
+
         staff_user = request.user
 
         try:
+            # 🔍 Validate vehicle
             vehicle = Vehicle.objects.filter(qr_value__iexact=qr_code).first()
             if not vehicle:
-                return JsonResponse({"status": "error", "message": "Invalid QR."})
+                return JsonResponse({
+                    "status": "error",
+                    "message": "❌ Invalid QR code.",
+                    "balance": None
+                })
 
-            wallet = Wallet.objects.filter(vehicle=vehicle).first()
-            if not wallet:
-                return JsonResponse({"status": "error", "message": "No wallet found."})
+            # 🏦 Get or create wallet
+            wallet, _ = Wallet.objects.get_or_create(vehicle=vehicle)
 
             from datetime import timedelta, timezone, datetime
             now = datetime.now(timezone.utc)
+
+            # 🚗 Check if vehicle already inside terminal
             active_log = EntryLog.objects.filter(vehicle=vehicle, is_active=True).first()
 
-            # DEPARTURE
+            # ========================
+            # 🔁 DEPARTURE LOGIC
+            # ========================
             if active_log:
                 active_log.is_active = False
                 active_log.departed_at = timezone.now()
                 active_log.message = f"Vehicle '{vehicle.license_plate}' departed."
                 active_log.save(update_fields=["is_active", "departed_at", "message"])
-                return JsonResponse({"status": "success", "message": f"✅ {vehicle.license_plate} departed."})
 
-            # ENTRY
-            recent_entry = EntryLog.objects.filter(vehicle=vehicle, status=EntryLog.STATUS_SUCCESS).order_by("-created_at").first()
+                return JsonResponse({
+                    "status": "success",
+                    "message": f"✅ {vehicle.license_plate} departed successfully.",
+                    "balance": float(wallet.balance)
+                })
+
+            # ========================
+            # 🚘 ENTRY LOGIC
+            # ========================
+            recent_entry = EntryLog.objects.filter(
+                vehicle=vehicle,
+                status=EntryLog.STATUS_SUCCESS
+            ).order_by("-created_at").first()
+
             if recent_entry and (now - recent_entry.created_at) < timedelta(minutes=cooldown_minutes):
-                return JsonResponse({"status": "error", "message": "⏳ Please wait before re-entry."})
+                return JsonResponse({
+                    "status": "error",
+                    "message": "⏳ Please wait before re-entry.",
+                    "balance": float(wallet.balance)
+                })
 
             if wallet.balance < min_deposit:
-                return JsonResponse({"status": "error", "message": f"⚠️ Minimum ₱{min_deposit} required."})
+                return JsonResponse({
+                    "status": "error",
+                    "message": f"⚠️ Minimum ₱{min_deposit} required before entry.",
+                    "balance": float(wallet.balance)
+                })
 
             if wallet.balance >= entry_fee:
                 wallet.balance -= entry_fee
                 wallet.save()
-                EntryLog.objects.create(vehicle=vehicle, staff=staff_user, fee_charged=entry_fee,
-                                        status=EntryLog.STATUS_SUCCESS,
-                                        message=f"Vehicle '{vehicle.license_plate}' entered terminal.")
-                return JsonResponse({"status": "success", "message": f"🚗 {vehicle.license_plate} entered terminal."})
+
+                EntryLog.objects.create(
+                    vehicle=vehicle,
+                    staff=staff_user,
+                    fee_charged=entry_fee,
+                    status=EntryLog.STATUS_SUCCESS,
+                    message=f"Vehicle '{vehicle.license_plate}' entered terminal."
+                )
+
+                return JsonResponse({
+                    "status": "success",
+                    "message": f"🚗 {vehicle.license_plate} entered terminal.",
+                    "balance": float(wallet.balance)
+                })
             else:
-                EntryLog.objects.create(vehicle=vehicle, staff=staff_user, fee_charged=entry_fee,
-                                        status=EntryLog.STATUS_INSUFFICIENT,
-                                        message=f"Insufficient balance for '{vehicle.license_plate}'.")
-                return JsonResponse({"status": "error", "message": "❌ Insufficient balance."})
+                EntryLog.objects.create(
+                    vehicle=vehicle,
+                    staff=staff_user,
+                    fee_charged=entry_fee,
+                    status=EntryLog.STATUS_INSUFFICIENT,
+                    message=f"Insufficient balance for '{vehicle.license_plate}'."
+                )
+
+                return JsonResponse({
+                    "status": "error",
+                    "message": f"❌ Insufficient balance for {vehicle.license_plate}.",
+                    "balance": float(wallet.balance)
+                })
 
         except Exception as e:
-            return JsonResponse({"status": "error", "message": f"Unexpected error: {str(e)}"})
+            return JsonResponse({
+                "status": "error",
+                "message": f"Unexpected error: {str(e)}",
+                "balance": None
+            })
 
-    context = {"terminal_fee": entry_fee, "min_deposit": min_deposit, "cooldown": cooldown_minutes}
+    # GET request → render scan page
+    context = {
+        "terminal_fee": entry_fee,
+        "min_deposit": min_deposit,
+        "cooldown": cooldown_minutes,
+    }
     return render(request, "terminal/qr_scan_entry.html", context)
 
 
@@ -443,3 +503,72 @@ def manage_routes(request):
         return redirect("terminal:manage_routes")
 
     return render(request, "terminal/manage_routes.html", {"routes": routes})
+
+
+# ===============================
+#   AJAX ADD DEPOSIT (New)
+# ===============================
+from django.views.decorators.csrf import csrf_exempt
+
+@login_required(login_url='login')
+@user_passes_test(is_staff_admin_or_admin)
+@csrf_exempt
+def ajax_add_deposit(request):
+    """AJAX-based deposit submission (no page reload)."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method.'})
+
+    vehicle_id = request.POST.get('vehicle_id')
+    amount = request.POST.get('amount')
+
+    if not vehicle_id or not amount:
+        return JsonResponse({'success': False, 'message': 'Missing fields.'})
+
+    try:
+        vehicle = Vehicle.objects.get(pk=vehicle_id)
+        wallet, _ = Wallet.objects.get_or_create(vehicle=vehicle)
+        amt = Decimal(amount)
+
+        if amt <= 0:
+            return JsonResponse({'success': False, 'message': 'Amount must be greater than zero.'})
+
+        deposit = Deposit.objects.create(wallet=wallet, amount=amt)
+
+        return JsonResponse({
+            'success': True,
+            'message': f"✅ Deposit of ₱{amt} for {vehicle.license_plate} recorded!",
+            'deposit': {
+                'reference': deposit.reference_number,
+                'driver': f"{vehicle.assigned_driver.last_name}, {vehicle.assigned_driver.first_name}",
+                'vehicle': vehicle.license_plate,
+                'amount': float(deposit.amount),
+                'date': deposit.created_at.strftime("%b %d, %Y %I:%M %p")
+            }
+        })
+    except Vehicle.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Vehicle not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@login_required(login_url='login')
+@user_passes_test(is_staff_admin_or_admin)
+@csrf_exempt
+def ajax_get_wallet_balance(request):
+    """Return current wallet balance for a selected vehicle."""
+    vehicle_id = request.GET.get('vehicle_id')
+    if not vehicle_id:
+        return JsonResponse({'success': False, 'message': 'Vehicle ID missing.'})
+
+    try:
+        vehicle = Vehicle.objects.get(pk=vehicle_id)
+        wallet, _ = Wallet.objects.get_or_create(vehicle=vehicle)
+        return JsonResponse({
+            'success': True,
+            'balance': float(wallet.balance),
+            'vehicle': vehicle.license_plate
+        })
+    except Vehicle.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Vehicle not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})

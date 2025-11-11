@@ -177,6 +177,104 @@ document.addEventListener("DOMContentLoaded", function() {
       language: { search: "_INPUT_", searchPlaceholder: "Search deposits..." }
     });
   }
+
+  // 🟢 Add a wallet balance display beside vehicle selector
+  const balanceInfo = $('<div id="walletInfo" class="mt-2 text-muted small fw-semibold"></div>');
+  $('#vehicleSelect').after(balanceInfo);
+
+  // 🔁 Load wallet balance when vehicle is selected
+  $('#vehicleSelect').on('change', function() {
+    const vehicleId = $(this).val();
+    if (!vehicleId) {
+      $('#walletInfo').html('');
+      return;
+    }
+
+    $('#walletInfo').html('<i class="bi bi-arrow-repeat spin"></i> Checking balance...');
+    $.get("{% url 'terminal:ajax_get_wallet_balance' %}", { vehicle_id: vehicleId })
+      .done(function(response) {
+        if (response.success) {
+          $('#walletInfo').html(`💰 Current Balance for <strong>${response.vehicle}</strong>: ₱<span id="walletBalance">${response.balance.toFixed(2)}</span>`);
+        } else {
+          $('#walletInfo').html(`<span class="text-danger">⚠️ ${response.message}</span>`);
+        }
+      })
+      .fail(() => $('#walletInfo').html(`<span class="text-danger">❌ Failed to load balance.</span>`));
+  });
+
+  // 🧾 AJAX Deposit submission
+  $("form").on("submit", function(e) {
+    e.preventDefault();
+    const form = $(this);
+    const formData = form.serialize();
+
+    $.ajax({
+      url: "{% url 'terminal:ajax_add_deposit' %}",
+      method: "POST",
+      data: formData,
+      headers: { "X-CSRFToken": "{{ csrf_token }}" },
+      beforeSend: function() {
+        form.find("button[type=submit]").prop("disabled", true).html("<i class='bi bi-arrow-repeat spin'></i> Processing...");
+      },
+      success: function(response) {
+        if (response.success) {
+          showToast(response.message, "success");
+
+          // 🟢 Add new deposit row instantly
+          const table = $("#depositTable").DataTable();
+          table.row.add([
+            table.rows().count() + 1,
+            `<strong>${response.deposit.reference}</strong>`,
+            response.deposit.driver,
+            response.deposit.vehicle,
+            `₱${response.deposit.amount.toFixed(2)}`,
+            response.deposit.date
+          ]).draw(false);
+
+          // 🟢 Refresh wallet balance display
+          const selectedVehicle = $('#vehicleSelect').val();
+          if (selectedVehicle) {
+            $.get("{% url 'terminal:ajax_get_wallet_balance' %}", { vehicle_id: selectedVehicle })
+              .done(function(r) {
+                if (r.success) {
+                  $('#walletBalance').text(r.balance.toFixed(2));
+                }
+              });
+          }
+
+          form.trigger("reset");
+          $('#vehicleSelect').val('').trigger('change');
+        } else {
+          showToast(response.message, "danger");
+        }
+      },
+      error: function() {
+        showToast("❌ Server error. Try again.", "danger");
+      },
+      complete: function() {
+        form.find("button[type=submit]").prop("disabled", false).html("<i class='bi bi-cash-stack'></i> Add Deposit");
+      }
+    });
+  });
+
+  // ✨ Toast Notification
+  $("body").append(`<div id="toastContainer" class="position-fixed top-0 end-0 p-3" style="z-index: 1055;"></div>`);
+  function showToast(msg, type) {
+    const toast = $(`
+      <div class="toast align-items-center text-bg-${type} border-0 show mb-2" role="alert">
+        <div class="d-flex">
+          <div class="toast-body">${msg}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    `);
+    $("#toastContainer").append(toast);
+    setTimeout(() => toast.fadeOut(400, () => toast.remove()), 4000);
+  }
+
+  $("<style>@keyframes spin {from {transform: rotate(0deg);} to {transform: rotate(360deg);}}</style>").appendTo("head");
 });
 </script>
+
+
 {% endblock %}

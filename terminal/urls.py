@@ -17,4 +17,7 @@ urlpatterns = [
     path('system-settings/', views.system_settings, name='system_settings'),
     path('mark-departed/<int:entry_id>/', views.mark_departed, name='mark_departed'),
     path('update-departure/<int:entry_id>/', views.update_departure_time, name='update_departure_time'),
+    path('ajax-add-deposit/', views.ajax_add_deposit, name='ajax_add_deposit'),
+    path('ajax-get-wallet-balance/', views.ajax_get_wallet_balance, name='ajax_get_wallet_balance'),
+
 ]

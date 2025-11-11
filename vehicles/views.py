@@ -15,10 +15,11 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Sum
+from django.utils import timezone
 
 from accounts.utils import is_staff_admin_or_admin, is_admin
-from .models import Driver, Vehicle, Wallet, Deposit
+from .models import Driver, Vehicle, Wallet, Deposit, QueueHistory
 from .forms import DriverRegistrationForm, VehicleRegistrationForm
 
 # ✅ Path for your installed Tesseract OCR (adjust if needed)
@@ -73,7 +74,7 @@ def ocr_process(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)})
-    
+
 
 # -------------------------
 # STAFF DASHBOARD
@@ -128,6 +129,7 @@ def staff_dashboard(request):
         'total_vehicles': Vehicle.objects.count(),
     }
     return render(request, 'accounts/staff_dashboard.html', context)
+
 
 # -------------------------
 # VEHICLE REGISTRATION (page)
@@ -354,9 +356,8 @@ def get_vehicles_by_driver(request, driver_id):
     return JsonResponse(data)
 
 
-
 # -------------------------
-# DELETE DRIVER (Admin only)
+# DELETE DRIVER / VEHICLE
 # -------------------------
 @login_required
 @user_passes_test(is_admin)
@@ -382,3 +383,143 @@ def delete_vehicle(request, vehicle_id):
         messages.success(request, f"✅ Vehicle '{vehicle_name}' deleted successfully.")
         return redirect('vehicles:registered_vehicles')
     return redirect('vehicles:registered_vehicles')
+
+
+# -------------------------
+# QR ENTRY & EXIT HANDLERS
+# -------------------------
+@login_required
+@csrf_exempt
+def qr_entry(request):
+    """
+    Triggered when vehicle QR is scanned on ENTRY.
+    Sets status to 'boarding', computes departure_time (+30 mins default),
+    and logs QueueHistory.
+    """
+    qr_value = request.POST.get('qr_value')
+    if not qr_value:
+        return JsonResponse({'success': False, 'message': 'Missing QR value.'})
+
+    try:
+        vehicle = get_object_or_404(Vehicle, qr_value=qr_value)
+        now = timezone.now()
+        vehicle.status = 'boarding'
+        vehicle.last_enter_time = now
+        vehicle.departure_time = now + timezone.timedelta(minutes=30)  # default waiting time
+        vehicle.save(update_fields=['status', 'last_enter_time', 'departure_time'])
+
+        QueueHistory.objects.create(
+            vehicle=vehicle,
+            driver=vehicle.assigned_driver,
+            action='enter',
+            departure_time_snapshot=vehicle.departure_time,
+            wallet_balance_snapshot=vehicle.wallet.balance
+        )
+        return JsonResponse({'success': True, 'message': f"{vehicle.license_plate} entered terminal.", 'departure_time': vehicle.departure_time})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@login_required
+@csrf_exempt
+def qr_exit(request):
+    """
+    Triggered when vehicle QR is scanned on EXIT.
+    Sets status to 'departed', keeps it for 10 mins, logs QueueHistory.
+    """
+    qr_value = request.POST.get('qr_value')
+    if not qr_value:
+        return JsonResponse({'success': False, 'message': 'Missing QR value.'})
+
+    try:
+        vehicle = get_object_or_404(Vehicle, qr_value=qr_value)
+        now = timezone.now()
+        vehicle.status = 'departed'
+        vehicle.last_exit_time = now
+        vehicle.save(update_fields=['status', 'last_exit_time'])
+
+        QueueHistory.objects.create(
+            vehicle=vehicle,
+            driver=vehicle.assigned_driver,
+            action='exit',
+            departure_time_snapshot=vehicle.departure_time,
+            wallet_balance_snapshot=vehicle.wallet.balance
+        )
+
+        return JsonResponse({'success': True, 'message': f"{vehicle.license_plate} departed terminal."})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+# -------------------------
+# ADMIN DASHBOARD DATA (7-day trend)
+# -------------------------
+@login_required
+@user_passes_test(is_admin)
+def admin_dashboard_data(request):
+    """Return JSON with 7-day profit trend and live stats."""
+    from django.db.models.functions import TruncDate
+    from datetime import timedelta
+
+    now = timezone.now()
+    seven_days_ago = now - timedelta(days=6)
+
+    # Group deposits by date
+    daily_profits = (
+        Deposit.objects.filter(created_at__date__gte=seven_days_ago.date())
+        .annotate(day=TruncDate('created_at'))
+        .values('day')
+        .annotate(total=Sum('amount'))
+        .order_by('day')
+    )
+
+    # Ensure we produce labels for each of the last 7 days (even if 0)
+    labels = []
+    data_points = []
+    for i in range(6, -1, -1):  # 6 -> 0 (six days ago .. today)
+        d = (now - timedelta(days=i)).date()
+        labels.append(d.strftime('%b %d'))
+        matching = next((item for item in daily_profits if item['day'].date() == d), None)
+        data_points.append(float(matching['total']) if matching else 0.0)
+
+    total_drivers = Driver.objects.count()
+    total_vehicles = Vehicle.objects.count()
+    total_deposits = Deposit.objects.aggregate(total=Sum('amount'))['total'] or 0
+    total_wallets = Wallet.objects.aggregate(total=Sum('balance'))['total'] or 0
+
+    recent_deposits = list(
+        Deposit.objects.select_related('wallet__vehicle')
+        .order_by('-created_at')[:5]
+        .values('reference_number', 'amount', 'created_at', 'wallet__vehicle__license_plate')
+    )
+
+    recent_queues = list(
+        QueueHistory.objects.select_related('vehicle')
+        .order_by('-timestamp')[:5]
+        .values('vehicle__license_plate', 'action', 'timestamp')
+    )
+
+    data = {
+        'total_drivers': total_drivers,
+        'total_vehicles': total_vehicles,
+        'total_profit': float(total_deposits),
+        'wallet_total': float(total_wallets),
+        'recent_deposits': recent_deposits,
+        'recent_queues': recent_queues,
+        'chart_labels': labels,
+        'chart_data': data_points,
+    }
+    return JsonResponse(data)
+
+
+# -------------------------
+# QUEUE HISTORY VIEW (for admin)
+# -------------------------
+@login_required
+@user_passes_test(is_admin)
+def queue_history(request):
+    history = QueueHistory.objects.select_related('vehicle', 'driver').order_by('-timestamp')
+    paginator = Paginator(history, 20)
+    page = paginator.get_page(request.GET.get('page'))
+    return render(request, 'terminal/queue_history.html', {'page_obj': page})
+
