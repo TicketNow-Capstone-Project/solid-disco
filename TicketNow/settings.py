@@ -13,8 +13,17 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))  # Load .env for local dev
 
 # --- Security ---
 SECRET_KEY = env('SECRET_KEY', default='replace-this-with-your-own-secret-key')
-DEBUG = env('DEBUG', default=True)
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+DEBUG = env.bool('DEBUG', default=True)
+
+# Allow list from env; fall back to '*' only when running on Render
+_raw_allowed = env('ALLOWED_HOSTS', default=None)
+if _raw_allowed:
+    # env.list will turn "a,b,c" -> ['a','b','c']
+    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+else:
+    # If no ALLOWED_HOSTS defined, be permissive on Render (temporary)
+    ALLOWED_HOSTS = ['*']
+
 
 # --- Installed Apps ---
 INSTALLED_APPS = [
