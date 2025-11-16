@@ -236,3 +236,47 @@ def trip_history(request):
         'trips': trip_data,
         'page_obj': page_obj
     })
+
+def real_time_status_updates(request):
+    """
+    WebSocket-like endpoint for real-time trip status updates.
+    Returns current status of all active trips.
+    """
+    from django.http import StreamingHttpResponse
+    import json
+    import time
+    
+    def event_stream():
+        while True:
+            now = timezone.now()
+            
+            # Get active trips with real-time status
+            active_trips = (
+                EntryLog.objects.select_related('vehicle', 'vehicle__route')
+                .filter(is_active=True, created_at__date=timezone.localtime(now).date())
+                .order_by('created_at')
+            )
+            
+            trip_data = []
+            for trip in active_trips:
+                vehicle = trip.vehicle
+                if vehicle:
+                    trip_data.append({
+                        'id': trip.id,
+                        'vehicle_plate': vehicle.license_plate,
+                        'route': f"{vehicle.route.origin} → {vehicle.route.destination}" if vehicle.route else 'N/A',
+                        'status': 'Boarding' if trip.is_active else 'Departed',
+                        'entry_time': timezone.localtime(trip.created_at).strftime('%H:%M'),
+                        'updated_at': timezone.localtime(now).strftime('%H:%M:%S')
+                    })
+            
+            yield f"data: {json.dumps({'trips': trip_data})}\n\n"
+            time.sleep(5)  # Update every 5 seconds
+    
+    if request.headers.get('Accept') == 'text/event-stream':
+        response = StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+        response['Cache-Control'] = 'no-cache'
+        response['Connection'] = 'keep-alive'
+        return response
+    
+    return JsonResponse({'error': 'This endpoint requires Server-Sent Events support'})
