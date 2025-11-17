@@ -3,60 +3,57 @@
 {% block title %}Vehicle QR | TicketNow{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2 bg-light sidebar p-3">
-            {% include 'includes/sidebar.html' %}
-        </div>
+<div class="p-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-body text-center">
 
-        <!-- Main Content -->
-        <div class="col-md-9 col-lg-10 p-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center">
-                    <h4 class="mb-1"><i class="bi bi-qr-code"></i> Vehicle QR Code</h4>
-                    <p class="text-muted small mb-4">{{ vehicle.vehicle_name }} — {{ vehicle.license_plate }}</p>
+            <h4 class="mb-1"><i class="bi bi-qr-code"></i> Vehicle QR Code</h4>
+            <p class="text-muted small mb-4">{{ vehicle.vehicle_name }} — {{ vehicle.license_plate }}</p>
 
-                    <!-- 🟩 Printable Area -->
-                    <div id="printArea" class="p-4 bg-white border rounded shadow-sm d-inline-block">
-                        {% if vehicle.qr_code %}
-                            <img src="{{ vehicle.qr_code.url }}" alt="QR Code" class="mx-auto d-block mb-3" style="width:280px; height:280px;">
-                        {% else %}
-                            <div class="text-muted mb-3">No QR available.</div>
-                        {% endif %}
+            <!-- Printable Area (ID Card Format) -->
+            <div id="printArea" class="id-card">
+                <div class="id-header text-center">
+                    
+                    <h6 class="mb-0 mt-1">TICKETNOW PASS</h6>
+                    <small class="text-muted">Vehicle QR ID</small>
+                </div>
 
-                        <div class="text-start mt-3" style="font-size: 15px;">
-                            <strong>Driver:</strong> {{ vehicle.assigned_driver.first_name }} {{ vehicle.assigned_driver.last_name }}<br>
-                            <strong>License Plate:</strong> {{ vehicle.license_plate }}<br>
-                            <strong>CR Number:</strong> {{ vehicle.cr_number }}<br>
-                            <strong>OR Number:</strong> {{ vehicle.or_number }}<br>
-                            <strong>VIN:</strong> {{ vehicle.vin_number }}<br>
-                            <strong>Year Model:</strong> {{ vehicle.year_model }}
-                        </div>
+                <div class="id-body text-center mt-1">
+                    {% if vehicle.qr_code %}
+                        <img src="{{ vehicle.qr_code.url }}" alt="QR Code" class="qr-image mb-1">
+                    {% else %}
+                        <div class="text-muted mb-2">No QR available.</div>
+                    {% endif %}
+                </div>
 
-                        <hr class="my-3">
-                        <div class="text-center small text-muted">
-                            <strong>TicketNow Terminal System</strong><br>
-                            Generated on {{ vehicle.date_registered|date:"M d, Y" }}
-                        </div>
-                    </div>
+                <div class="id-info mt-1">
+                    <strong>Driver:</strong> {{ vehicle.assigned_driver.first_name }} {{ vehicle.assigned_driver.last_name }}<br>
+                    <strong>Plate No.:</strong> {{ vehicle.license_plate }}<br>
+                    <strong>CR No.:</strong> {{ vehicle.cr_number }}<br>
+                    <strong>OR No.:</strong> {{ vehicle.or_number }}<br>
+                </div>
 
-                    <!-- Action Buttons -->
-                    <div class="mt-4">
-                        <button onclick="printQR()" class="btn btn-primary me-2">
-                            <i class="bi bi-printer"></i> Print QR
-                        </button>
-                        <a href="{% url 'vehicles:registered_vehicles' %}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Back to Registered Vehicles
-                        </a>
-                    </div>
+                <div class="id-footer text-center small text-muted mt-1">
+                    {{ vehicle.date_registered|date:"M d, Y" }}
                 </div>
             </div>
+
+
+            <!-- Buttons -->
+            <div class="mt-4">
+                <button onclick="printQR()" class="btn btn-primary me-2">
+                    <i class="bi bi-printer"></i> Print QR
+                </button>
+                <a href="{% url 'vehicles:registered_vehicles' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Registered Vehicles
+                </a>
+            </div>
+
         </div>
     </div>
 </div>
 
-<!-- 🖨️ Print Styles -->
+<!-- Print Styles -->
 <style>
 @media print {
     body * {
@@ -74,7 +71,7 @@
         margin: 0;
         padding: 0;
     }
-    .btn, .sidebar, nav, header, footer {
+    .btn, nav, header, footer, .sidebar {
         display: none !important;
     }
 }

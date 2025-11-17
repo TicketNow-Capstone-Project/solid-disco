@@ -4,198 +4,232 @@
 {% block title %}Register Driver | TicketNow{% endblock %}
 
 {% block content %}
-<div class="p-4">
-  <h3 class="mb-3"><i class="bi bi-person-plus"></i> Register Driver</h3>
-  <p class="text-muted">Register a new driver with complete license and contact information.</p>
+<style>
+  body {
+    background-color: #f8f9fa;
+  }
+
+  .form-container {
+    max-width: 1200px;
+    margin: auto;
+  }
+
+  .section-box {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.8rem;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+  }
+
+  .required::after {
+    content: " *";
+    color: red;
+    font-weight: bold;
+  }
+
+  #cameraArea {
+    pointer-events: auto;
+  }
+
+  #cameraArea.hidden,
+  #cameraArea[style*="display:none"] {
+    pointer-events: none;
+  }
+
+</style>
+
+<div class="container py-4 form-container">
+
+  <h3 class="fw-bold mb-3"><i class="bi bi-person-plus"></i> Register Driver</h3>
+  <p class="text-muted">Register a new driver with complete license and emergency details.</p>
 
   {% if messages %}
-  {% for message in messages %}
-  <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-    {{ message }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  </div>
-  {% endfor %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
   {% endif %}
 
   {% if form.non_field_errors %}
-  <div class="alert alert-danger">
-    <strong>Form Error:</strong> {{ form.non_field_errors }}
-  </div>
+    <div class="alert alert-danger"><strong>Error:</strong> {{ form.non_field_errors }}</div>
   {% endif %}
 
-  <!-- Driver Registration Form -->
-  <div class="card shadow-sm border-0">
-    <div class="card-body">
-      <form method="POST" enctype="multipart/form-data" 
-            hx-post="{% url 'vehicles:register_driver' %}" 
-            hx-target="#main-content" 
-            hx-swap="innerHTML transition:true"
-            id="driverForm">
-        {% csrf_token %}
+  <form method="POST" enctype="multipart/form-data"
+        hx-post="{% url 'vehicles:register_driver' %}"
+        hx-target="#main-content"
+        hx-swap="innerHTML transition:true"
+        id="driverForm">
+    {% csrf_token %}
 
-        <!-- Personal Information -->
-        <div class="form-section border rounded p-3 mb-4 bg-light">
-          <h5>Personal Information</h5>
-          <div class="row">
-            <div class="col-md-3 mb-3">
-              <label class="form-label fw-bold">First Name <span class="text-danger">*</span></label>
-              {{ form.first_name }}
-              {% for error in form.first_name.errors %}
-              <div class="text-danger small">{{ error }}</div>
-              {% endfor %}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label class="form-label">Middle Name</label>
-              {{ form.middle_name }}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label class="form-label fw-bold">Last Name <span class="text-danger">*</span></label>
-              {{ form.last_name }}
-              {% for error in form.last_name.errors %}
-              <div class="text-danger small">{{ error }}</div>
-              {% endfor %}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label class="form-label">Suffix</label>
-              {{ form.suffix }}
-            </div>
-          </div>
+    <!-- PERSONAL INFORMATION -->
+    <div class="section-box">
+      <div class="section-title">Personal Information</div>
 
-          <div class="row">
-            <div class="col-md-4 mb-3">
-              <label class="form-label fw-bold">Birth Date <span class="text-danger">*</span></label>
-              {{ form.birth_date }}
-              {% for error in form.birth_date.errors %}
-              <div class="text-danger small">{{ error }}</div>
-              {% endfor %}
-            </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label">Birth Place</label>
-              {{ form.birth_place }}
-            </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label fw-bold">Blood Type <span class="text-danger">*</span></label>
-              {{ form.blood_type }}
-              {% for error in form.blood_type.errors %}
-              <div class="text-danger small">{{ error }}</div>
-              {% endfor %}
-            </div>
-          </div>
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label required">First Name</label>
+          {{ form.first_name }}
         </div>
 
-        <!-- Contact Information -->
-        <div class="form-section border rounded p-3 mb-4 bg-light">
-          <h5>Contact Information</h5>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">Mobile Number <span class="text-danger">*</span></label>
-              {{ form.mobile_number }}
-              {% for error in form.mobile_number.errors %}
-              <div class="text-danger small">{{ error }}</div>
-              {% endfor %}
-              <small class="text-muted">Format: +639171234567 or 09171234567</small>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">Email Address <span class="text-danger">*</span></label>
-              {{ form.email }}
-              {% for error in form.email.errors %}
-              <div class="text-danger small">{{ error }}</div>
-              {% endfor %}
-            </div>
-          </div>
+        <div class="col-md-3">
+          <label class="form-label">Middle Name</label>
+          {{ form.middle_name }}
         </div>
 
-        <!-- Address Information -->
-        <div class="form-section border rounded p-3 mb-4 bg-light">
-          <h5>Address Information</h5>
-          <div class="row">
-            <div class="col-md-3 mb-3">
-              <label class="form-label">House/Bldg No.</label>
-              {{ form.house_number }}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label class="form-label">Street <span class="text-danger">*</span></label>
-              {{ form.street }}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label class="form-label fw-bold">Barangay <span class="text-danger">*</span></label>
-              {{ form.barangay }}
-            </div>
-            <div class="col-md-3 mb-3">
-              <label class="form-label fw-bold">ZIP Code <span class="text-danger">*</span></label>
-              {{ form.zip_code }}
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">City/Municipality <span class="text-danger">*</span></label>
-              {{ form.city_municipality }}
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="form-label fw-bold">Province <span class="text-danger">*</span></label>
-              {{ form.province }}
-            </div>
-          </div>
+        <div class="col-md-3">
+          <label class="form-label required">Last Name</label>
+          {{ form.last_name }}
         </div>
 
-        <!-- License Information -->
-        <div class="form-section border rounded p-3 mb-4 bg-light">
-          <h5>Driver’s License Information</h5>
-          <div class="row">
-            <div class="col-md-4 mb-3">
-              <label class="form-label fw-bold">License Number <span class="text-danger">*</span></label>
-              {{ form.license_number }}
-            </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label fw-bold">License Expiry <span class="text-danger">*</span></label>
-              {{ form.license_expiry }}
-            </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label fw-bold">License Type <span class="text-danger">*</span></label>
-              {{ form.license_type }}
-            </div>
-          </div>
+        <div class="col-md-3">
+          <label class="form-label">Suffix</label>
+          {{ form.suffix }}
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-md-4">
+          <label class="form-label required">Birth Date</label>
+          {{ form.birth_date }}
         </div>
 
-        <!-- Emergency Contact -->
-        <div class="form-section border rounded p-3 mb-4 bg-light">
-          <h5>Emergency Contact</h5>
-          <div class="row">
-            <div class="col-md-4 mb-3">
-              <label class="form-label fw-bold">Contact Name <span class="text-danger">*</span></label>
-              {{ form.emergency_contact_name }}
-            </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label fw-bold">Contact Number <span class="text-danger">*</span></label>
-              {{ form.emergency_contact_number }}
-            </div>
-            <div class="col-md-4 mb-3">
-              <label class="form-label">Relationship</label>
-              {{ form.emergency_contact_relationship }}
-            </div>
-          </div>
+        <div class="col-md-4">
+          <label class="form-label">Birth Place</label>
+          {{ form.birth_place }}
         </div>
 
-        <!-- Submit Buttons -->
-        <div class="text-end">
-          <button type="submit" class="btn btn-success btn-lg">
-            <i class="bi bi-save"></i> Register Driver
-          </button>
-          <a hx-get="{% url 'accounts:staff_dashboard' %}" 
-             hx-target="#main-content" 
-             hx-swap="innerHTML transition:true"
-             class="btn btn-secondary btn-lg">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-          </a>
+        <div class="col-md-4">
+          <label class="form-label required">Blood Type</label>
+          {{ form.blood_type }}
         </div>
-      </form>
+      </div>
     </div>
-  </div>
 
-  <!-- OCR SCANNER -->
-  <hr>
+    <!-- CONTACT INFORMATION -->
+    <div class="section-box">
+      <div class="section-title">Contact Information</div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label required">Mobile Number</label>
+          {{ form.mobile_number }}
+          <small class="text-muted">Format: +63 or 09...</small>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label required">Email Address</label>
+          {{ form.email }}
+        </div>
+      </div>
+    </div>
+
+    <!-- ADDRESS INFORMATION -->
+    <div class="section-box">
+      <div class="section-title">Address Information</div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label required">Street</label>
+          {{ form.street }}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label required">Barangay</label>
+          {{ form.barangay }}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label required">ZIP Code</label>
+          {{ form.zip_code }}
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-md-6">
+          <label class="form-label required">City / Municipality</label>
+          {{ form.city_municipality }}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label required">Province</label>
+          {{ form.province }}
+        </div>
+      </div>
+    </div>
+
+    <!-- LICENSE INFORMATION -->
+    <div class="section-box">
+      <div class="section-title">Driver's License Information</div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label required">License Number</label>
+          {{ form.license_number }}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label required">License Expiry</label>
+          {{ form.license_expiry }}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label required">License Type</label>
+          {{ form.license_type }}
+        </div>
+      </div>
+    </div>
+
+    <!-- EMERGENCY CONTACT -->
+    <div class="section-box">
+      <div class="section-title">Emergency Contact</div>
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label required">Contact Name</label>
+          {{ form.emergency_contact_name }}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label required">Contact Number</label>
+          {{ form.emergency_contact_number }}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Relationship</label>
+          {{ form.emergency_contact_relationship }}
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex">
+        <a href="{% url 'accounts:staff_dashboard' %}" 
+          class="btn btn-outline-secondary me-auto"
+          role="button"
+          type="button">
+          ← Back to Dashboard
+        </a>
+
+        <button type="submit" class="btn btn-success px-4 ms-auto">
+            ✔ Register Driver
+        </button>
+    </div>
+    </div>
+  </form>
+
+  <!-- OCR SECTION -->
+  <hr class="my-4">
+
   <h6 class="mb-2"><i class="bi bi-camera"></i> Driver’s License OCR Scanner</h6>
-  <p class="text-muted small">Capture a clear photo of the license to auto-fill the fields below.</p>
+  <p class="text-muted small">Capture a clear photo of the license to auto-fill the fields.</p>
 
   <div class="mb-3">
     <button id="openCameraBtn" class="btn btn-outline-success me-2">Open Camera</button>
@@ -234,7 +268,7 @@ openCameraBtn.addEventListener('click', async () => {
     closeCameraBtn.disabled = false;
     openCameraBtn.disabled = true;
   } catch {
-    alert('Camera access denied or unavailable.');
+    alert('Camera access denied.');
   }
 });
 
@@ -266,19 +300,23 @@ captureBtn.addEventListener('click', async () => {
       },
       body: JSON.stringify({ image_data: imageData })
     });
+
     const data = await res.json();
-    if (data.error) alert('❌ OCR Error: ' + data.error);
-    else {
+
+    if (data.error) {
+      alert('OCR Error: ' + data.error);
+    } else {
       for (const [key, value] of Object.entries(data)) {
         if (!value) continue;
         const input = document.getElementById('id_' + key);
         if (input) input.value = value;
       }
-      alert('✅ License scanned successfully — fields updated.');
+      alert('License scanned successfully.');
     }
   } catch (err) {
-    alert('❌ OCR request failed: ' + err);
+    alert('OCR request failed: ' + err);
   }
 });
 </script>
+
 {% endblock %}

@@ -4,98 +4,86 @@
 {% block title %}Register Vehicle | TicketNow{% endblock %}
 
 {% block content %}
-<div class="p-4">
-  <h3 class="mb-3"><i class="bi bi-truck"></i> Register Vehicle</h3>
-  <p class="text-muted">
-    Fill in all required fields (<span class="text-danger">*</span>) to register a vehicle and link it to a driver.
-  </p>
+  <div class="container py-4">
+    <div class="mx-auto p-4 bg-white shadow rounded" style="max-width: 1200px;">
+    <h3 class="fw-bold mb-2"><i class="bi bi-truck"></i> Register Vehicle</h3>
+    <p class="text-muted mb-4">
+      Fill in all required fields (<span class="text-danger">*</span>) to register a vehicle and link it to a driver.
+    </p>
 
-  <!-- Flash Messages -->
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <!-- Flash Messages -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger"><strong>Form Error:</strong> {{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data"
+          hx-post="{% url 'vehicles:register_vehicle' %}"
+          hx-target="#main-content"
+          hx-swap="innerHTML transition:true"
+          id="vehicleForm">
+      {% csrf_token %}
+
+      <!-- Assign Driver -->
+      <div class="mb-3">
+        <label class="form-label fw-bold required">Assign Driver</label>
+        {% if form.assigned_driver.errors %}
+          <div class="form-control border-danger p-0">{{ form.assigned_driver }}</div>
+          <div class="text-danger small mt-1">{{ form.assigned_driver.errors|striptags }}</div>
+        {% else %}
+          {{ form.assigned_driver }}
+        {% endif %}
+        <div class="form-text text-muted">Search and select a registered driver.</div>
       </div>
-    {% endfor %}
-  {% endif %}
 
-  {% if form.non_field_errors %}
-  <div class="alert alert-danger">
-    <strong>Form Error:</strong> {{ form.non_field_errors }}
-  </div>
-  {% endif %}
+      <!-- Vehicle Fields -->
+      <div class="row g-3">
+        {% for field in form %}
+          {% if field.name != 'assigned_driver' %}
+          <div class="col-md-6">
+            <label class="form-label fw-bold">
+              {{ field.label }}
+              {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+            </label>
 
-  <!-- Vehicle Registration Form -->
-  <div class="card shadow-sm border-0 mb-4">
-    <div class="card-body">
-      <form method="POST" enctype="multipart/form-data"
-            hx-post="{% url 'vehicles:register_vehicle' %}"
-            hx-target="#main-content"
-            hx-swap="innerHTML transition:true"
-            id="vehicleForm">
-        {% csrf_token %}
-
-        <!-- Assigned Driver -->
-        <div class="mb-3">
-          <label class="form-label fw-bold">
-            Assign Driver <span class="text-danger">*</span>
-          </label>
-          {% if form.assigned_driver.errors %}
-            <div class="form-control border-danger p-0">{{ form.assigned_driver }}</div>
-            <div class="text-danger small mt-1">{{ form.assigned_driver.errors|striptags }}</div>
-          {% else %}
-            {{ form.assigned_driver }}
-          {% endif %}
-          <div class="form-text text-muted">Search and select a registered driver.</div>
-        </div>
-
-        <!-- Vehicle Information Fields -->
-        <div class="row">
-          {% for field in form %}
-            {% if field.name != 'assigned_driver' %}
-              <div class="col-md-6 mb-3">
-                <label class="form-label fw-bold">
-                  {{ field.label }}
-                  {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
-                </label>
-
-                {% if field.errors %}
-                  <div class="form-control border-danger p-0">{{ field }}</div>
-                  <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
-                {% else %}
-                  {% if field.name == 'route' %}
-                    <div class="route-wrapper">
-                      {{ field }}
-                    </div>
-                    <div class="form-text text-muted">Select the route for this vehicle.</div>
-                  {% else %}
-                    {{ field }}
-                  {% endif %}
-                {% endif %}
-              </div>
+            {% if field.errors %}
+              <div class="form-control border-danger p-0">{{ field }}</div>
+              <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+            {% else %}
+              {{ field }}
             {% endif %}
-          {% endfor %}
-        </div>
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
 
-        <!-- Actions -->
-        <div class="text-end mt-3">
-          <button type="submit" class="btn btn-success btn-lg">
-            <i class="bi bi-save"></i> Register Vehicle
-          </button>
-          <a hx-get="{% url 'accounts:staff_dashboard' %}"
-             hx-target="#main-content"
-             hx-swap="innerHTML transition:true"
-             class="btn btn-secondary btn-lg">
-            <i class="bi bi-arrow-left-circle"></i> Back to Dashboard
-          </a>
-        </div>
-      </form>
-    </div>
+      <!-- Buttons -->
+      <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'accounts:staff_dashboard' %}"
+           hx-get="{% url 'accounts:staff_dashboard' %}"
+           hx-target="#main-content"
+           hx-swap="innerHTML transition:true"
+           class="btn btn-outline-secondary">
+          ← Back to Dashboard
+        </a>
+
+        <button type="submit" class="btn btn-success px-4">
+          ✔ Register Vehicle
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
-<!-- Select2 Enhancement -->
+<!-- Select2 Support -->
 <link href="{% static 'css/select2.min.css' %}" rel="stylesheet">
 <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
@@ -103,7 +91,6 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-  // ✅ Enable Select2 for driver and route dropdowns
   if (window.$ && $.fn && $.fn.select2) {
     $('#id_assigned_driver, #id_route').select2({
       placeholder: "Select option...",
@@ -112,31 +99,19 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // Auto-focus first invalid field
-  const invalidField = document.querySelector('.border-danger input, .border-danger select');
-  if (invalidField) invalidField.focus();
+  const invalid = document.querySelector('.border-danger input, .border-danger select');
+  if (invalid) invalid.focus();
 });
 </script>
 
 <style>
-select,
-select.form-select,
-select.form-control {
-  width: 100% !important;
-  min-width: 200px !important;
-  max-width: 100% !important;
-  height: auto !important;
-  color: #212529 !important;
-  background-color: #fff !important;
-  border: 1px solid #ced4da !important;
-  border-radius: 0.375rem !important;
-  padding: 0.5rem !important;
-  display: block !important;
+.required::after {
+  content: " *";
+  color: red;
 }
-
-option {
-  color: #000 !important;
-  background-color: #fff !important;
+select.form-control, select.form-select {
+  width: 100% !important;
 }
 </style>
+
 {% endblock %}

@@ -54,49 +54,98 @@ def deposit_menu(request):
     settings = SystemSettings.get_solo()
     min_deposit = settings.min_deposit_amount
     user = request.user
-    deposits = Deposit.objects.select_related('wallet__vehicle__assigned_driver').order_by('-created_at')
 
+    # Base queryset
+    deposits = Deposit.objects.select_related(
+        'wallet__vehicle__assigned_driver'
+    ).order_by('-created_at')
+
+    # ================================
+    #          ADMIN VIEW
+    # ================================
     if user.role == "admin":
         start_date = request.GET.get("start_date", "")
         end_date = request.GET.get("end_date", "")
         vehicle_plate = request.GET.get("vehicle_plate", "")
-        if start_date:
-            deposits = deposits.filter(created_at__date__gte=start_date)
-        if end_date:
-            deposits = deposits.filter(created_at__date__lte=end_date)
-        if vehicle_plate:
-            deposits = deposits.filter(wallet__vehicle__license_plate__icontains=vehicle_plate)
-        context = {"role":"admin","deposits":deposits[:200],"start_date":start_date,"end_date":end_date,"vehicle_plate":vehicle_plate,"min_deposit":min_deposit}
+
+        # 🟢 If NO filters → show TODAY by default
+        if not start_date and not end_date and not vehicle_plate:
+            today = timezone.localdate()
+            deposits = deposits.filter(created_at__date=today)
+            start_date = today.isoformat()
+            end_date = today.isoformat()
+        else:
+            # 🟡 Apply filters only if provided
+            if start_date:
+                deposits = deposits.filter(created_at__date__gte=start_date)
+            if end_date:
+                deposits = deposits.filter(created_at__date__lte=end_date)
+            if vehicle_plate:
+                deposits = deposits.filter(wallet__vehicle__license_plate__icontains=vehicle_plate)
+
+        context = {
+            "role": "admin",
+            "deposits": deposits[:200],
+            "start_date": start_date,
+            "end_date": end_date,
+            "vehicle_plate": vehicle_plate,
+            "min_deposit": min_deposit,
+        }
         return render(request, "terminal/deposit_menu.html", context)
 
-    drivers_with_vehicles = Driver.objects.filter(vehicles__isnull=False).distinct().order_by('last_name','first_name')
-    recent_deposits = deposits[:10]
+    # ================================
+    #          STAFF VIEW
+    # ================================
+    drivers_with_vehicles = Driver.objects.filter(
+        vehicles__isnull=False
+    ).distinct().order_by('last_name', 'first_name')
+
+    # 🟢 Staff always sees TODAY'S deposits by default
+    today = timezone.localdate()
+    recent_deposits = deposits.filter(
+        created_at__date=today
+    )[:10]
+
+    # -------------------------------
+    # Handle POST deposit submission
+    # -------------------------------
     if request.method == "POST":
         vehicle_id = request.POST.get("vehicle_id")
         amount_str = request.POST.get("amount", "").strip()
+
         if not vehicle_id or not amount_str:
             messages.error(request, "⚠️ Please fill in all required fields.")
             return redirect('terminal:deposit_menu')
+
         try:
             amount = Decimal(amount_str)
         except:
             messages.error(request, "❌ Invalid deposit amount.")
             return redirect('terminal:deposit_menu')
+
         if amount <= 0:
             messages.error(request, "⚠️ Deposit amount must be greater than zero.")
             return redirect('terminal:deposit_menu')
+
         vehicle = Vehicle.objects.filter(id=vehicle_id).first()
         if not vehicle:
             messages.error(request, "❌ Vehicle not found.")
             return redirect('terminal:deposit_menu')
+
         wallet, _ = Wallet.objects.get_or_create(vehicle=vehicle)
         Deposit.objects.create(wallet=wallet, amount=amount)
+
         messages.success(request, f"✅ Successfully deposited ₱{amount} to {vehicle.license_plate}.")
         return redirect('terminal:deposit_menu')
 
-    context = {"role":"staff_admin","drivers":drivers_with_vehicles,"recent_deposits":recent_deposits,"context_message":"" if drivers_with_vehicles.exists() else "No registered drivers with vehicles found. Please register a vehicle first.","min_deposit":min_deposit}
+    context = {
+        "role": "staff_admin",
+        "drivers": drivers_with_vehicles,
+        "recent_deposits": recent_deposits,
+        "context_message": "" if drivers_with_vehicles.exists() else "No registered drivers with vehicles found. Please register a vehicle first.",
+        "min_deposit": min_deposit,
+    }
     return render(request, "terminal/deposit_menu.html", context)
-
 
 
 # ===============================
