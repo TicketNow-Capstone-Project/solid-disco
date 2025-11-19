@@ -477,14 +477,28 @@ def qr_scan_entry(request):
         staff_user = request.user
 
         try:
-            # 🔍 Validate vehicle
+            # 🔍 Validate vehicle with better error handling
             vehicle = Vehicle.objects.filter(qr_value__iexact=qr_code).first()
             if not vehicle:
-                return JsonResponse({
-                    "status": "error",
-                    "message": "❌ Invalid QR code.",
-                    "balance": None
-                })
+                # Check for common QR code format issues
+                if len(qr_code) < 3:
+                    return JsonResponse({
+                        "status": "error",
+                        "message": "❌ QR code too short. Please scan again.",
+                        "balance": None
+                    })
+                elif not qr_code.replace('-', '').replace('_', '').isalnum():
+                    return JsonResponse({
+                        "status": "error",
+                        "message": "❌ Invalid QR code format. Please scan again.",
+                        "balance": None
+                    })
+                else:
+                    return JsonResponse({
+                        "status": "error",
+                        "message": "❌ Vehicle not found. Please check registration.",
+                        "balance": None
+                    })
 
             # 🏦 Get or create wallet
             wallet, _ = Wallet.objects.get_or_create(vehicle=vehicle)
