@@ -4,44 +4,78 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import CustomUser
 
 
-# ✅ DRIVER REGISTRATION FORM (unchanged)
-class DriverRegistrationForm(forms.Form):
-    first_name = forms.CharField(
-        max_length=100,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'})
-    )
-    middle_name = forms.CharField(
-        max_length=100,
-        required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Middle Name'})
-    )
-    last_name = forms.CharField(
-        max_length=100,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'})
-    )
-    suffix = forms.ChoiceField(
-        choices=[('', 'Select Suffix'), ('Jr.', 'Jr.'), ('Sr.', 'Sr.'), ('II', 'II'), ('III', 'III')],
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-
-    # Contact Information
+def validate_phone_number(value):
+    """Consolidated phone number validation."""
     phone_regex = RegexValidator(
         regex=r'^\+?1?\d{9,15}$',
         message="Phone number must be entered in the format: '+639171234567'. Up to 15 digits allowed."
     )
+    phone_regex(value)
+
+
+def validate_zip_code(value):
+    """Consolidated ZIP code validation."""
+    zip_regex = RegexValidator(
+        regex='^[0-9]{4}$', 
+        message='Enter a valid 4-digit ZIP code'
+    )
+    zip_regex(value)
+
+
+class BaseFormMixin:
+    """Mixin to apply consistent form styling."""
+    
+    def apply_bootstrap_classes(self):
+        """Apply Bootstrap classes to form fields."""
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, forms.Select):
+                field.widget.attrs.update({'class': 'form-select'})
+            elif isinstance(field.widget, forms.TextInput):
+                field.widget.attrs.update({'class': 'form-control'})
+            elif isinstance(field.widget, forms.EmailInput):
+                field.widget.attrs.update({'class': 'form-control'})
+            elif isinstance(field.widget, forms.DateInput):
+                field.widget.attrs.update({'class': 'form-control'})
+            elif isinstance(field.widget, forms.PasswordInput):
+                field.widget.attrs.update({'class': 'form-control'})
+
+
+# ✅ DRIVER REGISTRATION FORM (with consolidated validation)
+class DriverRegistrationForm(forms.Form, BaseFormMixin):
+    first_name = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={'placeholder': 'First Name'})
+    )
+    middle_name = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Middle Name'})
+    )
+    last_name = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={'placeholder': 'Last Name'})
+    )
+    suffix = forms.ChoiceField(
+        choices=[('', 'Select Suffix'), ('Jr.', 'Jr.'), ('Sr.', 'Sr.'), ('II', 'II'), ('III', 'III')],
+        required=False
+    )
+
+    # Contact Information with consolidated validation
     mobile_number = forms.CharField(
-        validators=[phone_regex],
+        validators=[validate_phone_number],
         max_length=17,
         widget=forms.TextInput(attrs={
-            'class': 'form-control',
             'placeholder': '+639171234567',
             'pattern': '^(\\+63|0)9\\d{9}$'
         })
     )
     email = forms.EmailField(
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'email@example.com'})
+        widget=forms.EmailInput(attrs={'placeholder': 'email@example.com'})
     )
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.apply_bootstrap_classes()
 
     # Address
     house_number = forms.CharField(
