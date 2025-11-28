@@ -10,6 +10,18 @@
         padding: 12px 20px;
         font-size: 16px;
         min-height: 44px; /* Touch target size */
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .btn:focus {
+        outline: 2px solid #007bff;
+        outline-offset: 2px;
     }
     
     .table-responsive {
