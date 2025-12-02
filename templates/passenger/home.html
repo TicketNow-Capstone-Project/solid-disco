@@ -8,165 +8,569 @@
 
   <link rel="icon" type="image/png" href="{% static 'img/TicketNow-Logo.png' %}">
   <link rel="shortcut icon" href="{% static 'img/TicketNow-Logo.png' %}">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-
+  
+  <!-- Bootstrap Icons for better icon support -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* === DESIGN SYSTEM VARIABLES === */
+    :root {
+      --primary-blue: #112666;
+      --secondary-blue: #180f92;
+      --accent-blue: #007bff;
+      --light-blue: #0884ff;
+      --button-blue: #0481a3;
+      --white: #ffffff;
+      --light-bg: #f8f9fa;
+      --light-gray: #e4eaf0;
+      --dark-text: #1c1b1b;
+      --medium-text: #555;
+      --white-text: #ffffff;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      background-color: #f8f9fa;
+    }
+    
+    @font-face {
+      font-family: 'Bebas Neue Web'; 
+      src: 
+           url('../fonts/BebasNeue-Regular.woff2') format('woff2'),
+           url('../fonts/BebasNeue-Regular.woff') format('woff');
     }
 
-    /* Navbar */
-    .navbar {
-      background-color: #007bff;
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--light-bg);
+      line-height: 1.6;
+      color: var(--dark-text);
     }
-    .navbar-brand, .nav-link {
-      color: white !important;
-      font-weight: 500;
+
+    /* === LAYOUT UTILITIES === */
+    .page-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
     }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* === NAVIGATION === */
+    header {
+      background-color: var(--white);
+      padding: 20px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .nav-container .logo {
+      font-family: 'Bebas Neue Web', Impact, sans-serif;
+      height: 40px;
+    }
+
+    .logo {
+      color: var(--primary-blue);
+      font-weight: 600;
+      font-size: 20px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      transition: var(--transition);
+    }
+
+    .logo:hover {
+      color: var(--secondary-blue);
+    }
+
+    .logo-image {
+      margin-right: 8px;
+      transition: var(--transition);
+    }
+
+    .logo:hover .logo-image {
+      transform: scale(1.05);
+    }
+
+    .nav-menu {
+      display: flex;
+      list-style: none;
+      gap: 30px;
+    }
+
     .nav-item {
-      margin-left: 1rem;
-    }
-    .nav-link:hover {
-      text-decoration: underline;
+      color: var(--dark-text);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      transition: var(--transition);
+      position: relative;
+      padding: 5px 0;
     }
 
-    /* Banner */
-    .banner {
-      background: url("{% static 'img/Home-BG.jpg' %}") center/cover no-repeat;
-      color: white;
-      position: relative;
-      padding: 6rem 2rem;
+    .nav-item:hover {
+      color: var(--secondary-blue);
     }
-    .banner::before {
+
+    .nav-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--secondary-blue);
+      transition: var(--transition);
+    }
+
+    .nav-item:hover::after {
+      width: 100%;
+    }
+
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 5px;
+      color: var(--primary-blue);
+      transition: var(--transition);
+    }
+
+    .menu-toggle:hover {  
+      color: var(--secondary-blue);
+    }
+
+    /* === HERO SECTION === */
+    .hero {
+      background: url("{% static 'img/Home-BG.jpg' %}") center/cover no-repeat;
+      position: relative;
+      min-height: 60vh;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      width: 100%;
+    }
+
+    .hero::before {
       content: "";
       position: absolute;
-      inset: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 1;
-    }
-    .banner-content {
-      position: relative;
-      z-index: 2;
-    }
-    .banner h1 {
-      font-size: 3rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
-    }
-    .banner p {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-    }
-    .banner .btn {
-      font-size: 1.1rem;
-      padding: 0.75rem 1.5rem;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+     
     }
 
-    /* Purpose Section */
-    .purpose-section {
-      background-color: white;
-      padding: 2rem;
-      border-radius: 8px;
-      margin-top: 2rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    .hero-content {
+  position: relative;
+  background-color: rgba(44, 97, 222, 0.75);
+  padding: 40px 30px;
+ min-width: 40%;
+ width: 400px;
+ min-height: 60vh;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  
+  /* REVISION: Ensure all margin is gone for full stickiness */
+  margin: 0; 
+  
+ 
+}
+
+    .hero-title {
+      font-size: 70px;
+      font-weight: 400;
+      margin-bottom: 15px;
+      font-family: 'Bebas Neue Web', Impact, sans-serif;
+      line-height: 1;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     }
-    .section-title {
-      font-weight: bold;
-      margin-bottom: 1rem;
-      color: #333;
-      border-bottom: 2px solid #007bff;
-      padding-bottom: 0.5rem;
+
+    .hero-description {
+      font-size: 18px;
+      margin-bottom: 30px;
+      opacity: 0.95;
+      line-height: 1.5;
     }
-    .purpose-item {
-      margin-bottom: 1.5rem;
-    }
-    .purpose-item h5 {
-      color: #007bff;
+
+    .cta-button {
+      font-size: 18px;
+      padding: 14px 32px;
+      background-color: var(--white);
+      color: var(--button-blue);
+      text-decoration: none;
+      border-radius: 6px;
       font-weight: 600;
-      margin-bottom: 0.5rem;
+      margin: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+      width: fit-content;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
-    .purpose-item p {
-      color: #555;
-      line-height: 1.6;
+
+    .cta-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+      background-color: var(--button-blue);
+      color: var(--white);
+    }
+
+    /* === PURPOSE SECTION === */
+    .purpose-section {
+      box-shadow: var(--shadow);
+      background-color: var(--white);
+
+      
+      display: flex;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .purpose-header {
+      background-color: var(--light-gray);
+      padding: 60px 30px;
+       min-width: 40%;
+ width: 400px;
+ min-height: 60vh;
+      display: flex;
+      justify-content: center;
+     
+    }
+
+    .purpose-title {
+      font-weight: bold;
+      color: var(--secondary-blue);
+      font-size: 40px;
+      text-transform: uppercase;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .purpose-word {
+      display: block;
+      text-align: right;
+      margin-left: -90px;
+    }
+
+    .about-word {
+      display: block;
+      text-align: left;
+      color: rgb(130, 113, 113);
+      margin-right: -90px;
+    }
+
+    .purpose-details {
+      padding: 60px 50px;
+      width: 70%;
+    }
+
+    .vision, .mission {
+      margin-bottom: 40px;
+    }
+
+    .section-heading {
+      color: var(--accent-blue);
+      font-weight: 600;
+      margin-bottom: 15px;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+    }
+
+    .section-heading::before {
+      content: "■";
+      color: var(--accent-blue);
+      margin-right: 12px;
+      font-size: 16px;
+    }
+
+    .section-text {
+      color: var(--medium-text);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    /* === RESPONSIVE DESIGN === */
+    @media (max-width: 1024px) {
+      .hero-content {
+        max-width: 450px;
+        padding: 35px 25px;
+      }
+      
+      .hero-title {
+        font-size: 60px;
+      }
+      
+      .purpose-header {
+        width: 35%;
+        min-width: 250px;
+      }
+      
+      .purpose-details {
+        width: 65%;
+        padding: 50px 40px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: block;
+      }
+
+      .nav-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: var(--white);
+        flex-direction: column;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        gap: 15px;
+      }
+
+      .nav-menu.active {
+        display: flex;
+      }
+
+      .hero {
+        min-height: 50vh;
+      }
+      
+      .hero-content {
+        width: 100%;
+        max-width: none;
+        min-height: auto;
+        padding: 40px 20px;
+        border-radius: 0;
+        text-align: center;
+      }
+
+      .hero-title {
+        font-size: 48px;
+      }
+      
+      .hero-description {
+        font-size: 16px;
+      }
+
+      .purpose-section {
+        flex-direction: column;
+        margin: 30px 0 50px;
+      }
+
+      .purpose-header,
+      .purpose-details {
+        width: 100%;
+      }
+
+      .purpose-header {
+        padding: 40px 20px;
+        min-width: auto;
+      }
+      
+      .purpose-title {
+        font-size: 36px;
+      }
+
+      .purpose-details {
+        padding: 40px 30px;
+      }
+      
+      .section-heading {
+        font-size: 20px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .page-container {
+        padding: 0 15px;
+      }
+      
+      .hero {
+        min-height: 45vh;
+      }
+      
+      .hero-title {
+        font-size: 40px;
+      }
+      
+      .hero-description {
+        font-size: 15px;
+        margin-bottom: 25px;
+      }
+      
+      .cta-button {
+        font-size: 16px;
+        padding: 12px 24px;
+      }
+
+      .purpose-title {
+        font-size: 32px;
+      }
+      
+      .purpose-header {
+        padding: 30px 15px;
+      }
+      
+      .purpose-details {
+        padding: 30px 20px;
+      }
+      
+      .vision, .mission {
+        margin-bottom: 30px;
+      }
+      
+      .section-heading {
+        font-size: 18px;
+      }
+      
+      .section-text {
+        font-size: 15px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .logo {
+        font-size: 16px;
+      }
+      
+      .logo-image {
+        width: 60px;
+        height: 60px;
+      }
+      
+      .hero-title {
+        font-size: 36px;
+      }
+      
+      .purpose-title {
+        font-size: 28px;
+      }
     }
   </style>
 </head>
 
 <body>
+  <header>
+    <div class="page-container">
+      <div class="nav-container">
+        <a class="logo" href="{% url 'passenger:home' %}">
+          <img class="logo-image" src="{% static 'img/TicketNow-Logo.png' %}" alt="TicketNow Logo" width="80" height="80">
+          Terminal Management System 
+        </a>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg">
-    <div class="container">
-      <a class="navbar-brand" href="{% url 'passenger:home' %}">
-        <img src="{% static 'img/TicketNow-Logo.png' %}" alt="TicketNow Logo" width="60" height="60" class="me-2">
-        TICKETNOW
-      </a>
+        <button class="menu-toggle" aria-label="Toggle navigation menu">
+          <span>☰</span>
+        </button>
 
-      <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="{% url 'passenger:home' %}">HOME</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'passenger:announcement' %}">ANNOUNCEMENT</a></li>
-          <li class="nav-item"><a class="nav-link" href="{% url 'passenger:public_queue' %}">TRIP SCHEDULE</a></li>
-          <li class="nav-item"><a class="nav-link" href="#">CONTACT</a></li>
+        <ul class="nav-menu">
+          <li><a class="nav-item" href="{% url 'passenger:home' %}">HOME</a></li>
+          <li><a class="nav-item" href="{% url 'passenger:announcement' %}">ANNOUNCEMENT</a></li>
+          <li><a class="nav-item" href="{% url 'passenger:public_queue' %}">TRIP SCHEDULE</a></li>
+          <li><a class="nav-item" href="{% url 'passenger:contact' %}">CONTACT</a></li>
         </ul>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <!-- Banner -->
-  <div class="banner">
-    <div class="container banner-content">
-      <div class="row">
-        <div class="col-md-8 text-start">
-          <h1>TICKET NOW!!</h1>
-          <p>See trip schedules and updates for government announcement...</p>
+  <section class="hero">
+    
+      <div class="hero-content">
+        <h1 class="hero-title">TICKET NOW!!</h1>
+        <p class="hero-description">See trip schedules and updates for government announcement.</p>
+        <a href="{% url 'passenger:public_queue' %}" class="cta-button">
+          <i class="bi bi-calendar-check"></i>Trip Schedule
+        </a>
+      </div>
+    
+  </section>
 
-          <div class="mt-4">
-            <a href="{% url 'passenger:public_queue' %}" class="btn btn-light fw-semibold">
-              Trip Schedule
-            </a>
-          </div>
+  
+    <section class="purpose-section">
+      <div class="purpose-header">
+        <h2 class="purpose-title">
+          <span class="purpose-word">PURPOSE</span>
+          <br>
+          <span class="about-word">ABOUT</span>
+        </h2>
+      </div>
 
+      <div class="purpose-details">
+        <div class="vision">
+          <h3 class="section-heading">VISION</h3>
+          <p class="section-text">
+            To become the leading, fully integrated Terminal Management System that delivers seamless operations,
+            real-time visibility, and data-driven decision support—empowering organizations to achieve efficiency,
+            security, and world-class service excellence.
+          </p>
+        </div>
+
+        <div class="mission">
+          <h3 class="section-heading">MISSION</h3>
+          <p class="section-text">
+            Our mission is to streamline terminal operations through innovative technology, automation, and intelligent
+            workflows. We aim to provide users with reliable tools for monitoring, managing, and optimizing terminal
+            activities—ensuring accuracy, transparency, operational safety, and superior customer experience at every
+            touchpoint.
+          </p>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+  
 
-  <!-- Purpose Section -->
-  <div class="container">
-    <div class="purpose-section">
-
-      <h4 class="section-title">PURPOSE ABOUT</h4>
-
-      <div class="purpose-item">
-        <h5>VISION</h5>
-        <p>
-          To become the leading, fully integrated Terminal Management System that delivers seamless operations,
-          real-time visibility, and data-driven decision support—empowering organizations to achieve efficiency,
-          security, and world-class service excellence.
-        </p>
-      </div>
-
-      <div class="purpose-item">
-        <h5>MISSION</h5>
-        <p>
-          Our mission is to streamline terminal operations through innovative technology, automation, and intelligent
-          workflows. We aim to provide users with reliable tools for monitoring, managing, and optimizing terminal
-          activities—ensuring accuracy, transparency, operational safety, and superior customer experience at every
-          touchpoint.
-        </p>
-      </div>
-
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Mobile menu toggle
+    document.querySelector('.menu-toggle').addEventListener('click', function() {
+      document.querySelector('.nav-menu').classList.toggle('active');
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', function(event) {
+      const navMenu = document.querySelector('.nav-menu');
+      const menuToggle = document.querySelector('.menu-toggle');
+      
+      if (!navMenu.contains(event.target) && !menuToggle.contains(event.target) && navMenu.classList.contains('active')) {
+        navMenu.classList.remove('active');
+      }
+    });
+    
+    // Close menu when clicking on a link (for single page applications)
+    document.querySelectorAll('.nav-item').forEach(link => {
+      link.addEventListener('click', () => {
+        document.querySelector('.nav-menu').classList.remove('active');
+      });
+    });
+  </script>
 </body>
 </html>

@@ -46,6 +46,9 @@ def home(request):
 def announcement(request):
     return render(request, 'passenger/announcement.html')
 
+def contact(request):
+    return render(request, 'passenger/contact.html')
+
 
 def public_queue_view(request):
     """

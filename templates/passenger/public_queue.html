@@ -14,313 +14,846 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
   <style>
+    /* === DESIGN SYSTEM VARIABLES === */
+    :root {
+      --primary-blue: #112666;
+      --secondary-blue: #180f92;
+      --accent-blue: #007bff;
+      --light-blue: #0884ff;
+      --button-blue: #0481a3;
+      --white: #ffffff;
+      --light-bg: #f8f9fa;
+      --light-gray: #e4eaf0;
+      --dark-text: #1c1b1b;
+      --medium-text: #555;
+      --white-text: #ffffff;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background-color: #f8f9fa;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--light-bg);
+      line-height: 1.6;
     }
 
-    /* NAVBAR copied from announcement.html */
-    .navbar {
-      background-color: #007bff;
+    /* === LAYOUT UTILITIES === */
+    .page-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 50px;
     }
-    .navbar-brand, .nav-link {
-      color: white !important;
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* === NAVIGATION === */
+    header {
+      background-color: var(--white);
+      padding: 20px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .nav-container .logo {
+      font-family: 'Bebas Neue Web', Impact, sans-serif;
+      height: 40px;
+    }
+
+    .logo {
+      color: var(--primary-blue);
+      font-weight: 600;
+      font-size: 20px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      transition: var(--transition);
+    }
+
+    .logo:hover {
+      color: var(--secondary-blue);
+    }
+
+    .logo-image {
+      margin-right: 8px;
+      transition: var(--transition);
+    }
+
+    .logo:hover .logo-image {
+      transform: scale(1.05);
+    }
+
+    .nav-menu {
+      display: flex;
+      list-style: none;
+      gap: 30px;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-item {
+      color: var(--dark-text);
+      text-decoration: none;
       font-weight: 500;
+      font-size: 14px;
+      transition: var(--transition);
+      position: relative;
+      padding: 5px 0;
     }
 
+    .nav-item:hover {
+      color: var(--secondary-blue);
+    }
+
+    .nav-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background-color: var(--secondary-blue);
+      transition: var(--transition);
+    }
+
+    .nav-item:hover::after {
+      width: 100%;
+    }
+
+    .menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 5px;
+      color: var(--primary-blue);
+      transition: var(--transition);
+    }
+
+    .menu-toggle:hover {
+      color: var(--secondary-blue);
+    }
+
+    /* === MAIN CONTENT AREA === */
+    .main-content {
+      padding: 30px 0 60px;
+    }
+
+    /* === PAGE HEADER === */
+    .page-header {
+      background: linear-gradient(135deg, #351bc5 0%,#351bc5 100%);
+      color: var(--white);
+      padding: 40px 0;
+      width: 100%;
+      margin-bottom: 30px;
+      box-shadow: var(--shadow);
+    }
+
+    .page-header .page-container {
+      padding: 0 50px;
+    }
+
+    .page-header-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      text-align: center;
+    }
+
+    .page-header-icon {
+      font-size: 3rem;
+      opacity: 0.9;
+      color: var(--white);
+    }
+
+    .page-title-section {
+      flex: 1;
+    }
+
+    .bruh {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-title {
+      font-weight: bold;
+      font-size: 40px;
+      color: var(--white);
+      text-transform: uppercase;
+      margin: 0 0 8px 0;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-subtitle {
+      font-size: 18px;
+      color: var(--white);
+      opacity: 0.9;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    /* === FILTER SECTION === */
+    .filter-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .filter-section {
+      background-color: var(--white);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      transition: var(--transition);
+    }
+
+    .filter-section:hover {
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+    }
+
+    .filter-label {
+      font-weight: 600;
+      color: var(--primary-blue);
+      margin-bottom: 15px;
+      display: block;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .filter-select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--light-gray);
+      border-radius: 6px;
+      font-size: 16px;
+      transition: var(--transition);
+      background-color: var(--white);
+      cursor: pointer;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    /* === SCHEDULE TABLE === */
+    .schedule-table {
+      background-color: var(--white);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .schedule-table:hover {
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+    }
+
+    .table-header {
+      background-color: var(--light-gray);
+      border-bottom: 3px solid var(--accent-blue);
+    }
+
+    .table-header th {
+      color: var(--primary-blue);
+      font-weight: 600;
+      padding: 20px 15px;
+      border: none;
+      font-size: 16px;
+    }
+
+    .table-body td {
+      padding: 18px 15px;
+      vertical-align: middle;
+      border-color: var(--light-gray);
+      transition: var(--transition);
+    }
+
+    .table-body tr:hover td {
+      background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    /* === ROUTE PILL === */
     .route-pill {
       background: #e7f1ff;
-      color: #0d6efd;
+      color: var(--accent-blue);
       font-weight: 600;
-      padding: 4px 10px;
+      padding: 8px 16px;
       border-radius: 999px;
       font-size: .85rem;
+      display: inline-block;
+      transition: var(--transition);
     }
 
+    .route-pill:hover {
+      transform: scale(1.05);
+    }
+
+    /* === STATUS BADGES === */
     .status-boarding {
       background-color: #28a745;
       color: white;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      padding: 8px 16px;
+      border-radius: 6px;
       font-size: 0.9rem;
+      font-weight: 600;
+      display: inline-block;
+      transition: var(--transition);
     }
 
     .status-departed {
       background-color: #6c757d;
       color: white;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      padding: 8px 16px;
+      border-radius: 6px;
       font-size: 0.9rem;
+      font-weight: 600;
+      display: inline-block;
+      transition: var(--transition);
     }
 
+    /* === COUNTDOWN BADGES === */
     .countdown-now {
       background-color: #dc3545;
       color: white;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      padding: 8px 16px;
+      border-radius: 6px;
       font-size: 0.9rem;
+      font-weight: 600;
+      display: inline-block;
     }
 
     .countdown-soon {
       background-color: #fd7e14;
       color: white;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      padding: 8px 16px;
+      border-radius: 6px;
       font-size: 0.9rem;
+      font-weight: 600;
+      display: inline-block;
     }
 
     .countdown-waiting {
       background-color: transparent;
-      color: #6c757d;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      color: var(--medium-text);
+      padding: 8px 16px;
+      border-radius: 6px;
       font-size: 0.9rem;
+      font-weight: 600;
+      display: inline-block;
     }
 
+    /* === PROGRESS BAR === */
     .progress {
-      height: 6px;
+      height: 10px;
+      background-color: var(--light-gray);
+      border-radius: 5px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     .progress-bar {
-      transition: width 0.8s linear;
-      height: 6px;
+      transition: width 0.8s ease;
+      height: 100%;
+      border-radius: 5px;
     }
 
-    .progress-blue { background: #0d6efd; }
+    .progress-blue { background: var(--accent-blue); }
     .progress-orange { background: #fd7e14; }
     .progress-red { background: #dc3545; }
 
+    /* === DEPARTED ROWS === */
     .departed-row {
-      opacity: 0.55;
+      opacity: 0.7;
       background: #f8f9fa !important;
     }
 
+    .departed-row:hover td {
+      background-color: #f1f3f4 !important;
+    }
+
+    /* === REFRESH NOTE === */
     .refresh-note {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
+      color: var(--medium-text);
+      text-align: right;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* === EMPTY STATE === */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--medium-text);
+    }
+
+    .empty-state i {
+      font-size: 4rem;
       color: #6c757d;
+      margin-bottom: 1.5rem;
+      opacity: 0.7;
+    }
+
+    /* === ACCESSIBILITY IMPROVEMENTS === */
+    .focus-visible {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 2px;
+    }
+
+    /* === RESPONSIVE DESIGN === */
+    @media (max-width: 1024px) {
+      .page-title {
+        font-size: 36px;
+      }
+      
+      .table-header th,
+      .table-body td {
+        padding: 16px 12px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: block;
+      }
+
+      .nav-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: var(--white);
+        flex-direction: column;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        gap: 15px;
+      }
+
+      .nav-menu.active {
+        display: flex;
+      }
+
+      .page-header {
+        padding: 30px 0;
+      }
+
+      .page-header .page-container {
+        padding: 0 20px;
+      }
+
+      .page-title {
+        font-size: 32px;
+      }
+
+      .page-header-icon {
+        font-size: 2.5rem;
+      }
+
+      .bruh {
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      .filter-section {
+        padding: 25px;
+        max-width: 100%;
+      }
+
+      .table-header th {
+        padding: 14px 10px;
+        font-size: 14px;
+      }
+
+      .table-body td {
+        padding: 14px 10px;
+        font-size: 14px;
+      }
+      
+      /* Make table scrollable on mobile */
+      .schedule-table {
+        overflow-x: auto;
+      }
+      
+      .schedule-table table {
+        min-width: 700px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .page-container {
+        padding: 0 15px;
+      }
+
+      .page-header .page-container {
+        padding: 0 15px;
+      }
+      
+      .main-content {
+        padding: 20px 0 40px;
+      }
+      
+      .page-header {
+        padding: 25px 0;
+      }
+      
+      .page-title {
+        font-size: 28px;
+      }
+      
+      .page-subtitle {
+        font-size: 16px;
+      }
+      
+      .filter-section {
+        padding: 20px;
+      }
+      
+      .filter-label {
+        font-size: 16px;
+      }
+      
+      .filter-select {
+        padding: 10px 14px;
+        font-size: 15px;
+      }
+      
+      .refresh-note {
+        text-align: center;
+        justify-content: center;
+      }
+      
+      .empty-state {
+        padding: 60px 20px;
+      }
+      
+      .empty-state i {
+        font-size: 3rem;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .logo {
+        font-size: 16px;
+      }
+      
+      .logo-image {
+        width: 60px;
+        height: 60px;
+      }
+      
+      .page-title {
+        font-size: 24px;
+      }
+      
+      .table-header th,
+      .table-body td {
+        padding: 12px 8px;
+        font-size: 13px;
+      }
+      
+      .route-pill,
+      .status-boarding,
+      .status-departed,
+      .countdown-now,
+      .countdown-soon,
+      .countdown-waiting {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
     }
   </style>
 </head>
 
 <body>
+  <!-- Header with Applied Design System -->
+  <header>
+    <div class="page-container">
+      <div class="nav-container">
+        <a class="logo" href="{% url 'passenger:home' %}">
+          <img class="logo-image" src="{% static 'img/TicketNow-Logo.png' %}" alt="TicketNow Logo" width="80" height="80">
+          Terminal Management System 
+        </a>
 
-<!-- 🚀 ADDED NAVBAR HERE -->
-<nav class="navbar navbar-expand-lg mb-3">
-  <div class="container">
-    <a class="navbar-brand" href="{% url 'passenger:home' %}">
-      <img src="{% static 'img/TicketNow-Logo.png' %}" alt="TicketNow Logo"
-           width="80" height="80" class="me-2">
-      TICKETNOW
-    </a>
+        <button class="menu-toggle" aria-label="Toggle navigation menu">
+          <span>☰</span>
+        </button>
 
-    <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+        <ul class="nav-menu">
+          <li><a class="nav-item" href="{% url 'passenger:home' %}">HOME</a></li>
+          <li><a class="nav-item" href="{% url 'passenger:announcement' %}">ANNOUNCEMENT</a></li>
+          <li><a class="nav-item" href="{% url 'passenger:public_queue' %}">TRIP SCHEDULE</a></li>
+          <li><a class="nav-item" href="{% url 'passenger:contact' %}">CONTACT</a></li>
+        </ul>
+      </div>
+    </div>
+  </header>
 
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="{% url 'passenger:home' %}">HOME</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'passenger:announcement' %}">ANNOUNCEMENT</a></li>
-        <li class="nav-item"><a class="nav-link" href="{% url 'passenger:public_queue' %}">TRIP SCHEDULE</a></li>
-        <li class="nav-item"><a class="nav-link" href="#">CONTACT</a></li>
-      </ul>
+  <!-- Page Header - Outside page-container -->
+  <div class="page-header">
+    <div class="page-container">
+      <div class="page-header-content">
+        <div class="page-title-section">
+          <div class="bruh">
+            <i class="bi bi-truck page-header-icon"></i>
+            <h1 class="page-title">Terminal Vehicle Schedule</h1>
+          </div>
+          <p class="page-subtitle">Live departure - follow the status and the countdown</p>
+        </div>
+      </div>
     </div>
   </div>
-</nav>
-<!-- END NAVBAR -->
 
-
-<div class="container py-4">
-
-  <!-- Back to Home Button -->
-  <div class="mb-4">
-    <a href="{% url 'passenger:home' %}" class="btn btn-outline-primary">
-      <i class="bi bi-arrow-left-circle-fill me-1"></i> Back to Home
-    </a>
-  </div>
-
-  <!-- Title -->
-  <div class="d-flex align-items-center mb-3">
-    <img src="{% static 'img/TicketNow-Logo.png' %}" alt="TicketNow Logo" width="80" height="80" class="me-2">
-    <h2 class="fw-bold mb-0">Terminal Vehicle Schedule</h2>
-  </div>
-
-  <!-- Route Filter -->
-  <form method="get" class="row g-3 mb-3" style="max-width: 360px;">
-    <div class="col-12">
-      <label class="form-label fw-semibold">Filter by Route</label>
-      <select name="route" class="form-select" onchange="this.form.submit()">
-        <option value="all">All Routes</option>
-        {% for route in routes %}
-          <option value="{{ route.id }}" {% if route.id|stringformat:'s' == selected_route %}selected{% endif %}>
-            {{ route.origin }} → {{ route.destination }}
-          </option>
-        {% endfor %}
-      </select>
+  <!-- Main Content - Inside page-container -->
+  <div class="page-container main-content">
+    <!-- Route Filter - Centered -->
+    <div class="filter-container">
+      <div class="filter-section">
+        <label class="filter-label">Filter by Route</label>
+        <form method="get">
+          <select name="route" class="filter-select" onchange="this.form.submit()">
+            <option value="all">All Routes</option>
+            {% for route in routes %}
+              <option value="{{ route.id }}" {% if route.id|stringformat:'s' == selected_route %}selected{% endif %}>
+                {{ route.origin }} → {{ route.destination }}
+              </option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
     </div>
-  </form>
 
-  <!-- Schedule Table -->
-  <div class="table-responsive shadow-sm border rounded bg-white">
-    {% if queue_entries %}
-    <table class="table table-bordered align-middle mb-0">
-      <thead class="table-light">
-        <tr>
-          <th>#</th>
-          <th>Vehicle</th>
-          <th>Route</th>
-          <th>Driver</th>
-          <th>Status</th>
-          <th>Departure</th>
-          <th>Countdown</th>
-        </tr>
-      </thead>
+    <!-- Schedule Table -->
+    <div class="schedule-table">
+      {% if queue_entries %}
+      <table class="table table-hover mb-0">
+        <thead class="table-header">
+          <tr>
+            <th>#</th>
+            <th>Vehicle</th>
+            <th>Route</th>
+            <th>Driver</th>
+            <th>Status</th>
+            <th>Departure</th>
+            <th>Countdown</th>
+          </tr>
+        </thead>
 
-      <tbody>
-        {% for q in queue_entries %}
-        <tr id="row-{{ q.id }}" class="{% if not q.is_active %}departed-row{% endif %}">
-          <td>{{ forloop.counter }}</td>
+        <tbody class="table-body">
+          {% for q in queue_entries %}
+          <tr id="row-{{ q.id }}" class="{% if not q.is_active %}departed-row{% endif %}">
+            <td><strong>{{ forloop.counter }}</strong></td>
 
-          <td><strong>{{ q.vehicle.license_plate }}</strong></td>
+            <td><strong>{{ q.vehicle.license_plate }}</strong></td>
 
-          <td>
-            <span class="route-pill">{{ q.route }}</span>
-          </td>
+            <td>
+              <span class="route-pill">{{ q.route }}</span>
+            </td>
 
-          <td>{{ q.driver.first_name }} {{ q.driver.last_name }}</td>
+            <td>{{ q.driver.first_name }} {{ q.driver.last_name }}</td>
 
-          <td>
-            {% if q.is_active %}
-              <span class="status-boarding">Boarding</span>
-            {% else %}
-              <span class="status-departed">
-                {% if q.recently_departed %}
-                  Departed
-                {% else %}
-                  Closed
-                {% endif %}
-              </span>
-            {% endif %}
-          </td>
+            <td>
+              {% if q.is_active %}
+                <span class="status-boarding">Boarding</span>
+              {% else %}
+                <span class="status-departed">
+                  {% if q.recently_departed %}
+                    Departed
+                  {% else %}
+                    Closed
+                  {% endif %}
+                </span>
+              {% endif %}
+            </td>
 
-          <td>{{ q.departure_time|date:"M d, Y h:i A" }}</td>
+            <td>{{ q.departure_time|date:"M d, Y h:i A" }}</td>
 
-          <td style="min-width: 220px;">
-            {% if q.is_active %}
-              <div class="mb-1">
-                <span class="countdown"
-                  data-departure="{{ q.departure_time|date:'Y-m-d H:i:s' }}"></span>
-              </div>
+            <td style="min-width: 220px;">
+              {% if q.is_active %}
+                <div class="mb-2">
+                  <span class="countdown"
+                    data-departure="{{ q.departure_time|date:'Y-m-d H:i:s' }}"></span>
+                </div>
 
-              <div class="progress">
-                <div class="progress-bar progress-blue"
-                  data-departure="{{ q.departure_time|date:'Y-m-d H:i:s' }}"></div>
-              </div>
-            {% else %}
-              <span class="text-muted small">—</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+                <div class="progress">
+                  <div class="progress-bar progress-blue"
+                    data-departure="{{ q.departure_time|date:'Y-m-d H:i:s' }}"></div>
+                </div>
+              {% else %}
+                <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
 
-    {% else %}
-      <p class="text-center text-muted py-3 mb-0">
-        No vehicles currently scheduled for departure.
-      </p>
-    {% endif %}
+      {% else %}
+        <div class="empty-state">
+          <i class="bi bi-calendar-x"></i>
+          <p class="mb-0">No vehicles currently scheduled for departure.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <p class="refresh-note">
+      <i class="bi bi-arrow-repeat"></i>
+      Auto-refreshing every 15 seconds for live updates.
+    </p>
   </div>
 
-  <p class="refresh-note text-end mt-3">
-    <i class="bi bi-arrow-repeat me-1"></i>
-    Auto-refreshing every 15 seconds for live updates.
-  </p>
+  <!-- JS Countdown + Progress -->
+  <script>
+  (function () {
+    const serverNowISO = "{{ server_now|date:'Y-m-d H:i:s' }}";
+    const serverNow = new Date(serverNowISO.replace(' ', 'T'));
+    const clientNow = new Date();
+    const timeOffset = serverNow.getTime() - clientNow.getTime();
 
-</div>
+    const COUNTDOWN_MIN = 15;
+    const COUNTDOWN_MS = COUNTDOWN_MIN * 60 * 1000;
 
-<!-- JS Countdown + Progress -->
-<script>
-(function () {
-  const serverNowISO = "{{ server_now|date:'Y-m-d H:i:s' }}";
-  const serverNow = new Date(serverNowISO.replace(' ', 'T'));
-  const clientNow = new Date();
-  const timeOffset = serverNow.getTime() - clientNow.getTime();
+    function nowMs() {
+      return Date.now() + timeOffset;
+    }
 
-  const COUNTDOWN_MIN = 15;
-  const COUNTDOWN_MS = COUNTDOWN_MIN * 60 * 1000;
+    function updateAll() {
+      document.querySelectorAll('.countdown').forEach(span => {
+        const row = span.closest("tr");
 
-  function nowMs() {
-    return Date.now() + timeOffset;
-  }
+        if (row.classList.contains("departed-row")) {
+          span.innerHTML = '<span class="countdown-waiting">—</span>';
+          return;
+        }
 
-  function updateAll() {
-    document.querySelectorAll('.countdown').forEach(span => {
-      const row = span.closest("tr");
+        const depart = new Date(span.dataset.departure.replace(' ', 'T')).getTime();
+        const diff = depart - nowMs();
 
-      if (row.classList.contains("departed-row")) {
-        span.innerHTML = '<span class="countdown-waiting">—</span>';
-        return;
-      }
-
-      const depart = new Date(span.dataset.departure.replace(' ', 'T')).getTime();
-      const diff = depart - nowMs();
-
-      if (diff <= 0) {
-        span.innerHTML = '<span class="countdown-now">Departing now!</span>';
-      } else if (diff > COUNTDOWN_MS) {
-        span.innerHTML = '<span class="countdown-waiting">Waiting</span>';
-      } else {
-        const mins = Math.ceil(diff / 60000);
-        span.innerHTML = `<span class="countdown-soon">Leaves in ${mins} min</span>`;
-      }
-    });
-
-    document.querySelectorAll('.progress-bar').forEach(bar => {
-      const row = bar.closest("tr");
-
-      if (row.classList.contains("departed-row")) {
-        bar.style.width = "0%";
-        bar.classList.remove('progress-blue', 'progress-orange', 'progress-red');
-        return;
-      }
-
-      const depart = new Date(bar.dataset.departure.replace(' ', 'T')).getTime();
-      const diff = depart - nowMs();
-
-      if (diff <= 0) {
-        bar.style.width = "100%";
-        bar.classList.remove('progress-blue', 'progress-orange');
-        bar.classList.add('progress-red');
-      } else if (diff > COUNTDOWN_MS) {
-        bar.style.width = "0%";
-        bar.classList.remove('progress-orange', 'progress-red');
-        bar.classList.add('progress-blue');
-      } else {
-        const pct = ((COUNTDOWN_MS - diff) / COUNTDOWN_MS) * 100;
-        bar.style.width = pct + "%";
-
-        if (pct < 50) {
-          bar.classList.remove('progress-orange', 'progress-red');
-          bar.classList.add('progress-blue');
-        } else if (pct < 85) {
-          bar.classList.remove('progress-blue', 'progress-red');
-          bar.classList.add('progress-orange');
+        if (diff <= 0) {
+          span.innerHTML = '<span class="countdown-now">Departing now!</span>';
+        } else if (diff > COUNTDOWN_MS) {
+          span.innerHTML = '<span class="countdown-waiting">Waiting</span>';
         } else {
+          const mins = Math.ceil(diff / 60000);
+          span.innerHTML = `<span class="countdown-soon">Leaves in ${mins} min</span>`;
+        }
+      });
+
+      document.querySelectorAll('.progress-bar').forEach(bar => {
+        const row = bar.closest("tr");
+
+        if (row.classList.contains("departed-row")) {
+          bar.style.width = "0%";
+          bar.classList.remove('progress-blue', 'progress-orange', 'progress-red');
+          return;
+        }
+
+        const depart = new Date(bar.dataset.departure.replace(' ', 'T')).getTime();
+        const diff = depart - nowMs();
+
+        if (diff <= 0) {
+          bar.style.width = "100%";
           bar.classList.remove('progress-blue', 'progress-orange');
           bar.classList.add('progress-red');
+        } else if (diff > COUNTDOWN_MS) {
+          bar.style.width = "0%";
+          bar.classList.remove('progress-orange', 'progress-red');
+          bar.classList.add('progress-blue');
+        } else {
+          const pct = ((COUNTDOWN_MS - diff) / COUNTDOWN_MS) * 100;
+          bar.style.width = pct + "%";
+
+          if (pct < 50) {
+            bar.classList.remove('progress-orange', 'progress-red');
+            bar.classList.add('progress-blue');
+          } else if (pct < 85) {
+            bar.classList.remove('progress-blue', 'progress-red');
+            bar.classList.add('progress-orange');
+          } else {
+            bar.classList.remove('progress-blue', 'progress-orange');
+            bar.classList.add('progress-red');
+          }
         }
+      });
+    }
+
+    updateAll();
+    setInterval(updateAll, 1000);
+    setInterval(() => location.reload(), 15000);
+  })();
+  </script>
+
+  <script>
+    // Mobile menu toggle
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+
+    menuToggle.addEventListener('click', function() {
+      navMenu.classList.toggle('active');
+      const isExpanded = navMenu.classList.contains('active');
+      menuToggle.setAttribute('aria-expanded', isExpanded);
+    });
+    
+    // Close menu when clicking outside
+    document.addEventListener('click', function(event) {
+      if (!navMenu.contains(event.target) && !menuToggle.contains(event.target) && navMenu.classList.contains('active')) {
+        navMenu.classList.remove('active');
+        menuToggle.setAttribute('aria-expanded', 'false');
       }
     });
-  }
+    
+    // Close menu when clicking on a link
+    document.querySelectorAll('.nav-item').forEach(link => {
+      link.addEventListener('click', () => {
+        navMenu.classList.remove('active');
+        menuToggle.setAttribute('aria-expanded', 'false');
+      });
+    });
 
-  updateAll();
-  setInterval(updateAll, 1000);
-  setInterval(() => location.reload(), 15000);
-})();
-</script>
+    // Add focus-visible class for better keyboard navigation
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Tab') {
+        document.body.classList.add('focus-visible');
+      }
+    });
 
-<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    document.addEventListener('mousedown', function() {
+      document.body.classList.remove('focus-visible');
+    });
+  </script>
 
+  <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 </body>
 </html>
