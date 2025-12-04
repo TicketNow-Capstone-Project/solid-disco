@@ -165,3 +165,57 @@ def profit_report_view(request):
         "end_date": end_date,
     }
     return render(request, "reports/profit_report.html", context)
+
+
+@login_required(login_url='login')
+@user_passes_test(is_admin)
+def export_trip_reports(request):
+    """Export trip reports to CSV format."""
+    import csv
+    from django.http import HttpResponse
+    from datetime import datetime
+    
+    # Get date range from request
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    
+    if not start_date or not end_date:
+        end_date = timezone.localdate()
+        start_date = end_date - timedelta(days=30)
+    else:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+    
+    # Get trip data
+    from terminal.models import EntryLog
+    trips = EntryLog.objects.select_related(
+        'vehicle', 'vehicle__route', 'vehicle__assigned_driver'
+    ).filter(
+        created_at__date__range=[start_date, end_date],
+        status='success'
+    ).order_by('-created_at')
+    
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="trip_reports_{start_date}_to_{end_date}.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'Date', 'Time', 'Vehicle Plate', 'Driver', 'Route', 
+        'Fee Charged', 'Status', 'Departed Time'
+    ])
+    
+    for trip in trips:
+        vehicle = trip.vehicle
+        writer.writerow([
+            timezone.localtime(trip.created_at).strftime('%Y-%m-%d'),
+            timezone.localtime(trip.created_at).strftime('%H:%M:%S'),
+            vehicle.license_plate if vehicle else 'N/A',
+            f"{vehicle.assigned_driver.first_name} {vehicle.assigned_driver.last_name}" if vehicle and vehicle.assigned_driver else 'N/A',
+            f"{vehicle.route.origin} → {vehicle.route.destination}" if vehicle and vehicle.route else 'N/A',
+            str(trip.fee_charged) if hasattr(trip, 'fee_charged') else '0.00',
+            'Completed' if trip.departed_at else 'Active',
+            timezone.localtime(trip.departed_at).strftime('%Y-%m-%d %H:%M:%S') if trip.departed_at else 'N/A'
+        ])
+    
+    return response
