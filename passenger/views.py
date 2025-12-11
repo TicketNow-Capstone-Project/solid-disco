@@ -202,11 +202,11 @@ def trip_history(request):
             created_at__gte=thirty_days_ago,
             status=EntryLog.STATUS_SUCCESS
         )
-        .order_by('-created_at')
+        .order_by('-created_at')[:100]  # Limit to 100 most recent trips for pagination performance
     )
     
-    # Pagination
-    paginator = Paginator(trips, 20)
+    # Pagination with improved page size
+    paginator = Paginator(trips, 25)  # Increased from 20 to 25
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
