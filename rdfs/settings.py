@@ -14,7 +14,6 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))  # Load .env for local dev
 ENVIRONMENT = env('ENVIRONMENT', default='development')
 IS_PRODUCTION = ENVIRONMENT == 'production'
 
-
 # --- Security ---
 SECRET_KEY = env('SECRET_KEY', default='replace-this-with-your-own-secret-key')
 DEBUG = env.bool('DEBUG', default=True)
@@ -100,11 +99,11 @@ else:
     DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST', default='localhost'),
-        'PORT': env('DB_PORT', default='5432'),
+        'NAME': 'rdfs_db',
+        'USER': 'postgres',
+        'PASSWORD': 'admin',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
