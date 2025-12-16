@@ -3,117 +3,183 @@
 {% block title %}Staff Dashboard | RDFS{% endblock %}
 
 {% block content %}
-<div class="container py-4">
 
-  <h2 class="mb-2 fw-bold">
-    <i class="bi bi-house-door-fill me-2"></i> Staff Dashboard
+<style>
+/* =====================================================
+   RDFS – STAFF DASHBOARD (SCOPED STYLES)
+   Prefix: rdfs-staff-
+===================================================== */
+.rdfs-staff-scope{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#0c1c4a;
+  --rdfs-accent:#2563eb;
+  --rdfs-soft:#e8f4fd;
+
+  --rdfs-text:#0f172a;
+  --rdfs-muted:#64748b;
+
+  --gray-100:#f7fafc;
+  --gray-200:#edf2f7;
+  --gray-300:#e2e8f0;
+
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 8px 18px rgba(0,0,0,.12);
+
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+  color:var(--rdfs-text);
+}
+
+/* HEADER */
+.rdfs-staff-title{
+  font-weight:700;
+  color:var(--rdfs-blue);
+}
+
+/* SUMMARY CARDS */
+.rdfs-staff-card{
+  border-radius:16px;
+  padding:1.2rem;
+  color:#fff;
+  box-shadow:var(--shadow-sm);
+}
+
+.rdfs-staff-card h5{
+  font-size:.9rem;
+  font-weight:600;
+  opacity:.9;
+}
+
+.rdfs-staff-card h3{
+  font-weight:700;
+  margin:0;
+}
+
+/* CARD VARIANTS */
+.rdfs-staff-blue{
+  background:linear-gradient(135deg,var(--rdfs-accent),var(--rdfs-blue));
+}
+
+.rdfs-staff-green{
+  background:linear-gradient(135deg,#22c55e,#15803d);
+}
+
+.rdfs-staff-yellow{
+  background:linear-gradient(135deg,#facc15,#ca8a04);
+  color:#1f2937;
+}
+
+/* QUICK ACTIONS */
+.rdfs-staff-action{
+  border:1px solid var(--gray-200);
+  border-radius:16px;
+  padding:1.2rem;
+  background:#fff;
+  box-shadow:var(--shadow-sm);
+  transition:.25s ease;
+  height:100%;
+}
+
+.rdfs-staff-action:hover{
+  transform:translateY(-4px);
+  box-shadow:var(--shadow-md);
+}
+
+.rdfs-staff-action h6{
+  font-weight:700;
+  color:var(--rdfs-blue);
+}
+
+.rdfs-staff-action p{
+  font-size:.85rem;
+  color:var(--rdfs-muted);
+}
+
+/* ACTION BUTTON */
+.rdfs-staff-go{
+  border-radius:999px;
+  font-weight:700;
+  background:linear-gradient(135deg,var(--rdfs-accent),var(--rdfs-blue));
+  border:none;
+  color:#fff;
+}
+</style>
+
+<div class="rdfs-staff-scope container py-4">
+
+  <h2 class="rdfs-staff-title mb-2">
+    <i class="bi bi-house-door-fill me-2"></i>
+    Staff Dashboard
   </h2>
+
   <p class="text-muted mb-4">
     Welcome, <strong>{{ user.username }}</strong>. Here's your quick overview and actions.
   </p>
 
-  <!-- Summary Cards -->
+  <!-- SUMMARY CARDS -->
   <div class="row g-3 mb-4">
+
     <div class="col-md-4">
-      <div class="card-box bg-blue">
+      <div class="rdfs-staff-card rdfs-staff-blue">
         <h5>Registered Drivers</h5>
         <h3>{{ total_drivers }}</h3>
       </div>
     </div>
 
     <div class="col-md-4">
-      <div class="card-box bg-green">
+      <div class="rdfs-staff-card rdfs-staff-green">
         <h5>Registered Vehicles</h5>
         <h3>{{ total_vehicles }}</h3>
       </div>
     </div>
 
     <div class="col-md-4">
-      <div class="card-box bg-yellow">
+      <div class="rdfs-staff-card rdfs-staff-yellow">
         <h5>Vehicles in Queue</h5>
         <h3>{{ total_queue }}</h3>
       </div>
     </div>
+
   </div>
 
-  <!-- Quick Actions -->
-<h5 class="mb-3">Quick Actions</h5>
-<div class="row g-3">
+  <!-- QUICK ACTIONS -->
+  <h5 class="mb-3 fw-bold">Quick Actions</h5>
+  <div class="row g-3">
 
-  <!-- Register Driver -->
-  <div class="col-md-4">
-    <a 
-      href="{% url 'vehicles:register_driver' %}"
-      class="text-decoration-none"
-    >
-      <div class="quick-action-card text-center">
-        <h6>Register Driver</h6>
-        <p class="small text-muted">Add a new driver to the system.</p>
-        <span class="btn btn-primary btn-sm">Go</span>
-      </div>
-    </a>
-  </div>
+    <!-- Register Driver -->
+    <div class="col-md-4">
+      <a href="{% url 'vehicles:register_driver' %}" class="text-decoration-none">
+        <div class="rdfs-staff-action text-center">
+          <h6>Register Driver</h6>
+          <p>Add a new driver to the system.</p>
+          <span class="btn btn-sm rdfs-staff-go">Go</span>
+        </div>
+      </a>
+    </div>
 
-  <!-- Register Vehicle -->
-  <div class="col-md-4">
-    <a 
-      href="{% url 'vehicles:register_vehicle' %}"
-      class="text-decoration-none"
-    >
-      <div class="quick-action-card text-center">
-        <h6>Register Vehicle</h6>
-        <p class="small text-muted">Assign a new vehicle to a driver.</p>
-        <span class="btn btn-primary btn-sm">Go</span>
-      </div>
-    </a>
-  </div>
+    <!-- Register Vehicle -->
+    <div class="col-md-4">
+      <a href="{% url 'vehicles:register_vehicle' %}" class="text-decoration-none">
+        <div class="rdfs-staff-action text-center">
+          <h6>Register Vehicle</h6>
+          <p>Assign a new vehicle to a driver.</p>
+          <span class="btn btn-sm rdfs-staff-go">Go</span>
+        </div>
+      </a>
+    </div>
 
-  <!-- Deposit Menu -->
-  <div class="col-md-4">
-    <a 
-      href="{% url 'terminal:deposit_menu' %}"
-      class="text-decoration-none"
-    >
-      <div class="quick-action-card text-center">
-        <h6>Deposit Menu</h6>
-        <p class="small text-muted">Record wallet deposits for vehicles.</p>
-        <span class="btn btn-primary btn-sm">Go</span>
-      </div>
-    </a>
+    <!-- Deposit Menu -->
+    <div class="col-md-4">
+      <a href="{% url 'terminal:deposit_menu' %}" class="text-decoration-none">
+        <div class="rdfs-staff-action text-center">
+          <h6>Deposit Menu</h6>
+          <p>Record wallet deposits for vehicles.</p>
+          <span class="btn btn-sm rdfs-staff-go">Go</span>
+        </div>
+      </a>
+    </div>
+
   </div>
 
 </div>
 
-
-<style>
-  body {
-    background-color: #f8f9fa;
-  }
-  .card-box {
-    border-radius: 8px;
-    color: white;
-    padding: 1rem;
-  }
-  .bg-blue { background-color: #007bff; }
-  .bg-green { background-color: #28a745; }
-  .bg-yellow { background-color: #ffc107; color: #212529; }
-
-  .quick-action-card {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 1rem;
-    background-color: white;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    transition: transform .2s, box-shadow .2s;
-  }
-  .quick-action-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 18px rgba(0,0,0,0.15);
-  }
-
-  .updated-note {
-    font-size: 0.85rem;
-    color: #6c757d;
-  }
-</style>
 {% endblock %}

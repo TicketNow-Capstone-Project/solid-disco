@@ -3,83 +3,154 @@
 {% block title %}Vehicle QR | RDFS{% endblock %}
 
 {% block content %}
-<div class="p-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-body text-center">
 
-            <h4 class="mb-1"><i class="bi bi-qr-code-scan me-2"></i> Vehicle QR Code</h4>
-            <p class="text-muted small mb-4">{{ vehicle.vehicle_name }} — {{ vehicle.license_plate }}</p>
-
-            <!-- Printable Area (ID Card Format) -->
-            <div id="printArea" class="id-card">
-                <div class="id-header text-center">
-                    
-                    <h6 class="mb-0 mt-1">RDFS PASS</h6>
-                    <small class="text-muted">Vehicle QR ID</small>
-                </div>
-
-                <div class="id-body text-center mt-1">
-                    {% if vehicle.qr_code %}
-                        <img src="{{ vehicle.qr_code.url }}" alt="QR Code" class="qr-image mb-1">
-                    {% else %}
-                        <div class="text-muted mb-2">No QR available.</div>
-                    {% endif %}
-                </div>
-
-                <div class="id-info mt-1">
-                    <strong>Driver:</strong> {{ vehicle.assigned_driver.first_name }} {{ vehicle.assigned_driver.last_name }}<br>
-                    <strong>Plate No.:</strong> {{ vehicle.license_plate }}<br>
-                    <strong>CR No.:</strong> {{ vehicle.cr_number }}<br>
-                    <strong>OR No.:</strong> {{ vehicle.or_number }}<br>
-                </div>
-
-                <div class="id-footer text-center small text-muted mt-1">
-                    {{ vehicle.date_registered|date:"M d, Y" }}
-                </div>
-            </div>
-
-
-            <!-- Buttons -->
-            <div class="mt-4">
-                <button onclick="printQR()" class="btn btn-primary me-2">
-                    <i class="bi bi-printer-fill me-1"></i> Print QR
-                </button>
-                <a href="{% url 'vehicles:registered_vehicles' %}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left-circle-fill me-1"></i> Back to Registered Vehicles
-                </a>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-<!-- Print Styles -->
 <style>
-@media print {
-    body * {
-        visibility: hidden !important;
-    }
-    #printArea, #printArea * {
-        visibility: visible !important;
-    }
-    #printArea {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        text-align: center;
-        margin: 0;
-        padding: 0;
-    }
-    .btn, nav, header, footer, .sidebar {
-        display: none !important;
-    }
+/* =====================================================
+   RDFS – VEHICLE QR (SCOPED)
+   Prefix: rdfs-vehicle-qr-
+===================================================== */
+.rdfs-vehicle-qr-scope{
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+}
+
+/* CARD */
+.rdfs-vehicle-qr-card{
+  border-radius:16px;
+}
+
+/* ID CARD */
+.rdfs-vehicle-qr-id{
+  width:260px;
+  margin:auto;
+  padding:12px;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  background:#ffffff;
+}
+
+.rdfs-vehicle-qr-header h6{
+  font-weight:700;
+}
+
+.rdfs-vehicle-qr-image{
+  width:140px;
+  height:140px;
+  object-fit:contain;
+}
+
+.rdfs-vehicle-qr-info{
+  font-size:.8rem;
+  line-height:1.35;
+}
+
+.rdfs-vehicle-qr-footer{
+  font-size:.7rem;
+}
+
+/* PRINT – STRICTLY SCOPED */
+@media print{
+  .rdfs-vehicle-qr-hide,
+  nav, header, footer, .sidebar{
+    display:none !important;
+  }
+
+  body *{
+    visibility:hidden !important;
+  }
+
+  .rdfs-vehicle-qr-print,
+  .rdfs-vehicle-qr-print *{
+    visibility:visible !important;
+  }
+
+  .rdfs-vehicle-qr-print{
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    text-align:center;
+  }
 }
 </style>
 
+<div class="p-4 rdfs-vehicle-qr-scope rdfs-vehicle-qr-hide">
+
+  <div class="card shadow-sm border-0 rdfs-vehicle-qr-card">
+    <div class="card-body text-center">
+
+      <h4 class="mb-1">
+        <i class="bi bi-qr-code-scan me-2"></i>
+        Vehicle QR Code
+      </h4>
+      <p class="text-muted small mb-4">
+        {{ vehicle.vehicle_name }} — {{ vehicle.license_plate }}
+      </p>
+
+      <!-- PRINTABLE AREA -->
+      <div class="rdfs-vehicle-qr-print">
+
+        <div class="rdfs-vehicle-qr-id">
+
+          <div class="rdfs-vehicle-qr-header text-center">
+            <h6 class="mb-0 mt-1">RDFS PASS</h6>
+            <small class="text-muted">Vehicle QR ID</small>
+          </div>
+
+          <div class="text-center mt-2">
+            {% if vehicle.qr_code %}
+              <img src="{{ vehicle.qr_code.url }}"
+                   alt="QR Code"
+                   class="rdfs-vehicle-qr-image mb-2">
+            {% else %}
+              <div class="text-muted small mb-2">No QR available.</div>
+            {% endif %}
+          </div>
+
+          <div class="rdfs-vehicle-qr-info mt-1">
+            <strong>Driver:</strong>
+            {{ vehicle.assigned_driver.first_name }}
+            {{ vehicle.assigned_driver.last_name }}<br>
+
+            <strong>Plate No.:</strong>
+            {{ vehicle.license_plate }}<br>
+
+            <strong>CR No.:</strong>
+            {{ vehicle.cr_number }}<br>
+
+            <strong>OR No.:</strong>
+            {{ vehicle.or_number }}
+          </div>
+
+          <div class="rdfs-vehicle-qr-footer text-center text-muted mt-2">
+            {{ vehicle.date_registered|date:"M d, Y" }}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="mt-4 rdfs-vehicle-qr-hide">
+        <button onclick="rdfsPrintVehicleQR()"
+                class="btn btn-primary me-2">
+          <i class="bi bi-printer-fill me-1"></i>
+          Print QR
+        </button>
+
+        <a href="{% url 'vehicles:registered_vehicles' %}"
+           class="btn btn-secondary">
+          <i class="bi bi-arrow-left-circle-fill me-1"></i>
+          Back to Registered Vehicles
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
-function printQR() {
-    window.print();
+function rdfsPrintVehicleQR(){
+  window.print();
 }
 </script>
+
 {% endblock %}

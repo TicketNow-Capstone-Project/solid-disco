@@ -4,206 +4,237 @@
 {% block title %}QR Exit Validation | RDFS{% endblock %}
 
 {% block content %}
-<div class="p-4">
+
+<style>
+/* =====================================================
+   RDFS – QR EXIT VALIDATION (SCOPED)
+   Prefix: rdfs-qr-exit-
+===================================================== */
+.rdfs-qr-exit-scope{
+  --rdfs-blue:#112666;
+  --rdfs-danger:#dc3545;
+  --rdfs-success:#198754;
+  --rdfs-muted:#64748b;
+
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+}
+
+/* CARD */
+.rdfs-qr-exit-card{
+  border-radius:18px;
+}
+
+/* FEEDBACK */
+.rdfs-qr-exit-feedback{
+  font-weight:600;
+}
+
+/* FLASH ANIMATIONS */
+@keyframes rdfsFlashGreen{
+  0%{background-color:#19875420;}
+  50%{background-color:#19875480;}
+  100%{background-color:transparent;}
+}
+@keyframes rdfsFlashRed{
+  0%{background-color:#dc354520;}
+  50%{background-color:#dc354580;}
+  100%{background-color:transparent;}
+}
+
+.rdfs-qr-exit-flash-success{
+  animation:rdfsFlashGreen 1.5s ease;
+}
+.rdfs-qr-exit-flash-error{
+  animation:rdfsFlashRed 1.5s ease;
+}
+</style>
+
+<div class="p-4 rdfs-qr-exit-scope">
+
+  <!-- INFO -->
   <div class="alert alert-warning text-start small">
-    <strong>Exit Validation:</strong> Scan a vehicle’s QR to mark it as departed.
+    <strong>Exit Validation:</strong>
+    Scan a vehicle’s QR to mark it as departed.
   </div>
 
-  <div class="card shadow-sm border-0 mt-4">
+  <div class="card shadow-sm border-0 mt-4 rdfs-qr-exit-card">
     <div class="card-header bg-danger text-white">
-      <h5 class="mb-0"><i class="bi bi-qr-code me-2"></i> QR Exit Validation</h5>
+      <h5 class="mb-0">
+        <i class="bi bi-qr-code me-2"></i>
+        QR Exit Validation
+      </h5>
     </div>
 
     <div class="card-body text-center">
+
       <p class="text-muted mb-3">
-        Use the camera to scan a vehicle’s QR code. The system will automatically
-        mark it as <strong>departed</strong> if currently inside the terminal.
+        Use the camera to scan a vehicle’s QR code.
+        The system will automatically mark it as
+        <strong>departed</strong> if currently inside the terminal.
       </p>
 
-      <!-- 🟩 QR Scanner -->
-      <div id="qr-reader" style="width:100%; max-width:400px; margin:auto;"></div>
+      <!-- QR SCANNER -->
+      <div id="rdfsQrReader"
+           style="width:100%;max-width:400px;margin:auto;"></div>
 
-      <!-- ✅ Live feedback -->
-      <div id="feedback" class="alert d-none mt-3 fw-semibold text-center" role="alert"></div>
+      <!-- FEEDBACK -->
+      <div id="rdfsQrFeedback"
+           class="alert d-none mt-3 text-center rdfs-qr-exit-feedback"
+           role="alert"></div>
 
       <div class="mt-3">
-        <a hx-get="{% url 'terminal:terminal_queue' %}" 
-           hx-target="#main-content" 
+        <a hx-get="{% url 'terminal:terminal_queue' %}"
+           hx-target="#main-content"
            hx-swap="innerHTML transition:true"
            class="btn btn-outline-danger btn-sm">
-          <i class="bi bi-list-check me-1"></i> View Terminal Queue
+          <i class="bi bi-list-check me-1"></i>
+          View Terminal Queue
         </a>
       </div>
 
-      <!-- Hidden CSRF token -->
+      <!-- CSRF -->
       <form style="display:none;">{% csrf_token %}</form>
+
+      <!-- SCAN LOG -->
+      <div id="rdfsQrScanLog"></div>
+
     </div>
   </div>
 </div>
 
-<!-- 🟦 html5-qrcode CDN -->
+<!-- QR LIB -->
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <script>
 /* =====================================================
-   🔴 QR Exit Scanner with Real-time Feedback & Logs
-   ===================================================== */
+   RDFS – QR EXIT SCANNER LOGIC
+===================================================== */
 
 // 🔊 Sounds
-const successBeep = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
-const errorBeep = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+const rdfsQrSuccessBeep = new Audio(
+  "https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"
+);
+const rdfsQrErrorBeep = new Audio(
+  "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"
+);
 
-// 🧾 Last 5 scan records
-let recentScans = [];
+// 🧾 Last 5 scans
+let rdfsQrRecentScans = [];
+let rdfsQrScanningPaused = false;
 
-/**
- * 💬 Display feedback on screen + visual flash
- */
-function showFeedback(message, kind = "info") {
-  const fb = document.getElementById("feedback");
-  fb.className = "alert mt-3 fw-semibold text-center";
-  fb.textContent = message;
-  fb.classList.remove("d-none", "alert-success", "alert-danger", "alert-warning", "alert-info");
+/* FEEDBACK */
+function rdfsShowQrFeedback(message, kind="info"){
+  const fb=document.getElementById("rdfsQrFeedback");
+  fb.className="alert mt-3 text-center rdfs-qr-exit-feedback";
+  fb.textContent=message;
+  fb.classList.remove("d-none","alert-success","alert-danger","alert-warning","alert-info");
 
-  if (kind === "success") fb.classList.add("alert-success");
-  else if (kind === "danger") fb.classList.add("alert-danger");
+  if(kind==="success") fb.classList.add("alert-success");
+  else if(kind==="danger") fb.classList.add("alert-danger");
   else fb.classList.add("alert-info");
 
-  // 💡 Flash background
-  const body = document.body;
-  body.classList.remove("flash-success", "flash-error");
-  if (kind === "success") {
-    body.classList.add("flash-success");
-    successBeep.play().catch(() => {});
-  } else if (kind === "danger") {
-    body.classList.add("flash-error");
-    errorBeep.play().catch(() => {});
+  const scope=document.querySelector(".rdfs-qr-exit-scope");
+  scope.classList.remove("rdfs-qr-exit-flash-success","rdfs-qr-exit-flash-error");
+
+  if(kind==="success"){
+    scope.classList.add("rdfs-qr-exit-flash-success");
+    rdfsQrSuccessBeep.play().catch(()=>{});
+  }else if(kind==="danger"){
+    scope.classList.add("rdfs-qr-exit-flash-error");
+    rdfsQrErrorBeep.play().catch(()=>{});
   }
 }
 
-/**
- * 📬 Send QR to backend for exit validation
- */
-async function postQRCode(qrCode) {
-  try {
-    const response = await fetch("{% url 'terminal:qr_exit_validation' %}", {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
-        "X-Requested-With": "XMLHttpRequest",
+/* POST QR */
+async function rdfsPostQrCode(qrCode){
+  try{
+    const res=await fetch("{% url 'terminal:qr_exit_validation' %}",{
+      method:"POST",
+      headers:{
+        "X-CSRFToken":document.querySelector('[name=csrfmiddlewaretoken]').value,
+        "X-Requested-With":"XMLHttpRequest"
       },
-      body: new URLSearchParams({ qr_code: qrCode }),
+      body:new URLSearchParams({qr_code:qrCode})
     });
 
-    const data = await response.json();
-    let balanceText = data.balance !== undefined
+    const data=await res.json();
+    const balanceTxt=data.balance!==undefined
       ? ` (Remaining Balance: ₱${parseFloat(data.balance).toFixed(2)})`
       : "";
 
-    const message = data.message + balanceText;
+    const msg=data.message+balanceTxt;
 
-    if (data.status === "success") {
-      showFeedback(message, "success");
-      addToLog("✅ Departed", message, "success");
-      pauseScanTemporarily(4000);
-    } else {
-      showFeedback(message, "danger");
-      addToLog("❌ Failed", message, "danger");
-      pauseScanTemporarily(3000);
+    if(data.status==="success"){
+      rdfsShowQrFeedback(msg,"success");
+      rdfsAddQrLog("✅ Departed",msg,"success");
+      rdfsPauseQrScan(4000);
+    }else{
+      rdfsShowQrFeedback(msg,"danger");
+      rdfsAddQrLog("❌ Failed",msg,"danger");
+      rdfsPauseQrScan(3000);
     }
-  } catch (err) {
-    showFeedback("⚠️ Network error — please check your connection.", "danger");
-    addToLog("⚠️ Error", "Network failure", "danger");
+  }catch{
+    rdfsShowQrFeedback("⚠️ Network error — please check your connection.","danger");
+    rdfsAddQrLog("⚠️ Error","Network failure","danger");
   }
 }
 
-/**
- * ⏸️ Prevent duplicate scans temporarily
- */
-function pauseScanTemporarily(ms) {
-  scanningPaused = true;
-  setTimeout(() => {
-    scanningPaused = false;
-    document.body.classList.remove("flash-success", "flash-error");
-    showFeedback("📷 Ready for next scan...", "info");
-  }, ms);
+/* PAUSE SCAN */
+function rdfsPauseQrScan(ms){
+  rdfsQrScanningPaused=true;
+  setTimeout(()=>{
+    rdfsQrScanningPaused=false;
+    rdfsShowQrFeedback("📷 Ready for next scan...","info");
+  },ms);
 }
 
-/**
- * 🧾 Add a new scan record to log table
- */
-function addToLog(status, message, type) {
-  const time = new Date().toLocaleTimeString();
-  if (recentScans.length >= 5) recentScans.shift();
-  recentScans.push({ status, message, time, type });
-  renderLogs();
+/* LOG */
+function rdfsAddQrLog(status,message,type){
+  const time=new Date().toLocaleTimeString();
+  if(rdfsQrRecentScans.length>=5) rdfsQrRecentScans.shift();
+  rdfsQrRecentScans.push({status,message,time,type});
+  rdfsRenderQrLogs();
 }
 
-/**
- * 🖋️ Render last 5 scans table
- */
-function renderLogs() {
-  const logContainer = document.getElementById("scanLog");
-  if (!logContainer) return;
-  logContainer.innerHTML = `
+/* RENDER LOG */
+function rdfsRenderQrLogs(){
+  const el=document.getElementById("rdfsQrScanLog");
+  el.innerHTML=`
     <table class="table table-sm table-hover align-middle mt-3 mb-0">
-      <thead class="table-light"><tr><th>Time</th><th>Status</th><th>Message</th></tr></thead>
+      <thead class="table-light">
+        <tr><th>Time</th><th>Status</th><th>Message</th></tr>
+      </thead>
       <tbody>
-        ${recentScans
-          .map(
-            s => `
-              <tr class="${s.type === 'success' ? 'table-success' : 'table-danger'}">
-                <td>${s.time}</td>
-                <td>${s.status}</td>
-                <td>${s.message}</td>
-              </tr>
-            `
-          )
-          .reverse()
-          .join("")}
+        ${rdfsQrRecentScans.map(s=>`
+          <tr class="${s.type==="success"?"table-success":"table-danger"}">
+            <td>${s.time}</td>
+            <td>${s.status}</td>
+            <td>${s.message}</td>
+          </tr>
+        `).reverse().join("")}
       </tbody>
     </table>
   `;
 }
 
-/**
- * 📸 Initialize QR scanner
- */
-document.addEventListener("DOMContentLoaded", function() {
-  const html5QrCode = new Html5Qrcode("qr-reader");
-  const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-  let lastScanned = "";
-  scanningPaused = false;
+/* INIT SCANNER */
+document.addEventListener("DOMContentLoaded",()=>{
+  const qr=new Html5Qrcode("rdfsQrReader");
+  let lastScan="";
 
-  html5QrCode.start(
-    { facingMode: "environment" },
-    config,
-    (decodedText) => {
-      if (scanningPaused || decodedText === lastScanned) return;
-      lastScanned = decodedText;
-      postQRCode(decodedText);
+  qr.start(
+    {facingMode:"environment"},
+    {fps:10,qrbox:{width:250,height:250}},
+    text=>{
+      if(rdfsQrScanningPaused||text===lastScan) return;
+      lastScan=text;
+      rdfsPostQrCode(text);
     },
-    (errorMessage) => {}
-  ).catch(err => {
-    showFeedback("❌ Failed to access camera: " + err, "danger");
+    ()=>{}
+  ).catch(err=>{
+    rdfsShowQrFeedback("❌ Failed to access camera: "+err,"danger");
   });
 });
 </script>
-
-<style>
-/* 🌈 Flash background animation */
-@keyframes flash-green {
-  0% { background-color: #19875420; }
-  50% { background-color: #19875480; }
-  100% { background-color: transparent; }
-}
-@keyframes flash-red {
-  0% { background-color: #dc354520; }
-  50% { background-color: #dc354580; }
-  100% { background-color: transparent; }
-}
-.flash-success { animation: flash-green 1.5s ease; }
-.flash-error { animation: flash-red 1.5s ease; }
-</style>
 
 {% endblock %}

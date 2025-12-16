@@ -5,128 +5,228 @@
 
 {% block content %}
 <style>
-    .form-wrapper {
-        max-width: 520px;
-        margin: auto;
-        background: #ffffff;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    }
-    .form-title {
-        font-weight: 700;
-        margin-bottom: .5rem;
-    }
-    .form-note {
-        font-size: .9rem;
-        color: #6c757d;
-        margin-bottom: 1.6rem;
-    }
+/* ===============================
+   RDFS CREATE ACCOUNT (PALETTE SAFE)
+================================ */
+:root{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#180f92;
+  --rdfs-blue-soft:#e8f4fd;
+
+  --rdfs-text:#1c1b1b;
+  --rdfs-muted:#64748b;
+
+  --rdfs-bg:#f7fafc;
+  --rdfs-card:#ffffff;
+
+  --rdfs-radius:12px;
+  --rdfs-shadow:0 10px 24px rgba(0,0,0,.08);
+  --rdfs-transition:.25s ease;
+}
+
+/* PAGE WRAPPER */
+.rdfs-acct-create{
+  min-height:100vh;
+  background:var(--rdfs-bg);
+  padding:1.5rem 0;
+}
+
+/* CARD */
+.rdfs-acct-create__card{
+  max-width:520px;
+  margin:auto;
+  background:var(--rdfs-card);
+  padding:2.25rem 2rem;
+  border-radius:var(--rdfs-radius);
+  box-shadow:var(--rdfs-shadow);
+}
+
+/* TITLE */
+.rdfs-acct-create__title{
+  font-weight:800;
+  color:var(--rdfs-blue-dark);
+  margin-bottom:.35rem;
+}
+
+/* NOTE */
+.rdfs-acct-create__note{
+  font-size:.9rem;
+  color:var(--rdfs-muted);
+  margin-bottom:1.6rem;
+}
+
+/* FORM FIELD */
+.rdfs-acct-create__field label{
+  font-weight:600;
+  color:var(--rdfs-text);
+}
+
+.rdfs-acct-create__field input,
+.rdfs-acct-create__field select{
+  border-radius:10px;
+}
+
+/* ERROR */
+.rdfs-acct-create__error{
+  font-size:.8rem;
+  color:#dc3545;
+  margin-top:.25rem;
+}
+
+/* SUBMIT BUTTON */
+.rdfs-acct-create__submit{
+  background:linear-gradient(
+    135deg,
+    var(--rdfs-blue),
+    var(--rdfs-blue-dark)
+  );
+  border:none;
+  color:#fff;
+  font-weight:700;
+  transition:var(--rdfs-transition);
+}
+
+.rdfs-acct-create__submit:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 18px rgba(17,38,102,.35);
+}
+
+/* BACK LINK */
+.rdfs-acct-create__back{
+  margin-top:1.25rem;
+}
+
+.rdfs-acct-create__back a{
+  color:var(--rdfs-blue);
+  border-color:var(--rdfs-blue);
+}
+
+.rdfs-acct-create__back a:hover{
+  background:var(--rdfs-blue-soft);
+  color:var(--rdfs-blue-dark);
+}
 </style>
 
-<div class="container py-3">
+<div class="container rdfs-acct-create">
 
-    <div class="form-wrapper">
+  <div class="rdfs-acct-create__card">
 
-        <!-- Title -->
-        <h3 class="form-title text-center">Create New Account</h3>
+    <!-- TITLE -->
+    <h3 class="rdfs-acct-create__title text-center">
+      Create New Account
+    </h3>
+
+    {% if user.role == 'admin' %}
+      <p class="rdfs-acct-create__note text-center">
+        As an Admin, you can create both Admin and Staff Admin accounts.
+      </p>
+    {% else %}
+      <p class="rdfs-acct-create__note text-center">
+        As a Staff Admin, you can only create Staff Admin accounts.
+      </p>
+    {% endif %}
+
+    <!-- ALERTS -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+          {{ message }}
+          <button class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" novalidate>
+      {% csrf_token %}
+
+      <!-- USERNAME -->
+      <div class="mb-3 rdfs-acct-create__field">
+        <label class="form-label">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <div class="rdfs-acct-create__error">
+            {{ form.username.errors.0 }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- EMAIL -->
+      <div class="mb-3 rdfs-acct-create__field">
+        <label class="form-label">Email Address</label>
+        {{ form.email }}
+        {% if form.email.errors %}
+          <div class="rdfs-acct-create__error">
+            {{ form.email.errors.0 }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ROLE -->
+      <div class="mb-3 rdfs-acct-create__field">
+        <label class="form-label">Account Role</label>
+        {{ form.role }}
 
         {% if user.role == 'admin' %}
-            <p class="form-note text-center">
-                As an Admin, you can create both Admin and Staff Admin accounts.
-            </p>
+          <small class="text-muted d-block mt-1">
+            • Choose <strong>Admin</strong> or <strong>Staff Admin</strong>.
+          </small>
         {% else %}
-            <p class="form-note text-center">
-                As a Staff Admin, you can only create Staff Admin accounts.
-            </p>
+          <small class="text-muted d-block mt-1">
+            • Only Staff Admin accounts can be created.
+          </small>
         {% endif %}
 
-        <!-- Alerts -->
-        {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                {{ message }}
-                <button class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endfor %}
+        {% if form.role.errors %}
+          <div class="rdfs-acct-create__error">
+            {{ form.role.errors.0 }}
+          </div>
         {% endif %}
+      </div>
 
-        <form method="POST" novalidate>
-            {% csrf_token %}
+      <!-- PASSWORD -->
+      <div class="mb-3 rdfs-acct-create__field">
+        <label class="form-label">Password</label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}
+          <div class="rdfs-acct-create__error">
+            {{ form.password1.errors.0 }}
+          </div>
+        {% endif %}
+      </div>
 
-            <!-- Username -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Username</label>
-                {{ form.username }}
-                {% if form.username.errors %}
-                    <div class="text-danger small">{{ form.username.errors.0 }}</div>
-                {% endif %}
-            </div>
+      <!-- CONFIRM PASSWORD -->
+      <div class="mb-3 rdfs-acct-create__field">
+        <label class="form-label">Confirm Password</label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}
+          <div class="rdfs-acct-create__error">
+            {{ form.password2.errors.0 }}
+          </div>
+        {% endif %}
+      </div>
 
-            <!-- Email -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Email Address</label>
-                {{ form.email }}
-                {% if form.email.errors %}
-                    <div class="text-danger small">{{ form.email.errors.0 }}</div>
-                {% endif %}
-            </div>
+      <!-- SUBMIT -->
+      <div class="d-grid mt-4">
+        <button
+          type="submit"
+          class="btn btn-lg rounded-pill rdfs-acct-create__submit">
+          <i class="bi bi-person-plus-fill me-2"></i>
+          Create Account
+        </button>
+      </div>
 
-            <!-- Role -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Account Role</label>
-                {{ form.role }}
+      <!-- BACK -->
+      <div class="text-center rdfs-acct-create__back">
+        <a
+          href="{% url 'accounts:manage_users' %}"
+          class="btn btn-outline-secondary btn-sm rounded-pill">
+          <i class="bi bi-arrow-left-circle-fill me-1"></i>
+          Back to User Management
+        </a>
+      </div>
 
-                {% if user.role == 'admin' %}
-                    <small class="text-muted d-block mt-1">
-                        • Choose <strong>Admin</strong> or <strong>Staff Admin</strong>.
-                    </small>
-                {% else %}
-                    <small class="text-muted d-block mt-1">
-                        • Only Staff Admin accounts can be created.
-                    </small>
-                {% endif %}
-
-                {% if form.role.errors %}
-                    <div class="text-danger small">{{ form.role.errors.0 }}</div>
-                {% endif %}
-            </div>
-
-            <!-- Password -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Password</label>
-                {{ form.password1 }}
-                {% if form.password1.errors %}
-                    <div class="text-danger small">{{ form.password1.errors.0 }}</div>
-                {% endif %}
-            </div>
-
-            <!-- Confirm Password -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Confirm Password</label>
-                {{ form.password2 }}
-                {% if form.password2.errors %}
-                    <div class="text-danger small">{{ form.password2.errors.0 }}</div>
-                {% endif %}
-            </div>
-
-            <!-- Submit -->
-            <div class="d-grid mt-4">
-                <button type="submit" class="btn btn-primary btn-lg fw-semibold rounded-pill">
-                    <i class="bi bi-person-plus-fill me-2"></i> Create Account
-                </button>
-            </div>
-
-            <!-- Back -->
-            <div class="text-center mt-3">
-                <a href="{% url 'accounts:manage_users' %}" class="btn btn-outline-secondary btn-sm rounded-pill">
-                    <i class="bi bi-arrow-left-circle-fill me-1"></i> Back to User Management
-                </a>
-            </div>
-
-
-        </form>
-    </div>
+    </form>
+  </div>
 
 </div>
 {% endblock %}

@@ -4,143 +4,273 @@
 
 {% block content %}
 <style>
-  body {
-    background-color: #f8f9fa;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-  .card-box {
-    border-radius: 8px;
-    color: white;
-    padding: 1rem;
-  }
-  .bg-blue { background-color: #007bff; }
-  .bg-green { background-color: #28a745; }
-  .bg-yellow { background-color: #ffc107; color: #212529; }
-  .bg-red { background-color: #dc3545; }
-  .quick-action-card {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 1rem;
-    background-color: white;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  }
+/* ===============================
+   RDFS ADMIN DASHBOARD (SCOPED)
+================================ */
+:root{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#180f92;
+  --rdfs-blue-soft:#e8f4fd;
+
+  --rdfs-text:#1c1b1b;
+  --rdfs-muted:#64748b;
+
+  --gray-100:#f7fafc;
+  --gray-200:#edf2f7;
+  --gray-300:#e2e8f0;
+  --gray-600:#718096;
+
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 8px 18px rgba(0,0,0,.12);
+
+  --radius:10px;
+  --transition:.25s ease;
+}
+
+/* PAGE WRAPPER */
+.rdfs-adm-dash{
+  background:var(--gray-100);
+  min-height:100vh;
+}
+
+/* TITLE */
+.rdfs-adm-dash__title{
+  font-weight:700;
+  color:var(--rdfs-blue-dark);
+}
+
+/* SUMMARY CARDS */
+.rdfs-adm-dash__stat{
+  border-radius:var(--radius);
+  padding:1.1rem;
+  text-align:center;
+  color:#fff;
+  box-shadow:var(--shadow-sm);
+}
+
+.rdfs-adm-dash__stat h5{
+  font-size:.85rem;
+  text-transform:uppercase;
+  letter-spacing:.8px;
+  margin-bottom:.25rem;
+  opacity:.9;
+}
+
+.rdfs-adm-dash__stat h3{
+  font-weight:800;
+  margin:0;
+}
+
+/* STAT VARIANTS */
+.rdfs-adm-dash__stat--primary{
+  background:linear-gradient(135deg,var(--rdfs-blue),var(--rdfs-blue-dark));
+}
+.rdfs-adm-dash__stat--soft{
+  background:linear-gradient(135deg,#3a7bc8,#1a365d);
+}
+.rdfs-adm-dash__stat--neutral{
+  background:linear-gradient(135deg,#64748b,#475569);
+}
+.rdfs-adm-dash__stat--accent{
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+}
+
+/* CONTENT CARD */
+.rdfs-adm-dash__card{
+  background:#fff;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-md);
+  border:1px solid var(--gray-300);
+}
+
+.rdfs-adm-dash__card h5{
+  color:var(--rdfs-blue-dark);
+  font-weight:700;
+}
+
+/* TABLE */
+.rdfs-adm-dash__table thead{
+  background:var(--rdfs-blue-soft);
+}
+
+.rdfs-adm-dash__table th{
+  font-size:.85rem;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  color:var(--rdfs-blue-dark);
+  border-bottom:2px solid var(--rdfs-blue);
+}
+
+.rdfs-adm-dash__table tbody tr:hover{
+  background:rgba(17,38,102,.04);
+}
+
+/* STATUS BADGES */
+.rdfs-adm-dash__badge--queued{
+  background:rgba(17,38,102,.12);
+  color:var(--rdfs-blue-dark);
+}
+.rdfs-adm-dash__badge--boarding{
+  background:rgba(58,123,200,.18);
+  color:#1a365d;
+}
+.rdfs-adm-dash__badge--departed{
+  background:var(--gray-200);
+  color:var(--gray-600);
+}
+
+/* QUICK ACTIONS */
+.rdfs-adm-dash__action{
+  border-radius:var(--radius);
+  border:1px solid var(--gray-300);
+  background:#fff;
+  padding:1.2rem;
+  transition:var(--transition);
+  box-shadow:var(--shadow-sm);
+}
+
+.rdfs-adm-dash__action:hover{
+  transform:translateY(-4px);
+  box-shadow:var(--shadow-md);
+  border-color:var(--rdfs-blue);
+}
+
+.rdfs-adm-dash__action h6{
+  color:var(--rdfs-blue-dark);
+  font-weight:700;
+}
+
+.rdfs-adm-dash__btn{
+  background:var(--rdfs-blue);
+  color:#fff;
+  border-radius:6px;
+  padding:.35rem .75rem;
+  font-size:.8rem;
+}
 </style>
 
-<div class="container py-4">
+<div class="container py-4 rdfs-adm-dash">
 
-  <h2 class="mb-3 fw-bold"><i class="bi bi-house-door-fill me-2"></i> Admin Dashboard</h2>
-  <p class="text-muted">Welcome back, <strong>{{ user.username }}</strong>.</p>
+  <h2 class="mb-2 rdfs-adm-dash__title">
+    <i class="bi bi-house-door-fill me-2"></i> Admin Dashboard
+  </h2>
+  <p class="text-muted">
+    Welcome back, <strong>{{ user.username }}</strong>.
+  </p>
 
-  <!-- Summary Cards -->
+  <!-- SUMMARY -->
   <div class="row g-3 mb-4">
     <div class="col-md-3">
-      <div class="card-box bg-blue text-center">
-        <h5>Registered Drivers</h5>
+      <div class="rdfs-adm-dash__stat rdfs-adm-dash__stat--primary">
+        <h5>Drivers</h5>
         <h3>{{ total_drivers }}</h3>
       </div>
     </div>
 
     <div class="col-md-3">
-      <div class="card-box bg-green text-center">
-        <h5>Registered Vehicles</h5>
+      <div class="rdfs-adm-dash__stat rdfs-adm-dash__stat--soft">
+        <h5>Vehicles</h5>
         <h3>{{ total_vehicles }}</h3>
       </div>
     </div>
 
     <div class="col-md-3">
-      <div class="card-box bg-yellow text-center">
-        <h5>Vehicles in Queue</h5>
+      <div class="rdfs-adm-dash__stat rdfs-adm-dash__stat--neutral">
+        <h5>In Queue</h5>
         <h3>{{ total_queue }}</h3>
       </div>
     </div>
 
     <div class="col-md-3">
-      <div class="card-box bg-red text-center">
-        <h5>Total Profit</h5>
+      <div class="rdfs-adm-dash__stat rdfs-adm-dash__stat--accent">
+        <h5>Total Revenue</h5>
         <h3>₱{{ total_profit|floatformat:2 }}</h3>
       </div>
     </div>
   </div>
 
-  <!-- Recent Queue Activity -->
-  <div class="card mb-4 shadow-sm border-0">
-    <div class="card-body">
-      <h5 class="card-title mb-3">Recent Queue Activity</h5>
+  <!-- RECENT QUEUE -->
+  <div class="rdfs-adm-dash__card mb-4 p-3">
+    <h5 class="mb-3">Recent Queue Activity</h5>
 
-      {% if recent_queues %}
-      <div class="table-responsive">
-        <table class="table table-striped align-middle">
-          <thead class="table-primary">
-            <tr>
-              <th>#</th>
-              <th>Vehicle Plate</th>
-              <th>Vehicle Name</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for v in recent_queues %}
-            <tr>
-              <td>{{ forloop.counter }}</td>
-              <td><strong>{{ v.license_plate }}</strong></td>
-              <td>{{ v.vehicle_name }}</td>
-              <td>
-                {% if v.status == "queued" %}
-                  <span class="badge bg-warning text-dark">Queued</span>
-                {% elif v.status == "boarding" %}
-                  <span class="badge bg-info text-dark">Boarding</span>
-                {% else %}
-                  <span class="badge bg-secondary">Departed</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-      <p class="text-muted text-center"><i class="bi bi-info-circle"></i> No recent activity found.</p>
-      {% endif %}
+    {% if recent_queues %}
+    <div class="table-responsive">
+      <table class="table rdfs-adm-dash__table align-middle">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Plate</th>
+            <th>Vehicle</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in recent_queues %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><strong>{{ v.license_plate }}</strong></td>
+            <td>{{ v.vehicle_name }}</td>
+            <td>
+              {% if v.status == "queued" %}
+                <span class="badge rdfs-adm-dash__badge--queued">Queued</span>
+              {% elif v.status == "boarding" %}
+                <span class="badge rdfs-adm-dash__badge--boarding">Boarding</span>
+              {% else %}
+                <span class="badge rdfs-adm-dash__badge--departed">Departed</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
+    {% else %}
+      <p class="text-muted text-center">
+        <i class="bi bi-info-circle"></i> No recent activity.
+      </p>
+    {% endif %}
   </div>
 
-  <!-- Quick Actions -->
-  <h5 class="mb-3">Quick Actions</h5>
+  <!-- QUICK ACTIONS -->
+  <h5 class="mb-3 rdfs-adm-dash__title">Quick Actions</h5>
   <div class="row g-3 mb-5">
+
     <div class="col-md-4">
       <a href="{% url 'reports:reports_home' %}" class="text-decoration-none">
-          <div class="quick-action-card text-center">
-            <h6>Reports & Analytics</h6>
-            <p class="small text-muted">View all reports and analytics.</p>
-            <span class="btn btn-primary btn-sm">Go</span>
-          </div>
+        <div class="rdfs-adm-dash__action text-center">
+          <h6>Reports & Analytics</h6>
+          <p class="small text-muted">View system metrics and insights</p>
+          <span class="rdfs-adm-dash__btn">Open</span>
+        </div>
       </a>
     </div>
 
     <div class="col-md-4">
       <a href="{% url 'terminal:manage_routes' %}" class="text-decoration-none">
-        <div class="quick-action-card text-center">
+        <div class="rdfs-adm-dash__action text-center">
           <h6>Manage Routes</h6>
-          <p class="small text-muted">Add, edit, or deactivate terminal routes.</p>
-          <span class="btn btn-primary btn-sm">Go</span>
+          <p class="small text-muted">Add or update terminal routes</p>
+          <span class="rdfs-adm-dash__btn">Open</span>
         </div>
       </a>
     </div>
 
     <div class="col-md-4">
       <a href="{% url 'terminal:system_settings' %}" class="text-decoration-none">
-        <div class="quick-action-card text-center">
+        <div class="rdfs-adm-dash__action text-center">
           <h6>System Settings</h6>
-          <p class="small text-muted">Configure terminal fees and preferences.</p>
-          <span class="btn btn-primary btn-sm">Go</span>
+          <p class="small text-muted">Configure fees & preferences</p>
+          <span class="rdfs-adm-dash__btn">Open</span>
         </div>
       </a>
     </div>
+
   </div>
 
-  <!-- Footer -->
   <div class="text-end">
-    <small class="text-muted">Updated as of {{ now|date:"M d, Y - h:i A" }}</small>
+    <small class="text-muted">
+      Updated {{ now|date:"M d, Y · h:i A" }}
+    </small>
   </div>
 
 </div>

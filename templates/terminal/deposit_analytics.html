@@ -3,74 +3,192 @@
 {% block title %}Deposit Analytics | RDFS{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-4">
+
+<style>
+/* =====================================================
+   RDFS – DEPOSIT ANALYTICS (SCOPED)
+   Prefix: rdfs-analytics-
+===================================================== */
+.rdfs-analytics-scope{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#0c1c4a;
+  --rdfs-accent:#2563eb;
+  --rdfs-soft:#e8f4fd;
+
+  --text:#0f172a;
+  --muted:#64748b;
+
+  --gray-100:#f7fafc;
+  --gray-200:#edf2f7;
+
+  --shadow-sm:0 2px 6px rgba(0,0,0,.05);
+  --shadow-md:0 8px 18px rgba(0,0,0,.10);
+
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+  color:var(--text);
+}
+
+/* HEADER */
+.rdfs-analytics-title{
+  font-weight:700;
+  color:var(--rdfs-blue);
+}
+
+/* FILTER */
+.rdfs-analytics-filter label{
+  font-weight:600;
+}
+
+.rdfs-analytics-filter input{
+  border-radius:10px;
+}
+
+.rdfs-analytics-filter button{
+  border-radius:999px;
+  font-weight:700;
+  background:linear-gradient(135deg,var(--rdfs-accent),var(--rdfs-blue));
+  border:none;
+}
+
+/* SUMMARY CARDS */
+.rdfs-analytics-card{
+  border-radius:16px;
+  box-shadow:var(--shadow-sm);
+  background:#fff;
+}
+
+.rdfs-analytics-card h6{
+  font-size:.85rem;
+  color:var(--muted);
+  margin-bottom:.25rem;
+}
+
+.rdfs-analytics-value{
+  font-weight:700;
+}
+
+.rdfs-analytics-value.blue{color:var(--rdfs-blue);}
+.rdfs-analytics-value.green{color:#15803d;}
+.rdfs-analytics-value.info{color:#0369a1;}
+.rdfs-analytics-value.warn{color:#a16207;}
+
+/* CHART */
+.rdfs-analytics-chart{
+  border-radius:18px;
+  box-shadow:var(--shadow-md);
+}
+
+/* TABLE */
+.rdfs-analytics-table thead{
+  background:var(--rdfs-soft);
+}
+
+.rdfs-analytics-table th{
+  font-weight:700;
+  color:var(--rdfs-blue-dark);
+}
+
+.rdfs-analytics-table td{
+  font-size:.9rem;
+}
+</style>
+
+<div class="container-fluid p-4 rdfs-analytics-scope">
+
+  <!-- HEADER -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-      <h3 class="fw-bold text-primary mb-1"><i class="bi bi-graph-up-arrow"></i> Deposit Analytics</h3>
-      <p class="text-muted mb-0">Visual overview of all cash deposits and driver contributions.</p>
+      <h3 class="rdfs-analytics-title mb-1">
+        <i class="bi bi-graph-up-arrow me-1"></i>
+        Deposit Analytics
+      </h3>
+      <p class="text-muted mb-0">
+        Visual overview of all cash deposits and driver contributions.
+      </p>
     </div>
   </div>
 
-  <!-- Filter Form -->
-  <form method="GET" class="row g-3 align-items-end mb-4">
+  <!-- FILTER -->
+  <form method="GET" class="row g-3 align-items-end mb-4 rdfs-analytics-filter">
     <div class="col-md-3">
-      <label class="form-label fw-semibold">Start Date</label>
+      <label class="form-label">Start Date</label>
       <input type="date" name="start_date" value="{{ start_date }}" class="form-control shadow-sm">
     </div>
     <div class="col-md-3">
-      <label class="form-label fw-semibold">End Date</label>
+      <label class="form-label">End Date</label>
       <input type="date" name="end_date" value="{{ end_date }}" class="form-control shadow-sm">
     </div>
     <div class="col-md-3 d-flex align-items-end">
-      <button type="submit" class="btn btn-primary px-4">
-        <i class="bi bi-funnel"></i> Apply Filter
+      <button type="submit" class="btn text-white px-4">
+        <i class="bi bi-funnel me-1"></i>
+        Apply Filter
       </button>
     </div>
   </form>
 
-  <!-- Summary Cards -->
+  <!-- SUMMARY -->
   <div class="row g-3 mb-4">
+
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm text-center p-3">
-        <h6 class="text-muted mb-1">Total Deposited</h6>
-        <h3 class="text-success fw-bold">₱{{ total_amount|floatformat:2 }}</h3>
+      <div class="rdfs-analytics-card text-center p-3">
+        <h6>Total Deposited</h6>
+        <h3 class="rdfs-analytics-value green">
+          ₱{{ total_amount|floatformat:2 }}
+        </h3>
       </div>
     </div>
+
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm text-center p-3">
-        <h6 class="text-muted mb-1">Total Transactions</h6>
-        <h3 class="text-primary fw-bold">{{ total_transactions }}</h3>
+      <div class="rdfs-analytics-card text-center p-3">
+        <h6>Total Transactions</h6>
+        <h3 class="rdfs-analytics-value blue">
+          {{ total_transactions }}
+        </h3>
       </div>
     </div>
+
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm text-center p-3">
-        <h6 class="text-muted mb-1">Unique Vehicles</h6>
-        <h3 class="text-info fw-bold">{{ unique_vehicles }}</h3>
+      <div class="rdfs-analytics-card text-center p-3">
+        <h6>Unique Vehicles</h6>
+        <h3 class="rdfs-analytics-value info">
+          {{ unique_vehicles }}
+        </h3>
       </div>
     </div>
+
     <div class="col-md-3">
-      <div class="card border-0 shadow-sm text-center p-3">
-        <h6 class="text-muted mb-1">Unique Drivers</h6>
-        <h3 class="text-warning fw-bold">{{ unique_drivers }}</h3>
+      <div class="rdfs-analytics-card text-center p-3">
+        <h6>Unique Drivers</h6>
+        <h3 class="rdfs-analytics-value warn">
+          {{ unique_drivers }}
+        </h3>
       </div>
+    </div>
+
+  </div>
+
+  <!-- CHART -->
+  <div class="card border-0 rdfs-analytics-chart mb-4">
+    <div class="card-body">
+      <h5 class="mb-3">
+        <i class="bi bi-bar-chart-line-fill text-primary me-1"></i>
+        Daily Deposit Trend
+      </h5>
+      <canvas id="rdfsDepositChart" height="100"></canvas>
     </div>
   </div>
 
-  <!-- Chart -->
-  <div class="card shadow-sm border-0 mb-4">
+  <!-- TOP DRIVERS -->
+  <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-      <h5 class="card-title mb-3"><i class="bi bi-bar-chart-line-fill text-primary"></i> Daily Deposit Trend</h5>
-      <canvas id="depositChart" height="100"></canvas>
-    </div>
-  </div>
+      <h5 class="mb-3">
+        <i class="bi bi-person-badge-fill text-success me-1"></i>
+        Top 5 Drivers by Deposit
+      </h5>
 
-  <!-- Top Drivers -->
-  <div class="card shadow-sm border-0 mb-4">
-    <div class="card-body">
-      <h5 class="card-title mb-3"><i class="bi bi-person-badge text-success"></i> Top 5 Drivers by Deposit</h5>
       {% if top_drivers %}
-      <table class="table table-striped align-middle">
-        <thead class="table-success">
+      <table class="table table-striped align-middle rdfs-analytics-table">
+        <thead>
           <tr>
             <th>#</th>
             <th>Driver</th>
@@ -81,54 +199,61 @@
           {% for d in top_drivers %}
           <tr>
             <td>{{ forloop.counter }}</td>
-            <td>{{ d.wallet__vehicle__assigned_driver__first_name }} {{ d.wallet__vehicle__assigned_driver__last_name }}</td>
+            <td>
+              {{ d.wallet__vehicle__assigned_driver__first_name }}
+              {{ d.wallet__vehicle__assigned_driver__last_name }}
+            </td>
             <td>₱{{ d.total|floatformat:2 }}</td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
       {% else %}
-        <p class="text-muted mb-0">No deposits found in this period.</p>
+        <p class="text-muted mb-0">
+          No deposits found in this period.
+        </p>
       {% endif %}
     </div>
   </div>
+
 </div>
 
-<!-- Chart.js -->
+<!-- CHART.JS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const ctx = document.getElementById('depositChart');
-  if (ctx) {
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: {{ chart_labels|safe }},
-        datasets: [{
-          label: 'Total Deposits (₱)',
-          data: {{ chart_data|safe }},
-          fill: true,
-          borderColor: '#198754',
-          backgroundColor: 'rgba(25,135,84,0.15)',
-          tension: 0.3
+document.addEventListener("DOMContentLoaded",function(){
+  const ctx=document.getElementById('rdfsDepositChart');
+  if(ctx){
+    new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:{{ chart_labels|safe }},
+        datasets:[{
+          label:'Total Deposits (₱)',
+          data:{{ chart_data|safe }},
+          fill:true,
+          borderColor:'#112666',
+          backgroundColor:'rgba(17,38,102,0.15)',
+          tension:.3
         }]
       },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#198754',
-            titleColor: '#fff',
-            bodyColor: '#fff'
+      options:{
+        responsive:true,
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            backgroundColor:'#112666',
+            titleColor:'#fff',
+            bodyColor:'#fff'
           }
         },
-        scales: {
-          y: { beginAtZero: true }
+        scales:{
+          y:{beginAtZero:true}
         }
       }
     });
   }
 });
 </script>
+
 {% endblock %}

@@ -4,32 +4,113 @@
 {% block title %}Manage Queue | RDFS{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-  <div class="card shadow-sm border-0">
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+
+<style>
+/* =====================================================
+   RDFS – MANAGE QUEUE (SCOPED)
+   Prefix: rdfs-queue-
+===================================================== */
+.rdfs-queue-scope{
+  --rdfs-blue:#112666;
+  --rdfs-accent:#2563eb;
+  --rdfs-muted:#64748b;
+
+  --gray-100:#f7fafc;
+  --gray-200:#edf2f7;
+
+  --shadow-sm:0 2px 6px rgba(0,0,0,.05);
+  --shadow-md:0 8px 18px rgba(0,0,0,.10);
+
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+}
+
+/* CARD */
+.rdfs-queue-card{
+  border-radius:18px;
+  box-shadow:var(--shadow-md);
+}
+
+/* HEADER */
+.rdfs-queue-header{
+  background:linear-gradient(135deg,var(--rdfs-accent),var(--rdfs-blue));
+  color:#fff;
+}
+
+.rdfs-queue-header h5{
+  font-weight:700;
+}
+
+.rdfs-queue-header small{
+  opacity:.85;
+}
+
+/* STATUS BAR */
+.rdfs-queue-status{
+  background:var(--gray-100);
+  border:1px solid var(--gray-200);
+  border-radius:10px;
+}
+
+/* TABLE */
+.rdfs-queue-table thead{
+  background:var(--rdfs-soft,#e8f4fd);
+}
+
+.rdfs-queue-table th{
+  font-weight:700;
+  color:var(--rdfs-blue);
+}
+
+.rdfs-queue-table td{
+  vertical-align:middle;
+  font-size:.9rem;
+}
+
+/* EMPTY STATE */
+.rdfs-queue-empty{
+  border-radius:10px;
+}
+</style>
+
+<div class="container-fluid mt-4 rdfs-queue-scope">
+
+  <div class="card border-0 rdfs-queue-card">
+    <div class="card-header rdfs-queue-header d-flex justify-content-between align-items-center">
       <div>
-        <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Manage Queue (Staff Panel)</h5>
-        <small class="text-light opacity-75">Monitor and manage active vehicles inside the terminal.</small>
+        <h5 class="mb-0">
+          <i class="bi bi-person-lines-fill me-2"></i>
+          Manage Queue (Staff Panel)
+        </h5>
+        <small>
+          Monitor and manage active vehicles inside the terminal.
+        </small>
       </div>
-      <a href="{% url 'terminal:qr_scan_entry' %}" class="btn btn-light btn-sm">
-        <i class="bi bi-qr-code-scan me-1"></i> QR Scan Entry
+      <a href="{% url 'terminal:qr_scan_entry' %}"
+         class="btn btn-light btn-sm fw-semibold">
+        <i class="bi bi-qr-code-scan me-1"></i>
+        QR Scan Entry
       </a>
     </div>
 
     <div class="card-body">
-      <!-- 🟩 Active Vehicles -->
-      <div class="alert alert-info py-2 d-flex justify-content-between align-items-center">
+
+      <!-- ACTIVE COUNT -->
+      <div class="alert alert-info py-2 d-flex justify-content-between align-items-center rdfs-queue-status">
         <div>
           <i class="bi bi-car-front me-2"></i>
-          <strong>Currently Active Vehicles:</strong> <span id="vehicleCount">0</span>
+          <strong>Currently Active Vehicles:</strong>
+          <span id="rdfsQueueCount">0</span>
         </div>
-        <small class="text-muted">Auto-refreshes every 5 seconds</small>
+        <small class="text-muted">
+          Auto-refreshes every 5 seconds
+        </small>
       </div>
 
-      <!-- 🟩 Table -->
+      <!-- TABLE -->
       <div class="table-responsive">
-        <table class="table table-striped align-middle" id="manage-queue-table">
-          <thead class="table-primary">
+        <table class="table table-striped align-middle rdfs-queue-table"
+               id="rdfsQueueTable">
+          <thead>
             <tr>
               <th>#</th>
               <th>Plate Number</th>
@@ -40,30 +121,38 @@
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody id="queue-body">
-            <tr><td colspan="7" class="text-center text-muted">Loading queue...</td></tr>
+          <tbody id="rdfsQueueBody">
+            <tr>
+              <td colspan="7" class="text-center text-muted">
+                Loading queue...
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Empty State -->
-      <div id="no-data" class="alert alert-secondary text-center d-none mt-3">
-        <i class="bi bi-info-circle me-1"></i> No active vehicles found.
+      <!-- EMPTY STATE -->
+      <div id="rdfsQueueEmpty"
+           class="alert alert-secondary text-center d-none mt-3 rdfs-queue-empty">
+        <i class="bi bi-info-circle me-1"></i>
+        No active vehicles found.
       </div>
+
     </div>
   </div>
 </div>
 
-<!-- 🟦 Live Queue Auto Refresh -->
+<!-- ================= QUEUE SCRIPT ================= -->
 <script>
-async function fetchQueueData() {
+async function rdfsFetchQueueData() {
   try {
     const response = await fetch("{% url 'terminal:queue_data' %}");
     const data = await response.json();
 
-    const tbody = document.getElementById('queue-body');
-    const noData = document.getElementById('no-data');
-    const countDisplay = document.getElementById('vehicleCount');
+    const tbody = document.getElementById('rdfsQueueBody');
+    const noData = document.getElementById('rdfsQueueEmpty');
+    const countDisplay = document.getElementById('rdfsQueueCount');
+
     tbody.innerHTML = '';
 
     if (data.entries && data.entries.length > 0) {
@@ -71,18 +160,20 @@ async function fetchQueueData() {
       countDisplay.textContent = data.entries.length;
 
       data.entries.forEach((item, index) => {
-        const expectedDeparture = calculateExpectedDeparture(item.time);
+        const expectedDeparture = rdfsCalculateExpectedDeparture(item.time);
         const row = `
-          <tr id="row-${item.id}">
+          <tr id="rdfsRow-${item.id}">
             <td>${index + 1}</td>
             <td><strong>${item.vehicle_plate}</strong></td>
             <td>${item.driver_name}</td>
             <td>${item.staff}</td>
-            <td>${formatTime(item.time)}</td>
+            <td>${rdfsFormatTime(item.time)}</td>
             <td>${expectedDeparture}</td>
             <td>
-              <button class="btn btn-sm btn-outline-danger" onclick="markDeparted(${item.id})">
-                <i class="bi bi-box-arrow-right"></i> Mark Departed
+              <button class="btn btn-sm btn-outline-danger"
+                      onclick="rdfsMarkDeparted(${item.id})">
+                <i class="bi bi-box-arrow-right"></i>
+                Mark Departed
               </button>
             </td>
           </tr>
@@ -98,22 +189,29 @@ async function fetchQueueData() {
   }
 }
 
-// 🕒 Helper: format entry time
-function formatTime(datetime) {
+/* TIME FORMAT */
+function rdfsFormatTime(datetime) {
   const date = new Date(datetime);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 }
 
-// 🕒 Helper: calculate expected departure time (+30 mins default)
-function calculateExpectedDeparture(entryTime) {
+/* EXPECTED DEPARTURE (+30 MIN) */
+function rdfsCalculateExpectedDeparture(entryTime) {
   const date = new Date(entryTime);
   date.setMinutes(date.getMinutes() + 30);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 }
 
-// 🟥 Manual Depart (override button)
-async function markDeparted(entryId) {
+/* MARK DEPARTED */
+async function rdfsMarkDeparted(entryId) {
   if (!confirm("Are you sure you want to mark this vehicle as departed?")) return;
+
   try {
     const response = await fetch(`/terminal/mark-departed/${entryId}/`, {
       method: "POST",
@@ -125,7 +223,7 @@ async function markDeparted(entryId) {
 
     if (data.success) {
       alert(data.message);
-      fetchQueueData();
+      rdfsFetchQueueData();
     } else {
       alert(data.message || "Failed to mark as departed.");
     }
@@ -134,11 +232,12 @@ async function markDeparted(entryId) {
   }
 }
 
-// 🕒 Auto-refresh queue every 5 seconds
-fetchQueueData();
-setInterval(fetchQueueData, 5000);
+/* AUTO REFRESH */
+rdfsFetchQueueData();
+setInterval(rdfsFetchQueueData, 5000);
 </script>
 
-<!-- CSRF Token for AJAX -->
+<!-- CSRF TOKEN -->
 <form style="display:none;">{% csrf_token %}</form>
+
 {% endblock %}

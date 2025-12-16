@@ -4,137 +4,225 @@
 {% block title %}Edit User | RDFS{% endblock %}
 
 {% block content %}
-
 <style>
-    .form-wrapper {
-        max-width: 520px;
-        margin: auto;
-        background: #ffffff;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    }
-    .form-title {
-        font-weight: 700;
-        margin-bottom: .5rem;
-    }
-    .form-note {
-        font-size: .9rem;
-        color: #6c757d;
-        margin-bottom: 1.2rem;
-    }
-    .password-section {
-        display: none;
-    }
+/* ===============================
+   RDFS EDIT USER (SCOPED)
+================================ */
+:root{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#180f92;
+  --rdfs-blue-soft:#e8f4fd;
+
+  --rdfs-bg:#f7fafc;
+  --rdfs-card:#ffffff;
+
+  --rdfs-text:#1c1b1b;
+  --rdfs-muted:#64748b;
+
+  --rdfs-border:#e2e8f0;
+  --rdfs-radius:14px;
+
+  --rdfs-shadow-sm:0 4px 10px rgba(0,0,0,.06);
+  --rdfs-shadow-md:0 12px 28px rgba(0,0,0,.12);
+
+  --rdfs-transition:.25s ease;
+}
+
+/* PAGE */
+.rdfs-edit-page{
+  min-height:80vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--rdfs-bg);
+}
+
+/* CARD */
+.rdfs-edit-card{
+  max-width:520px;
+  width:100%;
+  background:var(--rdfs-card);
+  border-radius:var(--rdfs-radius);
+  padding:2rem;
+  border:1px solid var(--rdfs-border);
+  box-shadow:var(--rdfs-shadow-md);
+}
+
+/* TITLE */
+.rdfs-edit-title{
+  font-weight:800;
+  color:var(--rdfs-blue-dark);
+  margin-bottom:.25rem;
+}
+
+/* NOTE */
+.rdfs-edit-note{
+  font-size:.9rem;
+  color:var(--rdfs-muted);
+  margin-bottom:1.4rem;
+}
+
+/* PASSWORD SECTION */
+.rdfs-password-section{
+  display:none;
+  background:var(--rdfs-blue-soft);
+  border-radius:12px;
+  padding:1rem;
+  margin-top:1rem;
+}
+
+/* TOGGLE BUTTON */
+.rdfs-password-toggle{
+  border-radius:999px;
+  font-weight:600;
+}
+
+/* ACTION BUTTONS */
+.rdfs-save-btn{
+  background:linear-gradient(
+    135deg,
+    var(--rdfs-blue),
+    var(--rdfs-blue-dark)
+  );
+  border:none;
+  color:#fff;
+  font-weight:700;
+  border-radius:999px;
+  transition:var(--rdfs-transition);
+}
+
+.rdfs-save-btn:hover{
+  box-shadow:0 8px 18px rgba(17,38,102,.35);
+  transform:translateY(-1px);
+}
+
+.rdfs-cancel-btn{
+  border-radius:999px;
+  font-weight:600;
+}
 </style>
 
-<div class="container py-3">
-    <div class="form-wrapper">
+<div class="container rdfs-edit-page">
 
-        <!-- Title -->
-        <h3 class="form-title text-center">Edit Account</h3>
-        <p class="form-note text-center">
-            Updating: <strong>{{ user_obj.username }}</strong>
-        </p>
+  <div class="rdfs-edit-card">
 
-        <!-- Alerts -->
-        {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                {{ message }}
-                <button class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endfor %}
+    <!-- TITLE -->
+    <h3 class="rdfs-edit-title text-center">
+      Edit Account
+    </h3>
+    <p class="rdfs-edit-note text-center">
+      Updating: <strong>{{ user_obj.username }}</strong>
+    </p>
+
+    <!-- ALERTS -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+          {{ message }}
+          <button class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" novalidate>
+      {% csrf_token %}
+
+      <!-- USERNAME -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <div class="text-danger small">{{ form.username.errors.0 }}</div>
         {% endif %}
+      </div>
 
-        <form method="POST" novalidate>
-            {% csrf_token %}
+      <!-- EMAIL -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Email Address</label>
+        {{ form.email }}
+        {% if form.email.errors %}
+          <div class="text-danger small">{{ form.email.errors.0 }}</div>
+        {% endif %}
+      </div>
 
-            <!-- Username -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Username</label>
-                {{ form.username }}
-                {% if form.username.errors %}
-                    <div class="text-danger small">{{ form.username.errors.0 }}</div>
-                {% endif %}
-            </div>
+      <!-- ROLE -->
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Account Role</label>
+        {{ form.role }}
+        {% if form.role.errors %}
+          <div class="text-danger small">{{ form.role.errors.0 }}</div>
+        {% endif %}
+      </div>
 
-            <!-- Email -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Email Address</label>
-                {{ form.email }}
-                {% if form.email.errors %}
-                    <div class="text-danger small">{{ form.email.errors.0 }}</div>
-                {% endif %}
-            </div>
+      <!-- PASSWORD TOGGLE -->
+      <div class="text-center my-3">
+        <button type="button"
+                id="rdfsPasswordToggle"
+                class="btn btn-outline-primary btn-sm rdfs-password-toggle">
+          <i class="bi bi-key-fill me-1"></i> Edit Password
+        </button>
+      </div>
 
-            <!-- Role -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Account Role</label>
-                {{ form.role }}
-                {% if form.role.errors %}
-                    <div class="text-danger small">{{ form.role.errors.0 }}</div>
-                {% endif %}
-            </div>
+      <!-- PASSWORD SECTION -->
+      <div id="rdfsPasswordSection" class="rdfs-password-section">
 
-            <!-- Toggle Password Editing -->
-            <div class="text-center my-3">
-                <button type="button" id="togglePasswordBtn"
-                        class="btn btn-outline-primary btn-sm rounded-pill">
-                    <i class="bi bi-key-fill me-1"></i> Edit Password
-                </button>
-            </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">New Password</label>
+          <input type="password"
+                 name="new_password1"
+                 class="form-control"
+                 placeholder="Enter new password">
+        </div>
 
-            <!-- Password Edit Section -->
-            <div id="passwordSection" class="password-section">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Confirm New Password</label>
+          <input type="password"
+                 name="new_password2"
+                 class="form-control"
+                 placeholder="Confirm new password">
+        </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">New Password</label>
-                    <input type="password" name="new_password1"
-                           class="form-control" placeholder="Enter new password">
-                </div>
+      </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Confirm New Password</label>
-                    <input type="password" name="new_password2"
-                           class="form-control" placeholder="Confirm new password">
-                </div>
+      <!-- SAVE -->
+      <div class="d-grid mt-4">
+        <button type="submit"
+                class="btn rdfs-save-btn btn-lg">
+          <i class="bi bi-check-circle-fill me-1"></i>
+          Save Changes
+        </button>
+      </div>
 
-            </div>
+      <!-- CANCEL -->
+      <div class="text-center mt-3">
+        <a href="{% url 'accounts:manage_users' %}"
+           class="btn btn-outline-secondary btn-sm rdfs-cancel-btn">
+          <i class="bi bi-arrow-left-circle-fill me-1"></i>
+          Cancel
+        </a>
+      </div>
 
-            <!-- Save Button -->
-            <div class="d-grid mt-4">
-                <button type="submit" class="btn btn-primary btn-lg fw-semibold rounded-pill">
-                    <i class="bi bi-check-circle-fill me-1"></i> Save Changes
-                </button>
-            </div>
+    </form>
 
-            <!-- Cancel Button -->
-            <div class="text-center mt-3">
-                <a href="{% url 'accounts:manage_users' %}" 
-                   class="btn btn-outline-secondary btn-sm rounded-pill">
-                    <i class="bi bi-x-circle-fill me-1"></i> Cancel
-                </a>
-            </div>
-
-        </form>
-
-    </div>
+  </div>
 </div>
 
-<!-- Password Toggle Script -->
+<!-- PASSWORD TOGGLE SCRIPT (SCOPED) -->
 <script>
-    const toggleBtn = document.getElementById("togglePasswordBtn");
-    const passwordSection = document.getElementById("passwordSection");
+(function(){
+  const toggle = document.getElementById("rdfsPasswordToggle");
+  const section = document.getElementById("rdfsPasswordSection");
 
-    toggleBtn.addEventListener("click", function () {
-        const isHidden = passwordSection.style.display === "none" || passwordSection.style.display === "";
-        passwordSection.style.display = isHidden ? "block" : "none";
+  if(!toggle || !section) return;
 
-        toggleBtn.innerHTML = isHidden
-            ? '<i class="bi bi-key me-1"></i> Hide Password Fields'
-            : '<i class="bi bi-key me-1"></i> Edit Password';
-    });
+  toggle.addEventListener("click", function(){
+    const open = section.style.display === "block";
+
+    section.style.display = open ? "none" : "block";
+    toggle.innerHTML = open
+      ? '<i class="bi bi-key-fill me-1"></i> Edit Password'
+      : '<i class="bi bi-key-fill me-1"></i> Hide Password Fields';
+  });
+})();
 </script>
-
 {% endblock %}

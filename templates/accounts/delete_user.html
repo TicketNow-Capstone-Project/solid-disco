@@ -4,70 +4,147 @@
 {% block title %}Delete User | RDFS{% endblock %}
 
 {% block content %}
-
-
 <style>
-    .delete-card {
-        max-width: 480px;
-        margin: 100px auto;
-        background: #ffffff;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-        text-align: center;
-    }
-    .delete-title {
-        font-weight: 700;
-    }
-    .delete-text {
-        font-size: 1rem;
-        color: #555;
-        margin: 1rem 0 1.5rem;
-    }
+/* ===============================
+   RDFS DELETE USER (SCOPED)
+================================ */
+:root{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#180f92;
+
+  --rdfs-danger:#dc2626;
+  --rdfs-danger-soft:rgba(220,38,38,.08);
+
+  --rdfs-bg:#f7fafc;
+  --rdfs-card:#ffffff;
+
+  --rdfs-text:#1c1b1b;
+  --rdfs-muted:#64748b;
+
+  --rdfs-border:#e2e8f0;
+  --rdfs-radius:14px;
+
+  --rdfs-shadow-sm:0 4px 10px rgba(0,0,0,.06);
+  --rdfs-shadow-md:0 12px 28px rgba(0,0,0,.12);
+
+  --rdfs-transition:.25s ease;
+}
+
+/* PAGE */
+.rdfs-delete-page{
+  min-height:80vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--rdfs-bg);
+}
+
+/* CARD */
+.rdfs-delete-card{
+  max-width:460px;
+  width:100%;
+  background:var(--rdfs-card);
+  border-radius:var(--rdfs-radius);
+  padding:2rem;
+  text-align:center;
+  border:1px solid var(--rdfs-border);
+  box-shadow:var(--rdfs-shadow-md);
+}
+
+/* ICON */
+.rdfs-delete-icon{
+  font-size:2.2rem;
+  color:var(--rdfs-danger);
+  margin-bottom:.5rem;
+}
+
+/* TITLE */
+.rdfs-delete-title{
+  font-weight:800;
+  color:var(--rdfs-danger);
+  margin-bottom:.5rem;
+}
+
+/* TEXT */
+.rdfs-delete-text{
+  font-size:1rem;
+  color:var(--rdfs-muted);
+  margin:1rem 0 1.6rem;
+  line-height:1.6;
+}
+
+/* BUTTONS */
+.rdfs-delete-btn{
+  background:linear-gradient(
+    135deg,
+    var(--rdfs-danger),
+    #991b1b
+  );
+  border:none;
+  color:#fff;
+  font-weight:700;
+  border-radius:999px;
+  padding:.65rem 1rem;
+  transition:var(--rdfs-transition);
+}
+
+.rdfs-delete-btn:hover{
+  box-shadow:0 8px 18px rgba(220,38,38,.4);
+  transform:translateY(-1px);
+}
+
+.rdfs-cancel-btn{
+  border-radius:999px;
+  font-weight:600;
+}
 </style>
 
-<div class="container py-4">
+<div class="container rdfs-delete-page">
 
-    <div class="delete-card">
+  <div class="rdfs-delete-card">
 
-        <!-- Title -->
-        <h3 class="delete-title text-danger">
-            <i class="bi bi-x-octagon-fill me-2"></i>
-            Delete Account
-        </h3>
-
-        <!-- Message -->
-        <p class="delete-text">
-            Are you sure you want to delete
-            <strong>{{ user_obj.username }}</strong>
-            ({{ user_obj.get_role_display }})?
-        </p>
-
-        <!-- Form -->
-        <form method="POST">
-            {% csrf_token %}
-
-            <div class="d-grid gap-2 mt-4">
-
-                <!-- Delete Button -->
-                <button type="submit"
-                        class="btn btn-danger fw-semibold rounded-pill">
-                    <i class="bi bi-trash-fill me-1"></i>
-                    Yes, Delete Account
-                </button>
-
-                <!-- Cancel Button -->
-                <a href="{% url 'accounts:manage_users' %}"
-                   class="btn btn-outline-secondary btn-sm rounded-pill">
-                    <i class="bi bi-x-circle-fill me-1"></i>
-                    Cancel
-                </a>
-
-            </div>
-        </form>
-
+    <!-- ICON -->
+    <div class="rdfs-delete-icon">
+      <i class="bi bi-x-octagon-fill"></i>
     </div>
 
-</div>
+    <!-- TITLE -->
+    <h3 class="rdfs-delete-title">
+      Delete Account
+    </h3>
 
+    <!-- MESSAGE -->
+    <p class="rdfs-delete-text">
+      Are you sure you want to permanently delete
+      <strong>{{ user_obj.username }}</strong>
+      <br>
+      <small>({{ user_obj.get_role_display }})</small>
+    </p>
+
+    <!-- FORM -->
+    <form method="POST">
+      {% csrf_token %}
+
+      <div class="d-grid gap-2 mt-4">
+
+        <!-- CONFIRM -->
+        <button type="submit"
+                class="btn rdfs-delete-btn">
+          <i class="bi bi-trash-fill me-1"></i>
+          Yes, Delete Account
+        </button>
+
+        <!-- CANCEL -->
+        <a href="{% url 'accounts:manage_users' %}"
+           class="btn btn-outline-secondary btn-sm rdfs-cancel-btn">
+          <i class="bi bi-arrow-left-circle-fill me-1"></i>
+          Cancel
+        </a>
+
+      </div>
+    </form>
+
+  </div>
+
+</div>
 {% endblock %}
