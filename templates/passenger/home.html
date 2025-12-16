@@ -509,6 +509,38 @@
       padding: var(--spacing-lg);
     }
   }
+  .fade-enter {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+  will-change: opacity, transform;
+}
+
+.fade-enter.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Direction variants */
+.fade-enter--up { transform: translateY(24px); }
+.fade-enter--left { transform: translateX(-24px); }
+.fade-enter--right { transform: translateX(24px); }
+
+/* Delay helpers */
+.fade-delay-1 { transition-delay: .15s; }
+.fade-delay-2 { transition-delay: .3s; }
+.fade-delay-3 { transition-delay: .45s; }
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .fade-enter {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
   </style>
 </head>
 
@@ -519,28 +551,28 @@
 
   <!-- HERO SECTION -->
   <section class="hero">
-    <div class="container">
-      <div class="hero-content">
-        <div class="hero-subtitle">Government Transportation System</div>
-        <h1 class="hero-title brand-font">MAASIN INTEGRATED TERMINAL</h1>
-        <p class="hero-description">
-          Real-Time Dispatch & Finance System providing reliable, transparent, 
-          and efficient transportation services for Southern Leyte.
-        </p>
-        
-        <div class="hero-actions">
-          <a href="{% url 'passenger:public_queue' %}" class="btn btn-primary">
-            <i class="bi bi-calendar-check"></i>
-            View Trip Schedule
-          </a>
-          <a href="{% url 'passenger:announcement' %}" class="btn btn-secondary">
-            <i class="bi bi-megaphone"></i>
-            Official Announcements
-          </a>
-        </div>
+  <div class="container">
+    <div class="hero-content fade-enter fade-enter--up">
+      <div class="hero-subtitle fade-enter fade-delay-1">
+        Government Transportation System
+      </div>
+
+      <h1 class="hero-title brand-font fade-enter fade-delay-2">
+        MAASIN INTEGRATED TERMINAL
+      </h1>
+
+      <p class="hero-description fade-enter fade-delay-3">
+        Real-Time Dispatch & Finance System providing reliable, transparent,
+        and efficient transportation services for Southern Leyte.
+      </p>
+
+      <div class="hero-actions fade-enter fade-delay-3">
+        ...
       </div>
     </div>
-  </section>
+  </div>
+</section>
+
 
   <!-- FEATURES SECTION -->
   <section class="features">
@@ -553,7 +585,7 @@
       </div>
       
       <div class="features-grid">
-        <div class="feature-card">
+        <div class="feature-card fade-enter fade-enter--up">
           <div class="feature-icon">
             <i class="bi bi-clock-history"></i>
           </div>
@@ -561,7 +593,7 @@
           <p>Live updates on departures, arrivals, and trip schedules with automated notifications.</p>
         </div>
         
-        <div class="feature-card">
+        <div class="feature-card fade-enter fade-enter--up fade-delay-1">
           <div class="feature-icon">
             <i class="bi bi-shield-check"></i>
           </div>
@@ -569,7 +601,7 @@
           <p>Government-grade security protocols for passenger safety and data protection.</p>
         </div>
         
-        <div class="feature-card">
+        <div class="feature-card fade-enter fade-enter--up fade-delay-2">
           <div class="feature-icon">
             <i class="bi bi-cash-stack"></i>
           </div>
@@ -584,7 +616,7 @@
   <section class="system-overview">
     <div class="container">
       <div class="overview-content">
-        <div class="overview-text">
+        <div class="overview-text fade-enter fade-enter--left">
           <h2 class="brand-font">Integrated Terminal Management</h2>
           <p class="text-body">
             The Real-Time Dispatch & Finance System streamlines terminal operations 
@@ -625,7 +657,8 @@
           </div>
         </div>
         
-        <div class="overview-stats">
+        <div class="overview-stats fade-enter fade-enter--right fade-delay-1">
+
           <div class="stats-grid">
             <div class="stat-item">
               <div class="stat-number">24/7</div>
@@ -653,7 +686,7 @@
   <section class="service-hours">
     <div class="container">
       <h2 class="brand-font text-center">Terminal Operating Hours</h2>
-      <div class="hours-container">
+      <div class="hours-container fade-enter fade-enter--up">
         <div class="hours-item">
           <h4 class="brand-font">Terminal Operations</h4>
           <p>4:00 AM - 10:00 PM</p>
@@ -676,7 +709,7 @@
   <!-- CALL TO ACTION -->
   <section class="cta-section">
     <div class="container">
-      <div class="cta-content">
+      <div class="cta-content fade-enter fade-enter--up">
         <h2 class="brand-font">Ready to Travel?</h2>
         <p>
           Access real-time schedules, official announcements, and terminal information 
@@ -688,10 +721,11 @@
             <i class="bi bi-calendar-check"></i>
             Check Schedules
           </a>
-          <a href="{% url 'passenger:contact' %}" class="btn cta-btn-alt">
+          <a href="{% url 'passenger:announcement' %}#contact-section-page" class="btn cta-btn-alt">
             <i class="bi bi-telephone"></i>
             Contact Terminal
           </a>
+
         </div>
       </div>
     </div>
@@ -699,3 +733,30 @@
 
 </body>
 </html>
+<script>
+(function () {
+  const items = document.querySelectorAll('.fade-enter');
+
+  if (!('IntersectionObserver' in window)) {
+    items.forEach(el => el.classList.add('is-visible'));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    {
+      threshold: 0.15,
+      rootMargin: '0px 0px -80px 0px'
+    }
+  );
+
+  items.forEach(el => observer.observe(el));
+})();
+</script>

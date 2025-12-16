@@ -1,88 +1,204 @@
-{# templates/includes/sidebar_staff.html #}
 {% load static %}
 
-<div class="d-flex align-items-center justify-content-center mb-4">
-  <img src="{% static 'img/RDFS-Logo-White.png' %}" alt="RDFS Logo" class="logo-img me-2">
-  <div>
-    <h6 class="text-white fw-bold mb-0">Real-Time Dispatch & Finance System</h6>
+<!-- ===============================
+     RDFS STAFF SIDEBAR (ULTRA COMPACT + STICKY)
+================================ -->
+<aside class="rdfs-sidebar">
+
+  <!-- TOP (LOGO) -->
+  <div class="rdfs-sidebar__top">
+    <img
+      src="{% static 'img/RDFS-Logo-White.png' %}"
+      alt="RDFS Logo"
+      class="rdfs-sidebar__logo"
+    >
   </div>
-</div>
 
+  <!-- MIDDLE (SCROLLABLE NAV) -->
+  <nav class="rdfs-sidebar__middle">
+    <ul class="rdfs-sidebar__nav">
 
-<ul class="list-unstyled">
+      <li class="rdfs-sidebar__item">
+        <a href="{% url 'accounts:staff_dashboard' %}" class="rdfs-sidebar__link">
+          <i class="bi bi-house-door-fill"></i><span>Staff Dashboard</span>
+        </a>
+      </li>
 
-  <!-- 🏠 Dashboard -->
-  <li>
-    <a href="{% url 'accounts:staff_dashboard' %}" class="d-block text-white py-2 px-3">
-      <i class="bi bi-house-door-fill me-2"></i> Dashboard
-    </a>
-  </li>
+      <li class="rdfs-sidebar__section">Driver & Vehicle</li>
 
-  <!-- 👤 Driver & Vehicle Management -->
-  <li class="mt-3 px-3">
-    <span class="text-uppercase small fw-bold text-light">Driver & Vehicle</span>
-  </li>
-  <li>
-    <a href="{% url 'vehicles:register_driver' %}" class="d-block text-white py-2 px-3">
-      <i class="bi bi-person-plus-fill me-2"></i> Register Driver
-    </a>
-  </li>
-  <li>
-    <a href="{% url 'vehicles:registered_drivers' %}" class="d-block text-white py-2 px-3">
-      <i class="bi bi-person-lines-fill me-2"></i> Registered Drivers
-    </a>
-  </li>
-  <li>
-    <a href="{% url 'vehicles:register_vehicle' %}" class="d-block text-white py-2 px-3">
-      <i class="bi bi-truck-front-fill me-2"></i> Register Vehicle
-    </a>
-  </li>
-  <li>
-    <a href="{% url 'vehicles:registered_vehicles' %}" class="d-block text-white py-2 px-3">
-      <i class="bi bi-card-list me-2"></i> Registered Vehicles
-    </a>
-  </li>
+      <li class="rdfs-sidebar__item">
+        <a href="{% url 'vehicles:register_driver' %}" class="rdfs-sidebar__link">
+          <i class="bi bi-person-plus-fill"></i><span>Add Driver</span>
+        </a>
+      </li>
 
-  <!-- 💰 Transactions -->
-  <li class="mt-3 px-3">
-    <span class="text-uppercase small fw-bold text-light">Transactions</span>
-  </li>
-  <li>
-    <a href="{% url 'terminal:deposit_menu' %}" class="d-block text-white py-2 px-3">
-      <i class="bi bi-cash-stack me-2"></i> Deposit Menu
-    </a>
-  </li>
+      <li class="rdfs-sidebar__item">
+        <a href="{% url 'vehicles:registered_drivers' %}" class="rdfs-sidebar__link">
+          <i class="bi bi-people-fill"></i><span>Drivers</span>
+        </a>
+      </li>
 
-  <!-- 🚗 QR Operations -->
-  <li class="mt-3 px-3">
-    <span class="text-uppercase small fw-bold text-light">QR Operations</span>
-  </li>
-  <li>
-    <a href="{% url 'terminal:qr_scan_entry' %}" class="d-block text-white py-2 px-3">
-      <i class="bi bi-qr-code-scan me-2"></i> QR Entry
-    </a>
-  </li>
-  <li>
-    <a href="{% url 'terminal:qr_exit_page' %}" class="d-block text-white py-2 px-3">
-      <i class="bi bi-qr-code me-2"></i> QR Exit
-    </a>
-  </li>
+      <li class="rdfs-sidebar__item">
+        <a href="{% url 'vehicles:register_vehicle' %}" class="rdfs-sidebar__link">
+          <i class="bi bi-truck-front-fill"></i><span>Add Vehicle</span>
+        </a>
+      </li>
 
-  <!-- 🖥️ Terminal Display -->
-  <li class="mt-3 px-3">
-    <span class="text-uppercase small fw-bold text-light">Monitoring</span>
-  </li>
-  <li>
-    <a href="{% url 'terminal:tv_display' %}" target="_blank" class="d-block text-white py-2 px-3">
-      <i class="bi bi-display-fill me-2"></i> Terminal TV Display
-    </a>
-  </li>
+      <li class="rdfs-sidebar__item">
+        <a href="{% url 'vehicles:registered_vehicles' %}" class="rdfs-sidebar__link">
+          <i class="bi bi-card-list"></i><span>Vehicles</span>
+        </a>
+      </li>
 
-  <!-- 🚪 Logout -->
-  <li class="mt-4">
-    <a href="{% url 'accounts:logout' %}" class="d-block text-white py-2 px-3">
-      <i class="bi bi-door-closed-fill me-2"></i> Logout
-    </a>
-  </li>
+      <li class="rdfs-sidebar__section">Transactions</li>
 
-</ul>
+      <li class="rdfs-sidebar__item">
+        <a href="{% url 'terminal:deposit_menu' %}" class="rdfs-sidebar__link">
+          <i class="bi bi-cash-stack"></i><span>Deposits</span>
+        </a>
+      </li>
+
+      <li class="rdfs-sidebar__section">QR</li>
+
+      <li class="rdfs-sidebar__item">
+        <a href="{% url 'terminal:qr_scan_entry' %}" class="rdfs-sidebar__link">
+          <i class="bi bi-qr-code-scan"></i><span>Entry</span>
+        </a>
+      </li>
+
+      <li class="rdfs-sidebar__item">
+        <a href="{% url 'terminal:qr_exit_page' %}" class="rdfs-sidebar__link">
+          <i class="bi bi-qr-code"></i><span>Exit</span>
+        </a>
+      </li>
+
+      <li class="rdfs-sidebar__section">Monitoring</li>
+
+      <li class="rdfs-sidebar__item">
+        <a href="{% url 'terminal:tv_display' %}" target="_blank" class="rdfs-sidebar__link">
+          <i class="bi bi-display-fill"></i><span>TV Display</span>
+        </a>
+      </li>
+
+    </ul>
+  </nav>
+
+  <!-- BOTTOM (LOGOUT STICKY) -->
+  <div class="rdfs-sidebar__bottom">
+    <a href="{% url 'accounts:logout' %}" class="rdfs-sidebar__link rdfs-sidebar__logout">
+      <i class="bi bi-door-closed-fill"></i><span>Logout</span>
+    </a>
+  </div>
+
+</aside>
+
+<style>
+:root{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#0c1c4a;
+  --rdfs-blue-soft:rgba(255,255,255,.08);
+  --rdfs-text:#ffffff;
+  --rdfs-muted:rgba(255,255,255,.6);
+  --rdfs-transition:all .2s ease;
+}
+
+/* SIDEBAR WRAPPER */
+.rdfs-sidebar{
+  position:sticky;
+  top:0;
+  height:100vh;
+  width:250px;
+  background:linear-gradient(180deg,var(--rdfs-blue),var(--rdfs-blue-dark));
+  display:flex;
+  flex-direction:column;
+}
+
+/* TOP */
+.rdfs-sidebar__top{
+  padding:12px;
+  display:flex;
+  justify-content:center;
+}
+
+.rdfs-sidebar__logo{
+  width:175px;
+}
+
+/* MIDDLE (SCROLL AREA) */
+.rdfs-sidebar__middle{
+  flex:1;
+  overflow-y:auto;
+  padding:4px 10px;
+}
+
+/* NAV */
+.rdfs-sidebar__nav{
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+/* SECTION LABEL */
+.rdfs-sidebar__section{
+  margin:10px 8px 4px;
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:.8px;
+  color:var(--rdfs-muted);
+}
+
+/* ITEM */
+.rdfs-sidebar__item{margin-bottom:2px}
+
+/* LINK */
+.rdfs-sidebar__link{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 10px;
+  border-radius:8px;
+  text-decoration:none;
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--rdfs-text);
+  transition:var(--rdfs-transition);
+}
+
+.rdfs-sidebar__link i{
+  font-size:14px;
+  min-width:18px;
+}
+
+.rdfs-sidebar__link:hover{
+  background:var(--rdfs-blue-soft);
+  transform:translateX(2px);
+}
+
+/* BOTTOM */
+.rdfs-sidebar__bottom{
+  padding:10px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+
+.rdfs-sidebar__logout{
+  background:rgba(255,255,255,.06);
+}
+
+.rdfs-sidebar__logout:hover{
+  background:rgba(255,255,255,.14);
+}
+.rdfs-sidebar__middle::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Firefox */
+.rdfs-sidebar__middle {
+  scrollbar-width: none; /* hides scrollbar */
+}
+
+/* Optional: prevent layout shift */
+.rdfs-sidebar__middle {
+  -ms-overflow-style: none; /* IE 10+ */
+}
+</style>

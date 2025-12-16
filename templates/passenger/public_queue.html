@@ -4,571 +4,413 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vehicle Schedule | Maasin Integrated Terminal System</title>
+  <title>Vehicle Schedule | Maasin Integrated Terminal</title>
 
   <link rel="icon" type="image/png" href="{% static 'img/RDFS-Logo.png' %}">
   <link rel="shortcut icon" href="{% static 'img/RDFS-Logo.png' %}">
-
-  <!-- Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <!-- Add this AFTER your other CSS links -->
+ 
+  <!-- Bootstrap + Icons -->
   <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
+<script>
+  AOS.init({
+    duration: 600,  // Animation duration in ms
+    once: true,     // Animate only once
+    offset: 100     // Trigger animation when element is 100px from viewport
+  });
+</script>
   <style>
   /* ===============================
-     DESIGN TOKENS (From Homepage)
+     DESIGN TOKENS
   ================================ */
-  :root {
-    --white: #ffffff;
-    --light-blue: #e8f4fd;
-    --medium-blue: #3a7bc8;
-    --dark-blue: #1a365d;
-    --dark-brown: #3a3329;
-    --gray-100: #f7fafc;
-    --gray-200: #edf2f7;
-    --gray-300: #e2e8f0;
-    --gray-400: #cbd5e0;
-    --gray-500: #a0aec0;
-    --gray-600: #718096;
-    
-    --font-brand: 'Bebas Neue', 'Arial Narrow', Impact, sans-serif;
-    --font-body: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    
-    --spacing-xs: 0.5rem;
-    --spacing-sm: 1rem;
-    --spacing-md: 1.5rem;
-    --spacing-lg: 2rem;
-    --spacing-xl: 3rem;
-    --spacing-xxl: 4rem;
-    
-    --border-radius: 4px;
-    --border-radius-lg: 8px;
-    
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
-    
-    --transition-base: 250ms ease;
+  :root{
+    --white:#ffffff;
+    --light-blue:#e8f4fd;
+    --medium-blue:#3a7bc8;
+    --dark-blue:#1a365d;
+    --dark-brown:#3a3329;
+    --gray-100:#f7fafc;
+    --gray-200:#edf2f7;
+    --gray-300:#e2e8f0;
+    --gray-500:#a0aec0;
+    --gray-600:#718096;
+    --radius:8px;
+    --shadow-sm:0 2px 6px rgba(0,0,0,.08);
+    --shadow-md:0 10px 18px rgba(0,0,0,.12);
+    --transition:.25s ease;
+    --font-brand:'Bebas Neue', Impact, sans-serif;
+    --font-body:'Segoe UI', system-ui, sans-serif;
   }
 
-  /* FONT FACE FOR BEBAS NEUE */
-  @font-face {
-    font-family: 'Bebas Neue';
-    src: url("{% static 'fonts/BebasNeue-Regular.woff2' %}") format('woff2'),
-         url("{% static 'fonts/BebasNeue-Regular.woff' %}") format('woff');
-    font-display: swap;
-    font-weight: normal;
-    font-style: normal;
+  @font-face{
+    font-family:'Bebas Neue';
+    src:url("{% static 'fonts/BebasNeue-Regular.woff2' %}") format('woff2'),
+        url("{% static 'fonts/BebasNeue-Regular.woff' %}") format('woff');
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+
+  body{
+    font-family:var(--font-body);
+    background:var(--gray-100);
+    color:var(--dark-brown);
+  }
+
+  .container{
+    max-width:1200px;
+    margin:auto;
+    padding:0 1.5rem;
   }
 
   /* ===============================
-     BASE STYLES
+     HERO
   ================================ */
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  .queue-hero{
+    background:linear-gradient(135deg,var(--dark-blue),var(--medium-blue));
+    color:#fff;
+    padding:3rem 0;
+    text-align:center;
+    position:relative;
   }
 
-  body {
-    font-family: var(--font-body);
-    color: var(--dark-brown);
-    line-height: 1.6;
-    background: var(--gray-100);
+  .queue-hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:url("{% static 'img/Home-BG.jpg' %}") center/cover no-repeat;
+    opacity:.12;
   }
 
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 var(--spacing-md);
+  .queue-hero > *{position:relative}
+
+  .queue-hero h1{
+    font-family:var(--font-brand);
+    font-size:3rem;
+    letter-spacing:1px;
+  }
+
+  .queue-hero p{
+    opacity:.9;
+    margin-top:.5rem;
   }
 
   /* ===============================
-     TYPOGRAPHY (From Homepage)
+     TABLE CARD
   ================================ */
-  .brand-font {
-    font-family: var(--font-brand);
-    font-weight: normal;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
+  .table-section{
+    padding:3rem 0 4rem;
   }
 
-  h1, h2, h3, h4, .heading {
-    font-family: var(--font-brand);
-    color: var(--dark-blue);
-    font-weight: normal;
-    line-height: 1.2;
-  }
-
-  h1 {
-    font-size: 2.5rem;
-    letter-spacing: 1px;
-  }
-
-  h2 {
-    font-size: 2rem;
-    letter-spacing: 0.75px;
-    margin-bottom: var(--spacing-lg);
-  }
-
-  h3 {
-    font-size: 1.5rem;
-    letter-spacing: 0.5px;
-    margin-bottom: var(--spacing-sm);
-  }
-
-  .text-body {
-    color: var(--dark-brown);
-    font-size: 1rem;
-    line-height: 1.6;
-  }
-
-  .text-lead {
-    font-size: 1.125rem;
-    color: var(--dark-brown);
-    opacity: 0.9;
+  .table-card{
+    background:#fff;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-md);
+    overflow:hidden;
   }
 
   /* ===============================
-     HERO SECTION (Modified for Queue Page)
+     TABLE TOOLBAR (FILTER)
   ================================ */
-  .queue-hero {
-    background: linear-gradient(135deg, var(--dark-blue) 0%, var(--medium-blue) 100%);
-    color: var(--white);
-    padding: var(--spacing-xl) 0;
-    position: relative;
-    overflow: hidden;
-    text-align: center;
+  .table-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:.75rem 1.25rem;
+    background:var(--gray-100);
+    border-bottom:1px solid var(--gray-300);
+    gap:1rem;
   }
 
-  .queue-hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url("{% static 'img/Home-BG.jpg' %}") center/cover no-repeat;
-    opacity: 0.15;
+  .table-toolbar__title{
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    font-family:var(--font-brand);
+    font-size:1.1rem;
+    color:var(--dark-blue);
   }
 
-  .queue-hero-content {
-    position: relative;
-    max-width: 800px;
-    margin: 0 auto;
+  .table-toolbar__title i{
+    color:var(--medium-blue);
+    font-size:1.2rem;
   }
 
-  .queue-hero-icon {
-    font-size: 3.5rem;
-    color: var(--white);
-    margin-bottom: var(--spacing-md);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  .table-toolbar__filter{
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    background:#fff;
+    border:1px solid var(--gray-300);
+    border-radius:999px;
+    padding:.35rem .75rem;
+    box-shadow:var(--shadow-sm);
   }
 
-  .queue-hero-title {
-    color: var(--white);
-    font-size: 3rem;
-    margin-bottom: var(--spacing-sm);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  .table-toolbar__filter i{
+    color:var(--medium-blue);
+    font-size:.9rem;
   }
 
-  .queue-hero-subtitle {
-    font-size: 1.25rem;
-    opacity: 0.9;
-    max-width: 600px;
-    margin: 0 auto;
+  .table-toolbar__filter select{
+    border:none;
+    outline:none;
+    background:none;
+    font-size:.85rem;
+    font-weight:600;
+    cursor:pointer;
+    min-width:170px;
   }
 
   /* ===============================
-     FILTER SECTION (Updated to Match Design System)
+     TABLE
   ================================ */
-  .filter-section {
-    padding: var(--spacing-xl) 0 var(--spacing-sm);
+  table{
+    width:100%;
+    border-collapse:collapse;
   }
 
-  .filter-card {
-    background: var(--white);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-md);
-    padding: var(--spacing-lg);
-    max-width: 500px;
-    margin: 0 auto;
-    text-align: center;
-    transition: var(--transition-base);
-    border: 1px solid var(--gray-300);
+  thead{
+    background:var(--light-blue);
   }
 
-  .filter-card:hover {
-    box-shadow: var(--shadow-lg);
-    border-color: var(--medium-blue);
+  th{
+    font-family:var(--font-brand);
+    color:var(--dark-blue);
+    padding:1rem 1.25rem;
+    border-bottom:2px solid var(--medium-blue);
+    font-weight:normal;
   }
 
-  .filter-label {
-    display: block;
-    font-family: var(--font-brand);
-    color: var(--dark-blue);
-    font-size: 1.25rem;
-    margin-bottom: var(--spacing-md);
-    letter-spacing: 0.5px;
+  td{
+    padding:1rem 1.25rem;
+    border-bottom:1px solid var(--gray-300);
   }
 
-  .filter-select {
-    width: 100%;
-    padding: 0.875rem 1rem;
-    border-radius: var(--border-radius);
-    border: 2px solid var(--gray-300);
-    font-family: var(--font-body);
-    font-size: 1rem;
-    color: var(--dark-brown);
-    background: var(--white);
-    transition: var(--transition-base);
-    cursor: pointer;
+  tbody tr:hover{
+    background:rgba(232,244,253,.4);
   }
 
-  .filter-select:focus {
-    outline: none;
-    border-color: var(--medium-blue);
-    box-shadow: 0 0 0 3px rgba(58, 123, 200, 0.15);
+  .route-badge{
+    background:var(--light-blue);
+    color:var(--dark-blue);
+    padding:.35rem 1rem;
+    border-radius:999px;
+    font-size:.85rem;
+    font-weight:600;
+  }
+
+  .status{
+    padding:.35rem .9rem;
+    border-radius:6px;
+    font-size:.85rem;
+    font-weight:600;
+    color:#fff;
+  }
+
+  .status.active{background:#22c55e}
+  .status.departed{background:var(--gray-500)}
+
+  .departed-row{
+    opacity:.7;
+    background:var(--gray-100);
   }
 
   /* ===============================
-     TABLE SECTION (Updated to Match Design System)
+     FOOTNOTE
   ================================ */
-  .table-section {
-    padding: var(--spacing-lg) 0 var(--spacing-xxl);
+  .queue-footnote{
+    margin-top:1rem;
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:.5rem;
+    font-size:.85rem;
+    color:var(--gray-600);
   }
 
-  .table-card {
-    background: var(--white);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-md);
-    overflow: hidden;
-    border: 1px solid var(--gray-300);
-    transition: var(--transition-base);
-  }
+  .queue-footnote i{color:var(--medium-blue)}
 
-  .table-card:hover {
-    box-shadow: var(--shadow-lg);
-  }
-
-  .queue-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0;
-  }
-
-  .queue-table thead {
-    background: var(--light-blue);
-  }
-
-  .queue-table th {
-    padding: 1rem 1.5rem;
-    text-align: left;
-    font-family: var(--font-brand);
-    color: var(--dark-blue);
-    font-size: 1.1rem;
-    font-weight: normal;
-    letter-spacing: 0.5px;
-    border-bottom: 2px solid var(--medium-blue);
-  }
-
-  .queue-table td {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--gray-300);
-    vertical-align: middle;
-    color: var(--dark-brown);
-  }
-
-  .queue-table tbody tr {
-    transition: var(--transition-base);
-  }
-
-  .queue-table tbody tr:hover {
-    background: rgba(232, 244, 253, 0.3);
+  /* ===============================
+     RESPONSIVE
+  ================================ */
+  @media(max-width:768px){
+    .table-toolbar{
+      flex-direction:column;
+      align-items:flex-start;
+    }
+    .table-toolbar__filter{
+      width:100%;
+    }
+    .table-toolbar__filter select{
+      width:100%;
+    }
+    .table-card{overflow-x:auto}
+    table{min-width:700px}
   }
 
   /* ===============================
-     BADGES (Updated to Match Design System)
-  ================================ */
-  .route-badge {
-    background: var(--light-blue);
-    color: var(--dark-blue);
-    padding: 0.375rem 1rem;
-    border-radius: 999px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    letter-spacing: 0.25px;
-    display: inline-block;
-  }
+   FADE-IN ON SCROLL (CUSTOM)
+================================ */
+.fade-enter {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+  will-change: opacity, transform;
+}
 
-  .status-badge {
-    padding: 0.375rem 1rem;
-    border-radius: var(--border-radius);
-    font-size: 0.875rem;
-    font-weight: 600;
-    letter-spacing: 0.25px;
-    display: inline-block;
-  }
+.fade-enter.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 
-  .status-active {
-    background: #22c55e;
-    color: var(--white);
-  }
+/* Direction variants */
+.fade-enter--up { transform: translateY(20px); }
+.fade-enter--down { transform: translateY(-20px); }
+.fade-enter--left { transform: translateX(-20px); }
+.fade-enter--right { transform: translateX(20px); }
 
-  .status-departed {
-    background: var(--gray-500);
-    color: var(--white);
-  }
+/* Delay helpers */
+.fade-delay-1 { transition-delay: .1s; }
+.fade-delay-2 { transition-delay: .2s; }
+.fade-delay-3 { transition-delay: .3s; }
 
-  .departed-row {
-    opacity: 0.7;
-    background: var(--gray-100) !important;
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .fade-enter {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
+}
 
-  .departed-row:hover {
-    background: var(--gray-200) !important;
-  }
-
-  /* ===============================
-     EMPTY STATE (Updated to Match Design System)
-  ================================ */
-  .empty-state {
-    padding: var(--spacing-xxl) var(--spacing-lg);
-    text-align: center;
-    color: var(--gray-600);
-  }
-
-  .empty-state-icon {
-    font-size: 4rem;
-    color: var(--gray-400);
-    margin-bottom: var(--spacing-md);
-    opacity: 0.7;
-  }
-
-  .empty-state-text {
-    font-size: 1.125rem;
-    color: var(--gray-600);
-    max-width: 400px;
-    margin: 0 auto;
-  }
-
-  /* ===============================
-     FOOTNOTE (Updated to Match Design System)
-  ================================ */
-  .queue-footnote {
-    margin-top: var(--spacing-lg);
-    text-align: right;
-    font-size: 0.875rem;
-    color: var(--gray-600);
-    display: flex;
-    gap: 0.5rem;
-    justify-content: flex-end;
-    align-items: center;
-  }
-
-  .queue-footnote i {
-    color: var(--medium-blue);
-  }
-
-  /* ===============================
-     BUTTONS (From Homepage)
-  ================================ */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0.875rem 2rem;
-    border-radius: var(--border-radius);
-    font-weight: 600;
-    text-decoration: none;
-    transition: var(--transition-base);
-    border: 2px solid transparent;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-
-  .btn-primary {
-    background: var(--white);
-    color: var(--dark-blue);
-  }
-
-  .btn-primary:hover {
-    background: var(--light-blue);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .btn-secondary {
-    background: transparent;
-    color: var(--white);
-    border-color: var(--white);
-  }
-
-  .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
-  }
-
-  /* ===============================
-     RESPONSIVE DESIGN (From Homepage)
-  ================================ */
-  @media (max-width: 1024px) {
-    .queue-table {
-      font-size: 0.95rem;
-    }
-    
-    .queue-table th,
-    .queue-table td {
-      padding: 0.875rem 1.25rem;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .queue-hero-title {
-      font-size: 2.5rem;
-    }
-    
-    .queue-hero-subtitle {
-      font-size: 1.125rem;
-    }
-    
-    .table-card {
-      overflow-x: auto;
-    }
-    
-    .queue-table {
-      min-width: 700px;
-    }
-    
-    .queue-table th,
-    .queue-table td {
-      padding: 0.75rem 1rem;
-    }
-    
-    .filter-card {
-      margin: 0 var(--spacing-sm);
-      padding: var(--spacing-md);
-    }
-  }
-
-  @media (max-width: 480px) {
-    .container {
-      padding: 0 var(--spacing-sm);
-    }
-    
-    .queue-hero {
-      padding: var(--spacing-lg) 0;
-    }
-    
-    .queue-hero-title {
-      font-size: 2rem;
-    }
-    
-    .queue-hero-subtitle {
-      font-size: 1rem;
-    }
-    
-    .queue-table th {
-      font-size: 1rem;
-    }
-    
-    .queue-footnote {
-      text-align: center;
-      justify-content: center;
-    }
-  }
   </style>
 </head>
 
 <body>
 
-  <!-- SHARED HEADER -->
-  {% include "passenger/header.html" %}
+<!-- SHARED HEADER -->
+{% include "passenger/header.html" %}
 
-  <!-- HERO SECTION -->
-  <section class="queue-hero">
-    <div class="container">
-      <div class="queue-hero-content">
-        <i class="bi bi-truck queue-hero-icon"></i>
-        <h1 class="queue-hero-title brand-font">TERMINAL VEHICLE SCHEDULE</h1>
-        <p class="queue-hero-subtitle">
-          Live departures with real-time visibility and tracking information
-        </p>
-      </div>
-    </div>
-  </section>
+<!-- HERO -->
+<section class="queue-hero">
+  <div class="container fade-enter fade-enter--up">
+    <i class="bi bi-truck fs-1 fade-enter fade-delay-1"></i>
+    <h1 class="fade-enter fade-delay-2">Terminal Vehicle Schedule</h1>
+    <p class="fade-enter fade-delay-3">
+      Live departures with real-time visibility
+    </p>
+  </div>
+</section>
 
-  <!-- FILTER SECTION -->
-  <section class="filter-section">
-    <div class="container">
-      <div class="filter-card">
-        <label class="filter-label brand-font">Filter by Route</label>
-        <form method="get">
-          <select class="filter-select" name="route" onchange="this.form.submit()">
+
+<!-- TABLE -->
+<section class="table-section">
+  <div class="container">
+    <div class="table-card fade-enter fade-enter--up">
+
+
+      <!-- TABLE TOOLBAR -->
+      <div class="table-toolbar fade-enter fade-delay-1">
+
+        <div class="table-toolbar__title">
+          <i class="bi bi-list-ul"></i>
+          <span>Vehicle Queue</span>
+        </div>
+
+        <form method="get" class="table-toolbar__filter">
+          <i class="bi bi-funnel"></i>
+          <select name="route" onchange="this.form.submit()">
             <option value="all">All Routes</option>
             {% for route in routes %}
-              <option value="{{ route.id }}" {% if route.id|stringformat:'s' == selected_route %}selected{% endif %}>
+              <option value="{{ route.id }}"
+                {% if route.id|stringformat:'s' == selected_route %}selected{% endif %}>
                 {{ route.origin }} → {{ route.destination }}
               </option>
             {% endfor %}
           </select>
         </form>
       </div>
+
+      {% if queue_entries %}
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Vehicle</th>
+            <th>Route</th>
+            <th>Driver</th>
+            <th>Status</th>
+            <th>Departure</th>
+            <th>Countdown</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in queue_entries %}
+          <tr class="{% if not q.is_active %}departed-row{% endif %}">
+            <td><strong>{{ forloop.counter }}</strong></td>
+            <td>{{ q.vehicle.license_plate }}</td>
+            <td><span class="route-badge">{{ q.route }}</span></td>
+            <td>{{ q.driver.first_name }} {{ q.driver.last_name }}</td>
+            <td>
+              {% if q.is_active %}
+                <span class="status active">Boarding</span>
+              {% else %}
+                <span class="status departed">Departed</span>
+              {% endif %}
+            </td>
+            <td>{{ q.departure_time|date:"M d, Y h:i A" }}</td>
+            <td>—</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <div class="p-5 text-center text-muted">
+          <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+          No vehicles currently scheduled.
+        </div>
+      {% endif %}
     </div>
-  </section>
 
-  <!-- TABLE SECTION -->
-  <section class="table-section">
-    <div class="container">
-      <div class="table-card">
-        {% if queue_entries %}
-          <table class="queue-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Vehicle</th>
-                <th>Route</th>
-                <th>Driver</th>
-                <th>Status</th>
-                <th>Departure Time</th>
-                <th>Countdown</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for q in queue_entries %}
-                <tr class="{% if not q.is_active %}departed-row{% endif %}">
-                  <td><strong>{{ forloop.counter }}</strong></td>
-                  <td>{{ q.vehicle.license_plate }}</td>
-                  <td><span class="route-badge">{{ q.route }}</span></td>
-                  <td>{{ q.driver.first_name }} {{ q.driver.last_name }}</td>
-                  <td>
-                    {% if q.is_active %}
-                      <span class="status-badge status-active">Boarding</span>
-                    {% else %}
-                      <span class="status-badge status-departed">Departed</span>
-                    {% endif %}
-                  </td>
-                  <td>{{ q.departure_time|date:"M d, Y h:i A" }}</td>
-                  <td>—</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        {% else %}
-          <div class="empty-state">
-            <i class="bi bi-calendar-x empty-state-icon"></i>
-            <p class="empty-state-text">No vehicles currently scheduled for departure.</p>
-          </div>
-        {% endif %}
-      </div>
+    <div class="queue-footnote fade-enter fade-delay-2">
 
-      <div class="queue-footnote">
-        <i class="bi bi-arrow-repeat"></i>
-        <span>Auto-refreshing every 15 seconds</span>
-      </div>
+      <i class="bi bi-arrow-repeat"></i>
+      Auto-refreshing every 15 seconds
     </div>
-  </section>
+  </div>
+</section>
 
-  <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 </body>
 </html>
+<script>
+(function () {
+  const items = document.querySelectorAll('.fade-enter');
+
+  if (!('IntersectionObserver' in window)) {
+    items.forEach(el => el.classList.add('is-visible'));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    {
+      threshold: 0.15,
+      rootMargin: '0px 0px -80px 0px'
+    }
+  );
+
+  items.forEach(el => observer.observe(el));
+})();
+</script>

@@ -23,17 +23,20 @@
     <!-- NAVIGATION -->
     <div class="rdfs-header__nav">
 
-      <a class="rdfs-header__link" href="{% url 'passenger:home' %}">
+      <a class="rdfs-header__link {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}" 
+         href="{% url 'passenger:home' %}">
         <i class="bi bi-house-door"></i>
         <span>Home</span>
       </a>
 
-      <a class="rdfs-header__link" href="{% url 'passenger:announcement' %}">
+      <a class="rdfs-header__link {% if request.resolver_match.url_name == 'announcement' %}is-active{% endif %}" 
+         href="{% url 'passenger:announcement' %}">
         <i class="bi bi-megaphone"></i>
         <span>Announcements</span>
       </a>
 
-      <a class="rdfs-header__link" href="{% url 'passenger:public_queue' %}">
+      <a class="rdfs-header__link {% if request.resolver_match.url_name == 'public_queue' %}is-active{% endif %}" 
+         href="{% url 'passenger:public_queue' %}">
         <i class="bi bi-truck"></i>
         <span>Trip Schedule</span>
       </a>
@@ -146,6 +149,31 @@
 
 .rdfs-header__link:hover::after{
   width:100%;
+}
+
+/* ===============================
+   ACTIVE PAGE STYLES
+================================ */
+.rdfs-header__link.is-active{
+  color:var(--rdfs-blue-dark);
+  font-weight:700;
+}
+
+.rdfs-header__link.is-active i{
+  color:var(--rdfs-blue-dark);
+}
+
+.rdfs-header__link.is-active::after{
+  width:100%;
+  background:var(--rdfs-blue-dark);
+}
+
+/* Mobile active state */
+@media(max-width:768px){
+  .rdfs-header__link.is-active{
+    background:rgba(17,38,102,.06);
+    color:var(--rdfs-blue-dark);
+  }
 }
 
 /* ===============================
