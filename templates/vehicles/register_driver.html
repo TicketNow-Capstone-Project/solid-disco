@@ -7,41 +7,183 @@
 
 <style>
 
-  body {
-    background-color: #f8f9fa;
-  }
+ :root{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#0c1c4a;
+  --rdfs-accent:#2563eb;
+  --rdfs-soft:#e8f4fd;
 
-  .form-container {
-    max-width: 1200px;
-    margin: auto;
-  }
+  --text:#0f172a;
+  --muted:#64748b;
 
-  .section-box {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 1.8rem;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-    margin-bottom: 2rem;
-  }
+  --gray-200:#edf2f7;
+  --gray-300:#e2e8f0;
 
-  .section-title {
-    font-weight: 700;
-    margin-bottom: 1rem;
-    font-size: 1.25rem;
-    color: #006a36;
-  }
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 8px 18px rgba(0,0,0,.12);
+}
 
-  .required::after {
-    content: " *";
-    color: red;
-    font-weight: bold;
-  }
+body{
+  background:linear-gradient(180deg,#ffffff 0%,#f2f6ff 100%);
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+}
 
-  .form-label {
-    font-weight: 600;
-    color: #4a5568;
-  }
+/* PAGE HEADER */
+.rdfs-page-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:1.5rem;
+}
 
+.rdfs-page-title{
+  font-weight:800;
+  font-size:1.6rem;
+  color:var(--rdfs-blue-dark);
+}
+
+.rdfs-page-sub{
+  font-size:.9rem;
+  color:var(--muted);
+}
+
+/* RETURN BUTTON */
+.rdfs-return-btn{
+  position:sticky;
+  top:1rem;
+  z-index:10;
+  border-radius:999px;
+  font-weight:700;
+  padding:.55rem 1.2rem;
+  background:#fff;
+  color:var(--rdfs-blue-dark);
+  border:2px solid var(--rdfs-blue);
+  box-shadow:var(--shadow-sm);
+  text-decoration:none;
+}
+.rdfs-return-btn:hover{
+  background:var(--rdfs-soft);
+}
+
+/* CONTAINER */
+.form-container{
+  max-width:1200px;
+  margin:auto;
+}
+
+/* SECTIONS */
+.section-box{
+  background:#fff;
+  border-radius:18px;
+  padding:1.8rem;
+  box-shadow:var(--shadow-md);
+  margin-bottom:2rem;
+  border:1px solid var(--gray-200);
+}
+
+.section-title{
+  font-weight:800;
+  font-size:1.2rem;
+  color:var(--rdfs-blue-dark);
+  margin-bottom:1rem;
+}
+
+/* LABELS */
+.form-label{
+  font-weight:600;
+  color:var(--text);
+}
+
+.required::after{
+  content:" *";
+  color:#dc3545;
+}
+
+/* INPUTS */
+input, select{
+  height:48px !important;
+  border-radius:10px !important;
+  border:1.5px solid var(--gray-300) !important;
+  padding:10px 14px !important;
+  transition:.2s;
+}
+
+input:focus, select:focus{
+  border-color:var(--rdfs-accent) !important;
+  box-shadow:0 0 0 3px rgba(37,99,235,.18) !important;
+}
+
+/* DATE PICKER */
+.date-wrapper{ position:relative; }
+
+.custom-calendar{
+  position:absolute;
+  top:60px;
+  width:330px;
+  background:#fff;
+  border-radius:14px;
+  box-shadow:var(--shadow-md);
+  border:1px solid var(--gray-300);
+  padding:12px;
+  display:none;
+  z-index:999;
+}
+
+.cal-header{
+  display:flex;
+  justify-content:space-between;
+  background:var(--rdfs-blue);
+  padding:10px;
+  border-radius:10px;
+}
+
+.cal-header select{
+  border:none;
+  border-radius:8px;
+  padding:4px 8px;
+  font-weight:600;
+  color:var(--rdfs-blue-dark);
+}
+
+.cal-days,
+.cal-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+  margin-top:10px;
+  text-align:center;
+}
+
+.cal-days{ font-weight:700; color:var(--rdfs-blue-dark); }
+
+.cal-day{
+  height:40px;
+  line-height:40px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.cal-day:hover{ background:var(--rdfs-soft); }
+
+.cal-day.selected{
+  background:var(--rdfs-blue);
+  color:#fff;
+  font-weight:700;
+}
+
+.cal-day.today{
+  border:2px solid var(--rdfs-blue);
+}
+
+/* FOOTER BUTTONS */
+.rdfs-submit{
+  border-radius:999px;
+  font-weight:700;
+  padding:.6rem 1.8rem;
+  background:linear-gradient(135deg,var(--rdfs-accent),var(--rdfs-blue));
+  border:none;
+  color:#fff;
+}
   /* ✨ Modern Inputs */
   input, select {
     height: 50px !important;
@@ -69,115 +211,125 @@
     background-position: right 12px center;
     cursor: pointer;
   }
+/* ==========================================
+   RDFS – CUSTOM CALENDAR
+========================================== */
 
-  .custom-calendar {
-    position: absolute;
-    top: 60px;
-    left: 0;
-    width: 330px; /* Increased so dates fit properly */
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-    border: 1px solid #d7e2d6;
-    padding: 12px;
-    z-index: 9999;
-    display: none;
-    animation: fadeIn .15s ease-out;
-  }
+.custom-calendar {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  width: 330px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(17,38,102,0.18); /* RDFS shadow */
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  z-index: 9999;
+  display: none;
+  animation: fadeIn .15s ease-out;
+}
 
-  @keyframes fadeIn {
-    from {opacity:0; transform: translateY(-6px);}
-    to {opacity:1; transform: translateY(0);}
-  }
+/* Fade animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-  .cal-header {
-    display: flex;
-    justify-content: space-between;
-    background: #006a36;
-    padding: 10px;
-    border-radius: 8px;
-  }
+/* HEADER */
+.cal-header {
+  display: flex;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #112666, #2563eb);
+  padding: 10px;
+  border-radius: 10px;
+}
 
-  .cal-header select {
-    border: none;
-    background: white;
-    padding: 5px 8px;
-    border-radius: 6px;
-    color: #006a36;
-    font-weight: 600;
-    font-size: 14px;
-  }
+.cal-header select {
+  border: none;
+  background: #ffffff;
+  padding: 5px 8px;
+  border-radius: 8px;
+  color: #112666;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.12);
+}
 
-  /* Weekday labels */
-  .cal-days {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    column-gap: 4px;
-    margin-top: 10px;
-    font-weight: 600;
-    text-align: center;
-    color: #006a36;
-  }
+/* WEEKDAY LABELS */
+.cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  column-gap: 4px;
+  margin-top: 10px;
+  font-weight: 700;
+  text-align: center;
+  color: #0c1c4a;
+  font-size: 13px;
+}
 
-  /* Dates grid */
-  .cal-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    column-gap: 4px;
-    row-gap: 4px;
-    margin-top: 5px;
-  }
+/* DAYS GRID */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  column-gap: 4px;
+  row-gap: 4px;
+  margin-top: 6px;
+}
 
-  /* Uniform day squares */
-  .cal-day {
-    height: 40px;                /* Perfect square height */
-    line-height: 40px;           /* Center text vertically */
-    cursor: pointer;
-    border-radius: 6px;
-    text-align: center;
-    font-size: 14px;
-    box-sizing: border-box;      /* Prevents overflow */
-    margin: 0;                   /* Removed margin for clean grid */
-  }
+/* DAY CELL */
+.cal-day {
+  height: 40px;
+  line-height: 40px;
+  cursor: pointer;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  transition: all .15s ease;
+}
 
-  .cal-day:hover {
-    background: #e7f6ee;
-    color: #006a36;
-  }
+/* HOVER */
+.cal-day:hover {
+  background: #e8f4fd;
+  color: #112666;
+}
 
-  .cal-day.selected {
-    background: #006a36;
-    color: white !important;
-    font-weight: bold;
-  }
+/* SELECTED DAY */
+.cal-day.selected {
+  background: #112666;
+  color: #ffffff !important;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(17,38,102,.35);
+}
 
-  .cal-day.today {
-    border: 2px solid #006a36;
-    border-radius: 6px;
-  }
+/* TODAY */
+.cal-day.today {
+  border: 2px solid #2563eb;
+  color: #112666;
+  font-weight: 700;
+}
 
-
-  .cal-day:hover {
-    background: #e7f6ee;
-    color: #006a36;
-  }
-
-  .cal-day.selected {
-    background: #006a36;
-    color: white !important;
-    font-weight: bold;
-  }
-
-  .cal-day.today {
-    border: 2px solid #006a36;
-  }
 
 </style>
 
 <div class="container py-4 form-container">
 
-  <h3 class="fw-bold mb-3"><i class="bi bi-person-plus-fill me-2"></i> Register Driver</h3>
-  <p class="text-muted">Register a new driver with updated UI.</p>
+ <div class="rdfs-page-header">
+    <div>
+      <div class="rdfs-page-title">
+        <i class="bi bi-person-plus-fill me-2"></i> Register Driver
+      </div>
+      <div class="rdfs-page-sub">
+        Add a new driver to the RDFS system
+      </div>
+    </div>
+
+    <a href="{% url 'accounts:staff_dashboard' %}" class="rdfs-return-btn">
+      <i class="bi bi-arrow-left-circle me-1"></i> Dashboard
+    </a>
+  </div>
 
   {% if messages %}
     {% for message in messages %}
@@ -364,9 +516,7 @@
 
     <!-- FOOTER BUTTONS -->
     <div class="d-flex">
-      <a href="{% url 'accounts:staff_dashboard' %}" class="btn btn-outline-secondary me-auto">
-        <i class="bi bi-arrow-left-circle-fill me-1"></i> Back to Dashboard
-      </a>
+      
 
       <button type="submit" class="btn btn-success px-4 ms-auto">
         <i class="bi bi-check-circle-fill me-1"></i> Register Driver

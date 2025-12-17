@@ -4,23 +4,146 @@
 {% block title %}Queue History | RDFS{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-  <div class="card shadow-sm border-0">
-    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-      <div>
-        <h5 class="mb-0"><i class="bi bi-clock-fill me-2"></i> Queue History</h5>
-        <small class="text-light opacity-75">Filter and export past entries</small>
-      </div>
-      <a href="{% url 'terminal:terminal_queue' %}" class="btn btn-light btn-sm">
-        <i class="bi bi-arrow-left-circle-fill me-1"></i> Back to Queue
-      </a>
+
+<style>
+/* =====================================================
+   RDFS – QUEUE HISTORY (SCOPED)
+===================================================== */
+.rdfs-qh-scope{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#0c1c4a;
+  --rdfs-accent:#2563eb;
+  --rdfs-soft:#e8f4fd;
+
+  --gray-100:#f7fafc;
+  --gray-200:#edf2f7;
+
+  --muted:#64748b;
+  --shadow-md:0 8px 18px rgba(12,28,74,.18);
+
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+}
+
+/* HEADER ROW */
+.rdfs-qh-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  margin-bottom:1.25rem;
+}
+
+.rdfs-qh-title{
+  font-weight:700;
+  color:var(--rdfs-blue-dark);
+}
+
+.rdfs-qh-subtitle{
+  font-size:.9rem;
+  color:var(--muted);
+}
+
+/* BACK BUTTON */
+.rdfs-qh-back{
+  border-radius:999px;
+  font-weight:600;
+  background:#fff;
+  color:var(--rdfs-blue-dark);
+  border:1.5px solid var(--rdfs-blue);
+  white-space:nowrap;
+}
+
+.rdfs-qh-back:hover{
+  background:var(--rdfs-soft);
+}
+
+/* CARD */
+.rdfs-qh-card{
+  border-radius:16px;
+  box-shadow:var(--shadow-md);
+}
+
+/* FILTER LABELS */
+.rdfs-qh-label{
+  font-weight:600;
+}
+
+/* =========================
+   TABLE HEADER (RDFS STYLE)
+========================= */
+.rdfs-qh-table{
+  border-collapse:separate;
+  border-spacing:0;
+}
+
+.rdfs-qh-table thead th{
+  background:linear-gradient(
+    180deg,
+    var(--rdfs-blue),
+    var(--rdfs-blue-dark)
+  );
+  color:#ffffff;
+  font-weight:700;
+  font-size:.8rem;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  padding:14px 12px;
+  border-bottom:2px solid var(--rdfs-blue-dark);
+  white-space:nowrap;
+}
+
+.rdfs-qh-table thead th:first-child{
+  border-top-left-radius:12px;
+}
+
+.rdfs-qh-table thead th:last-child{
+  border-top-right-radius:12px;
+}
+
+.rdfs-qh-table tbody td{
+  font-size:.9rem;
+  vertical-align:middle;
+  padding:12px;
+  border-top:1px solid var(--gray-200);
+}
+
+/* BADGES */
+.rdfs-qh-badge-success{ background:#198754; }
+.rdfs-qh-badge-warning{ background:#f59e0b; color:#0f172a; }
+.rdfs-qh-badge-danger{ background:#dc3545; }
+.rdfs-qh-badge-muted{ background:#64748b; }
+</style>
+
+<div class="p-4 rdfs-qh-scope">
+
+  <!-- HEADER -->
+  <div class="rdfs-qh-header">
+    <div>
+      <h3 class="rdfs-qh-title mb-1">
+        <i class="bi bi-clock-fill me-2"></i>
+        Queue History
+      </h3>
+      <p class="rdfs-qh-subtitle mb-0">
+        Filter, review, and export past terminal entries
+      </p>
     </div>
 
+    <a href="{% url 'terminal:terminal_queue' %}"
+       class="btn rdfs-qh-back">
+      <i class="bi bi-arrow-left-circle me-1"></i>
+      Back to Queue
+    </a>
+  </div>
+
+  <!-- CARD -->
+  <div class="card border-0 rdfs-qh-card">
     <div class="card-body">
-      <!-- 🟩 Filter Form -->
+
+      <!-- FILTER FORM -->
       <form method="GET" class="row g-3 mb-4 align-items-end">
+
         <div class="col-md-3">
-          <label class="form-label fw-bold">Status</label>
+          <label class="form-label rdfs-qh-label">Status</label>
           <select name="status" class="form-select">
             <option value="">All</option>
             <option value="success" {% if status_filter == 'success' %}selected{% endif %}>Success</option>
@@ -29,39 +152,52 @@
             <option value="invalid" {% if status_filter == 'invalid' %}selected{% endif %}>Invalid</option>
           </select>
         </div>
+
         <div class="col-md-3">
-          <label class="form-label fw-bold">Start Date</label>
-          <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+          <label class="form-label rdfs-qh-label">Start Date</label>
+          <input type="date"
+                 name="start_date"
+                 value="{{ start_date }}"
+                 class="form-control">
         </div>
+
         <div class="col-md-3">
-          <label class="form-label fw-bold">End Date</label>
-          <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+          <label class="form-label rdfs-qh-label">End Date</label>
+          <input type="date"
+                 name="end_date"
+                 value="{{ end_date }}"
+                 class="form-control">
         </div>
+
         <div class="col-md-3 text-end">
-          <button type="submit" class="btn btn-primary mt-3">
-            <i class="bi bi-funnel-fill me-1"></i> Apply Filters
+          <button type="submit" class="btn btn-primary mt-3 w-100">
+            <i class="bi bi-funnel-fill me-1"></i>
+            Apply Filters
           </button>
-          <a href="{% url 'terminal:queue_history' %}" class="btn btn-outline-secondary mt-3">
-            <i class="bi bi-x-octagon-fill me-1"></i> Reset
+          <a href="{% url 'terminal:queue_history' %}"
+             class="btn btn-outline-secondary mt-2 w-100">
+            <i class="bi bi-x-circle me-1"></i>
+            Reset
           </a>
         </div>
       </form>
 
-      <!-- 🟦 Export Button -->
+      <!-- EXPORT -->
       <div class="text-end mb-3">
         <a href="?{% if status_filter %}status={{ status_filter }}&{% endif %}
                  {% if start_date %}start_date={{ start_date }}&{% endif %}
                  {% if end_date %}end_date={{ end_date }}&{% endif %}
                  export=csv"
            class="btn btn-success">
-          <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Export CSV
+          <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i>
+          Export CSV
         </a>
       </div>
 
-      <!-- 🟧 Table -->
+      <!-- TABLE -->
       <div class="table-responsive">
-        <table class="table table-striped align-middle">
-          <thead class="table-dark">
+        <table class="table table-hover align-middle rdfs-qh-table mb-0">
+          <thead>
             <tr>
               <th>#</th>
               <th>Plate Number</th>
@@ -79,20 +215,21 @@
               <td>{{ log.vehicle.license_plate|default:"N/A" }}</td>
               <td>
                 {% if log.vehicle.assigned_driver %}
-                  {{ log.vehicle.assigned_driver.first_name }} {{ log.vehicle.assigned_driver.last_name }}
+                  {{ log.vehicle.assigned_driver.first_name }}
+                  {{ log.vehicle.assigned_driver.last_name }}
                 {% else %}
                   N/A
                 {% endif %}
               </td>
               <td>
                 {% if log.status == "success" %}
-                  <span class="badge bg-success">Success</span>
+                  <span class="badge rdfs-qh-badge-success">Success</span>
                 {% elif log.status == "insufficient" %}
-                  <span class="badge bg-warning text-dark">Insufficient</span>
+                  <span class="badge rdfs-qh-badge-warning">Insufficient</span>
                 {% elif log.status == "invalid" %}
-                  <span class="badge bg-secondary">Invalid</span>
+                  <span class="badge rdfs-qh-badge-muted">Invalid</span>
                 {% else %}
-                  <span class="badge bg-danger">Failed</span>
+                  <span class="badge rdfs-qh-badge-danger">Failed</span>
                 {% endif %}
               </td>
               <td>₱{{ log.fee_charged }}</td>
@@ -100,12 +237,18 @@
               <td>{{ log.created_at|date:"M d, Y H:i" }}</td>
             </tr>
             {% empty %}
-              <tr><td colspan="7" class="text-center text-muted">No records found for selected filters.</td></tr>
+            <tr>
+              <td colspan="7" class="text-center text-muted py-3">
+                No records found for selected filters.
+              </td>
+            </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
+
     </div>
   </div>
 </div>
+
 {% endblock %}

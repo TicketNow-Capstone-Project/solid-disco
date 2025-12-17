@@ -39,6 +39,7 @@
 
 /* CARD */
 .rdfs-edit-card{
+  position:relative; /* REQUIRED for absolute cancel */
   max-width:520px;
   width:100%;
   background:var(--rdfs-card);
@@ -46,6 +47,16 @@
   padding:2rem;
   border:1px solid var(--rdfs-border);
   box-shadow:var(--rdfs-shadow-md);
+}
+
+/* TOP-RIGHT CANCEL */
+.rdfs-cancel-top{
+  position:absolute;
+  top:1rem;
+  right:1rem;
+  z-index:10;
+  border-radius:999px;
+  font-weight:600;
 }
 
 /* TITLE */
@@ -77,7 +88,7 @@
   font-weight:600;
 }
 
-/* ACTION BUTTONS */
+/* SAVE BUTTON */
 .rdfs-save-btn{
   background:linear-gradient(
     135deg,
@@ -95,16 +106,18 @@
   box-shadow:0 8px 18px rgba(17,38,102,.35);
   transform:translateY(-1px);
 }
-
-.rdfs-cancel-btn{
-  border-radius:999px;
-  font-weight:600;
-}
 </style>
 
 <div class="container rdfs-edit-page">
 
   <div class="rdfs-edit-card">
+
+    <!-- TOP RIGHT CANCEL -->
+    <a href="{% url 'accounts:manage_users' %}"
+       class="btn btn-outline-secondary btn-sm rdfs-cancel-top">
+      <i class="bi bi-x-circle-fill me-1"></i>
+      Cancel
+    </a>
 
     <!-- TITLE -->
     <h3 class="rdfs-edit-title text-center">
@@ -159,7 +172,8 @@
         <button type="button"
                 id="rdfsPasswordToggle"
                 class="btn btn-outline-primary btn-sm rdfs-password-toggle">
-          <i class="bi bi-key-fill me-1"></i> Edit Password
+          <i class="bi bi-key-fill me-1"></i>
+          Edit Password
         </button>
       </div>
 
@@ -193,21 +207,12 @@
         </button>
       </div>
 
-      <!-- CANCEL -->
-      <div class="text-center mt-3">
-        <a href="{% url 'accounts:manage_users' %}"
-           class="btn btn-outline-secondary btn-sm rdfs-cancel-btn">
-          <i class="bi bi-arrow-left-circle-fill me-1"></i>
-          Cancel
-        </a>
-      </div>
-
     </form>
 
   </div>
 </div>
 
-<!-- PASSWORD TOGGLE SCRIPT (SCOPED) -->
+<!-- PASSWORD TOGGLE SCRIPT -->
 <script>
 (function(){
   const toggle = document.getElementById("rdfsPasswordToggle");

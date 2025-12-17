@@ -3,33 +3,88 @@
 {% block title %}Vehicle QR | RDFS{% endblock %}
 
 {% block content %}
-
 <style>
 /* =====================================================
    RDFS – VEHICLE QR (SCOPED)
    Prefix: rdfs-vehicle-qr-
 ===================================================== */
-.rdfs-vehicle-qr-scope{
+:root{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#0c1c4a;
+  --rdfs-blue-soft:#e8f4fd;
+
+  --rdfs-bg:#f7fafc;
+  --rdfs-card:#ffffff;
+
+  --rdfs-text:#0f172a;
+  --rdfs-muted:#64748b;
+
+  --rdfs-border:#e2e8f0;
+  --rdfs-radius:16px;
+
+  --rdfs-shadow-sm:0 4px 10px rgba(15,23,42,.08);
+  --rdfs-shadow-md:0 14px 32px rgba(15,23,42,.14);
+}
+
+/* PAGE */
+.rdfs-vehicle-qr-page{
+  min-height:80vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--rdfs-bg);
   font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
 }
 
 /* CARD */
 .rdfs-vehicle-qr-card{
-  border-radius:16px;
+  position:relative;
+  width:100%;
+  max-width:460px;
+  background:var(--rdfs-card);
+  border-radius:var(--rdfs-radius);
+  padding:2rem;
+  border:1px solid var(--rdfs-border);
+  box-shadow:var(--rdfs-shadow-md);
+}
+
+/* TOP RIGHT BACK */
+.rdfs-vehicle-qr-cancel{
+  position:absolute;
+  top:1rem;
+  right:1rem;
+  font-weight:600;
+  border-radius:999px;
+}
+
+/* TITLE */
+.rdfs-vehicle-qr-title{
+  font-weight:800;
+  color:var(--rdfs-blue-dark);
+  margin-bottom:.25rem;
+}
+
+/* SUBTITLE */
+.rdfs-vehicle-qr-sub{
+  font-size:.85rem;
+  color:var(--rdfs-muted);
+  margin-bottom:1.6rem;
 }
 
 /* ID CARD */
 .rdfs-vehicle-qr-id{
   width:260px;
   margin:auto;
-  padding:12px;
-  border:1px solid #e2e8f0;
-  border-radius:12px;
+  padding:1rem;
+  border:1px solid var(--rdfs-border);
+  border-radius:14px;
   background:#ffffff;
+  box-shadow:var(--rdfs-shadow-sm);
 }
 
-.rdfs-vehicle-qr-header h6{
+.rdfs-vehicle-qr-id h6{
   font-weight:700;
+  color:var(--rdfs-blue-dark);
 }
 
 .rdfs-vehicle-qr-image{
@@ -40,11 +95,18 @@
 
 .rdfs-vehicle-qr-info{
   font-size:.8rem;
-  line-height:1.35;
+  line-height:1.4;
+  color:var(--rdfs-text);
 }
 
 .rdfs-vehicle-qr-footer{
   font-size:.7rem;
+  color:var(--rdfs-muted);
+}
+
+/* ACTIONS */
+.rdfs-vehicle-qr-actions{
+  margin-top:1.8rem;
 }
 
 /* PRINT – STRICTLY SCOPED */
@@ -73,77 +135,74 @@
 }
 </style>
 
-<div class="p-4 rdfs-vehicle-qr-scope rdfs-vehicle-qr-hide">
+<div class="container rdfs-vehicle-qr-page rdfs-vehicle-qr-hide">
 
-  <div class="card shadow-sm border-0 rdfs-vehicle-qr-card">
-    <div class="card-body text-center">
+  <div class="rdfs-vehicle-qr-card">
 
-      <h4 class="mb-1">
-        <i class="bi bi-qr-code-scan me-2"></i>
-        Vehicle QR Code
-      </h4>
-      <p class="text-muted small mb-4">
-        {{ vehicle.vehicle_name }} — {{ vehicle.license_plate }}
-      </p>
+    <!-- TOP RIGHT BACK -->
+    <a href="{% url 'vehicles:registered_vehicles' %}"
+       class="btn btn-outline-secondary btn-sm rdfs-vehicle-qr-cancel">
+      <i class="bi bi-x-circle-fill me-1"></i>
+      Back
+    </a>
 
-      <!-- PRINTABLE AREA -->
-      <div class="rdfs-vehicle-qr-print">
+    <!-- TITLE -->
+    <h3 class="rdfs-vehicle-qr-title text-center">
+      Vehicle QR Code
+    </h3>
+    <p class="rdfs-vehicle-qr-sub text-center">
+      {{ vehicle.vehicle_name }} — {{ vehicle.license_plate }}
+    </p>
 
-        <div class="rdfs-vehicle-qr-id">
+    <!-- PRINTABLE AREA -->
+    <div class="rdfs-vehicle-qr-print">
 
-          <div class="rdfs-vehicle-qr-header text-center">
-            <h6 class="mb-0 mt-1">RDFS PASS</h6>
-            <small class="text-muted">Vehicle QR ID</small>
-          </div>
+      <div class="rdfs-vehicle-qr-id text-center">
 
-          <div class="text-center mt-2">
-            {% if vehicle.qr_code %}
-              <img src="{{ vehicle.qr_code.url }}"
-                   alt="QR Code"
-                   class="rdfs-vehicle-qr-image mb-2">
-            {% else %}
-              <div class="text-muted small mb-2">No QR available.</div>
-            {% endif %}
-          </div>
+        <h6 class="mb-0">RDFS PASS</h6>
+        <small class="text-muted">Vehicle QR Identification</small>
 
-          <div class="rdfs-vehicle-qr-info mt-1">
-            <strong>Driver:</strong>
-            {{ vehicle.assigned_driver.first_name }}
-            {{ vehicle.assigned_driver.last_name }}<br>
-
-            <strong>Plate No.:</strong>
-            {{ vehicle.license_plate }}<br>
-
-            <strong>CR No.:</strong>
-            {{ vehicle.cr_number }}<br>
-
-            <strong>OR No.:</strong>
-            {{ vehicle.or_number }}
-          </div>
-
-          <div class="rdfs-vehicle-qr-footer text-center text-muted mt-2">
-            {{ vehicle.date_registered|date:"M d, Y" }}
-          </div>
-
+        <div class="mt-3">
+          {% if vehicle.qr_code %}
+            <img src="{{ vehicle.qr_code.url }}"
+                 alt="QR Code"
+                 class="rdfs-vehicle-qr-image mb-2">
+          {% else %}
+            <div class="text-muted small mb-2">No QR available.</div>
+          {% endif %}
         </div>
+
+        <div class="rdfs-vehicle-qr-info mt-2 text-start">
+          <strong>Driver:</strong>
+          {{ vehicle.assigned_driver.first_name }}
+          {{ vehicle.assigned_driver.last_name }}<br>
+
+          <strong>Plate No.:</strong>
+          {{ vehicle.license_plate }}<br>
+
+          <strong>CR No.:</strong>
+          {{ vehicle.cr_number }}<br>
+
+          <strong>OR No.:</strong>
+          {{ vehicle.or_number }}
+        </div>
+
+        <div class="rdfs-vehicle-qr-footer mt-2">
+          {{ vehicle.date_registered|date:"M d, Y" }}
+        </div>
+
       </div>
-
-      <!-- ACTIONS -->
-      <div class="mt-4 rdfs-vehicle-qr-hide">
-        <button onclick="rdfsPrintVehicleQR()"
-                class="btn btn-primary me-2">
-          <i class="bi bi-printer-fill me-1"></i>
-          Print QR
-        </button>
-
-        <a href="{% url 'vehicles:registered_vehicles' %}"
-           class="btn btn-secondary">
-          <i class="bi bi-arrow-left-circle-fill me-1"></i>
-          Back to Registered Vehicles
-        </a>
-      </div>
-
     </div>
+
+    <!-- ACTIONS -->
+    <div class="text-center rdfs-vehicle-qr-actions rdfs-vehicle-qr-hide">
+      <button onclick="rdfsPrintVehicleQR()"
+              class="btn btn-primary rounded-pill px-4">
+        <i class="bi bi-printer-fill me-1"></i>
+        Print QR
+      </button>
+    </div>
+
   </div>
 </div>
 
@@ -152,5 +211,4 @@ function rdfsPrintVehicleQR(){
   window.print();
 }
 </script>
-
 {% endblock %}

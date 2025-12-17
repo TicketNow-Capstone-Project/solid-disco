@@ -3,165 +3,280 @@
 {% block title %}System Settings | RDFS{% endblock %}
 
 {% block content %}
-<div class="container-fluid p-4">
-  <h3><i class="bi bi-gear-fill me-2"></i> System Settings</h3>
-  <p class="text-muted">Manage terminal-wide configurations such as entry fee and vehicle seat limits.</p>
 
-  <!-- 🟩 Current Fee Display -->
-  <div class="alert alert-info d-flex align-items-center justify-content-between">
+<style>
+/* =====================================================
+   RDFS – SYSTEM SETTINGS (SCOPED)
+===================================================== */
+.rdfs-settings-scope{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#0c1c4a;
+  --rdfs-accent:#2563eb;
+  --rdfs-soft:#e8f4fd;
+
+  --rdfs-text:#0f172a;
+  --rdfs-muted:#64748b;
+
+  --gray-100:#f7fafc;
+  --gray-200:#edf2f7;
+
+  --shadow-md:0 10px 24px rgba(12,28,74,.18);
+
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+  color:var(--rdfs-text);
+}
+
+/* HEADER */
+.rdfs-settings-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:1rem;
+  margin-bottom:1.5rem;
+}
+
+.rdfs-settings-title{
+  font-weight:800;
+  color:var(--rdfs-blue-dark);
+}
+
+.rdfs-settings-subtitle{
+  font-size:.9rem;
+  color:var(--rdfs-muted);
+}
+
+/* BACK BUTTON */
+.rdfs-settings-back{
+  border-radius:999px;
+  font-weight:600;
+  background:#fff;
+  color:var(--rdfs-blue-dark);
+  border:1.5px solid var(--rdfs-blue);
+  white-space:nowrap;
+}
+
+.rdfs-settings-back:hover{
+  background:var(--rdfs-soft);
+}
+
+/* INFO ALERT */
+.rdfs-settings-info{
+  background:var(--rdfs-soft);
+  border-left:4px solid var(--rdfs-blue);
+  color:var(--rdfs-blue-dark);
+}
+
+/* CARD */
+.rdfs-settings-card{
+  border-radius:16px;
+  box-shadow:var(--shadow-md);
+}
+
+/* SECTION HEADERS */
+.rdfs-settings-section-title{
+  font-weight:700;
+  color:var(--rdfs-blue-dark);
+}
+
+/* CONFIRM MODAL HEADER */
+.rdfs-modal-header{
+  background:linear-gradient(
+    180deg,
+    var(--rdfs-blue),
+    var(--rdfs-blue-dark)
+  );
+  color:#fff;
+}
+</style>
+
+<div class="container-fluid p-4 rdfs-settings-scope">
+
+  <!-- HEADER -->
+  <div class="rdfs-settings-header">
     <div>
-      <i class="bi bi-cash-coin me-2"></i>
-      <strong>Current Terminal Fee:</strong> ₱{{ form.instance.terminal_fee }}
+      <h3 class="rdfs-settings-title mb-1">
+        <i class="bi bi-gear-fill me-2"></i>
+        System Settings
+      </h3>
+      <p class="rdfs-settings-subtitle mb-0">
+        Manage terminal-wide configurations such as fees, limits, and system behavior.
+      </p>
     </div>
-    <span class="text-muted small">Last updated: {{ form.instance.updated_at|date:"M d, Y H:i" }}</span>
+
+    <a href="{% url 'accounts:admin_dashboard' %}"
+       class="btn rdfs-settings-back">
+      <i class="bi bi-arrow-left-circle me-1"></i>
+      Back to Dashboard
+    </a>
   </div>
 
-  <!-- Flash Messages -->
+  <!-- CURRENT FEE -->
+  <div class="alert rdfs-settings-info d-flex justify-content-between align-items-center">
+    <div>
+      <i class="bi bi-cash-coin me-2"></i>
+      <strong>Current Terminal Fee:</strong>
+      ₱{{ form.instance.terminal_fee }}
+    </div>
+    <small class="text-muted">
+      Last updated: {{ form.instance.updated_at|date:"M d, Y H:i" }}
+    </small>
+  </div>
+
+  <!-- FLASH MESSAGES -->
   {% if messages %}
     {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
         {{ message }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
     {% endfor %}
   {% endif %}
 
-  <!-- Settings Card -->
-  <div class="card shadow-sm border-0 mt-3">
+  <!-- SETTINGS CARD -->
+  <div class="card border-0 mt-3 rdfs-settings-card">
     <div class="card-body">
+
       <form method="POST" id="settingsForm" novalidate>
         {% csrf_token %}
 
-        <!-- Terminal Fee -->
+        <!-- TERMINAL FEE -->
         <div class="mb-3">
           <label class="form-label fw-bold">New Terminal Entry Fee (₱)</label>
           {{ form.terminal_fee }}
           {% if form.terminal_fee.errors %}
-            <div class="text-danger small mt-1">{{ form.terminal_fee.errors|striptags }}</div>
+            <div class="text-danger small">{{ form.terminal_fee.errors|striptags }}</div>
           {% endif %}
         </div>
 
-        <!-- Minimum Deposit -->
+        <!-- MIN DEPOSIT -->
         <div class="mb-3">
           <label class="form-label fw-bold">Minimum Deposit Required (₱)</label>
           {{ form.min_deposit_amount }}
           {% if form.min_deposit_amount.errors %}
-            <div class="text-danger small mt-1">{{ form.min_deposit_amount.errors|striptags }}</div>
+            <div class="text-danger small">{{ form.min_deposit_amount.errors|striptags }}</div>
           {% endif %}
         </div>
 
-        <!-- Entry Cooldown -->
+        <!-- COOLDOWN -->
         <div class="mb-3">
           <label class="form-label fw-bold">Entry Cooldown (minutes)</label>
           {{ form.entry_cooldown_minutes }}
           {% if form.entry_cooldown_minutes.errors %}
-            <div class="text-danger small mt-1">{{ form.entry_cooldown_minutes.errors|striptags }}</div>
+            <div class="text-danger small">{{ form.entry_cooldown_minutes.errors|striptags }}</div>
           {% endif %}
         </div>
 
-        <!-- 🟩 Vehicle Stay Duration -->
+        <!-- STAY DURATION -->
         <div class="mb-4">
-          <label class="form-label fw-bold">Vehicle Stay Duration (minutes before departure)</label>
+          <label class="form-label fw-bold">
+            Vehicle Stay Duration (minutes before departure)
+          </label>
           {{ form.departure_duration_minutes }}
           {% if form.departure_duration_minutes.errors %}
-            <div class="text-danger small mt-1">{{ form.departure_duration_minutes.errors|striptags }}</div>
+            <div class="text-danger small">{{ form.departure_duration_minutes.errors|striptags }}</div>
           {% endif %}
-          <small class="form-text text-muted">
-            Determines how long a vehicle can stay in the terminal after entry before being marked as departed.
+          <small class="text-muted">
+            Determines how long a vehicle can stay before being marked as departed.
           </small>
         </div>
 
-        <!-- 🟧 Seat Capacity Limits -->
-        <div class="border-top pt-3 mt-4">
-          <h5 class="fw-bold mb-3"><i class="bi bi-bus-front-fill me-2"></i> Seat Capacity Limits</h5>
+        <!-- SEAT LIMITS -->
+        <div class="border-top pt-4 mt-4">
+          <h5 class="rdfs-settings-section-title mb-2">
+            <i class="bi bi-bus-front-fill me-2"></i>
+            Seat Capacity Limits
+          </h5>
           <p class="text-muted small mb-4">
-            Define the maximum number of seats allowed for each vehicle type based on LTO standards.
+            Maximum allowed seats per vehicle type based on LTO standards.
           </p>
 
           <div class="row">
             <div class="col-md-4 mb-3">
-              <label class="form-label fw-semibold">Jeepney (max seats)</label>
+              <label class="form-label fw-semibold">Jeepney</label>
               {{ form.jeepney_max_seats }}
-              {% if form.jeepney_max_seats.errors %}
-                <div class="text-danger small mt-1">{{ form.jeepney_max_seats.errors|striptags }}</div>
-              {% endif %}
             </div>
             <div class="col-md-4 mb-3">
-              <label class="form-label fw-semibold">Van (max seats)</label>
+              <label class="form-label fw-semibold">Van</label>
               {{ form.van_max_seats }}
-              {% if form.van_max_seats.errors %}
-                <div class="text-danger small mt-1">{{ form.van_max_seats.errors|striptags }}</div>
-              {% endif %}
             </div>
             <div class="col-md-4 mb-3">
-              <label class="form-label fw-semibold">Bus (max seats)</label>
+              <label class="form-label fw-semibold">Bus</label>
               {{ form.bus_max_seats }}
-              {% if form.bus_max_seats.errors %}
-                <div class="text-danger small mt-1">{{ form.bus_max_seats.errors|striptags }}</div>
-              {% endif %}
             </div>
           </div>
         </div>
 
-        <!-- Theme -->
-        <div class="mt-4 border-top pt-3">
+        <!-- THEME -->
+        <div class="border-top pt-4 mt-4">
           <label class="form-label fw-bold">System Theme</label>
           {{ form.theme_preference }}
-          {% if form.theme_preference.errors %}
-            <div class="text-danger small mt-1">{{ form.theme_preference.errors|striptags }}</div>
-          {% endif %}
         </div>
 
-        <!-- Buttons -->
+        <!-- ACTIONS -->
         <div class="text-end mt-4">
-          <button type="button" class="btn btn-success" id="openConfirmModal">
-            <i class="bi bi-check-circle-fill me-1"></i> Save Settings
+          <button type="button"
+                  class="btn btn-success"
+                  id="openConfirmModal">
+            <i class="bi bi-check-circle-fill me-1"></i>
+            Save Settings
           </button>
-          <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left-circle-fill me-1"></i> Back
-          </a>
         </div>
+
       </form>
     </div>
   </div>
 </div>
 
-<!-- 🟩 Confirmation Modal -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+<!-- CONFIRM MODAL -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="confirmModalLabel"><i class="bi bi-x-octagon-fill me-2"></i> Confirm Update</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-header rdfs-modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-exclamation-octagon-fill me-2"></i>
+          Confirm Update
+        </h5>
+        <button type="button" class="btn-close btn-close-white"
+                data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p class="fw-semibold">Are you sure you want to update the system settings?</p>
-        <p class="text-muted small mb-0">This will immediately apply the new settings for all future vehicle entries.</p>
+        <p class="fw-semibold mb-1">
+          Are you sure you want to update the system settings?
+        </p>
+        <p class="text-muted small mb-0">
+          Changes will apply immediately to all future vehicle entries.
+        </p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-success" id="confirmSaveBtn">
-          <i class="bi bi-check-circle-fill me-1"></i> Yes, Update
+        <button class="btn btn-outline-secondary"
+                data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button class="btn btn-success"
+                id="confirmSaveBtn">
+          <i class="bi bi-check-circle-fill me-1"></i>
+          Yes, Update
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 🟦 Scripts -->
+<!-- SCRIPTS -->
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const openConfirmBtn = document.getElementById("openConfirmModal");
-  const confirmModal = new bootstrap.Modal(document.getElementById("confirmModal"));
-  const confirmSaveBtn = document.getElementById("confirmSaveBtn");
+  const openBtn = document.getElementById("openConfirmModal");
+  const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
+  const confirmBtn = document.getElementById("confirmSaveBtn");
   const form = document.getElementById("settingsForm");
 
-  openConfirmBtn.addEventListener("click", () => confirmModal.show());
-  confirmSaveBtn.addEventListener("click", () => {
-    confirmModal.hide();
+  openBtn.addEventListener("click", () => modal.show());
+  confirmBtn.addEventListener("click", () => {
+    modal.hide();
     form.submit();
   });
 });
 </script>
+
 {% endblock %}

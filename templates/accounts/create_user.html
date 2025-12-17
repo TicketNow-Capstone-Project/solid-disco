@@ -6,7 +6,7 @@
 {% block content %}
 <style>
 /* ===============================
-   RDFS CREATE ACCOUNT (PALETTE SAFE)
+   RDFS CREATE ACCOUNT (SCOPED)
 ================================ */
 :root{
   --rdfs-blue:#112666;
@@ -19,26 +19,39 @@
   --rdfs-bg:#f7fafc;
   --rdfs-card:#ffffff;
 
-  --rdfs-radius:12px;
-  --rdfs-shadow:0 10px 24px rgba(0,0,0,.08);
+  --rdfs-radius:14px;
+  --rdfs-shadow:0 12px 28px rgba(0,0,0,.12);
   --rdfs-transition:.25s ease;
 }
 
-/* PAGE WRAPPER */
+/* PAGE */
 .rdfs-acct-create{
-  min-height:100vh;
+  min-height:80vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   background:var(--rdfs-bg);
-  padding:1.5rem 0;
 }
 
 /* CARD */
 .rdfs-acct-create__card{
+  position:relative; /* for top-right cancel */
   max-width:520px;
-  margin:auto;
+  width:100%;
   background:var(--rdfs-card);
   padding:2.25rem 2rem;
   border-radius:var(--rdfs-radius);
   box-shadow:var(--rdfs-shadow);
+  border:1px solid #e2e8f0;
+}
+
+/* TOP RIGHT CANCEL */
+.rdfs-acct-create__cancel{
+  position:absolute;
+  top:1rem;
+  right:1rem;
+  border-radius:999px;
+  font-weight:600;
 }
 
 /* TITLE */
@@ -90,26 +103,18 @@
   transform:translateY(-2px);
   box-shadow:0 8px 18px rgba(17,38,102,.35);
 }
-
-/* BACK LINK */
-.rdfs-acct-create__back{
-  margin-top:1.25rem;
-}
-
-.rdfs-acct-create__back a{
-  color:var(--rdfs-blue);
-  border-color:var(--rdfs-blue);
-}
-
-.rdfs-acct-create__back a:hover{
-  background:var(--rdfs-blue-soft);
-  color:var(--rdfs-blue-dark);
-}
 </style>
 
 <div class="container rdfs-acct-create">
 
   <div class="rdfs-acct-create__card">
+
+    <!-- TOP RIGHT CANCEL -->
+    <a href="{% url 'accounts:manage_users' %}"
+       class="btn btn-outline-secondary btn-sm rdfs-acct-create__cancel">
+      <i class="bi bi-x-circle-fill me-1"></i>
+      Cancel
+    </a>
 
     <!-- TITLE -->
     <h3 class="rdfs-acct-create__title text-center">
@@ -207,25 +212,15 @@
 
       <!-- SUBMIT -->
       <div class="d-grid mt-4">
-        <button
-          type="submit"
-          class="btn btn-lg rounded-pill rdfs-acct-create__submit">
+        <button type="submit"
+                class="btn btn-lg rounded-pill rdfs-acct-create__submit">
           <i class="bi bi-person-plus-fill me-2"></i>
           Create Account
         </button>
       </div>
 
-      <!-- BACK -->
-      <div class="text-center rdfs-acct-create__back">
-        <a
-          href="{% url 'accounts:manage_users' %}"
-          class="btn btn-outline-secondary btn-sm rounded-pill">
-          <i class="bi bi-arrow-left-circle-fill me-1"></i>
-          Back to User Management
-        </a>
-      </div>
-
     </form>
+
   </div>
 
 </div>

@@ -7,8 +7,7 @@
 
 <style>
 /* =====================================================
-   RDFS – REGISTERED DRIVERS (SCOPED STYLES ONLY)
-   Prefix: rdfs-drivers-
+   RDFS – REGISTERED DRIVERS (MATCHED TO VEHICLES)
 ===================================================== */
 .rdfs-drivers-scope{
   --rdfs-blue:#112666;
@@ -31,30 +30,92 @@
 }
 
 /* HEADER */
-.rdfs-drivers-title{
-  font-weight:700;
-  color:var(--rdfs-blue);
+.rdfs-drivers-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:1rem;
+  margin-bottom:1.25rem;
 }
 
-/* SEARCH */
-.rdfs-drivers-search{
+.rdfs-drivers-title{
+  font-weight:800;
+  color:var(--rdfs-blue-dark);
+}
+
+.rdfs-drivers-subtitle{
+  font-size:.9rem;
+  color:var(--rdfs-muted);
+}
+
+/* RETURN BUTTON – SAME AS VEHICLES */
+.rdfs-drivers-back{
+  border-radius:999px;
+  font-weight:600;
+  background:#fff;
+  color:var(--rdfs-blue-dark);
+  border:1.5px solid var(--rdfs-blue);
+  white-space:nowrap;
+}
+
+.rdfs-drivers-back:hover{
+  background:var(--rdfs-soft);
+}
+
+/* SEARCH BAR */
+.rdfs-drivers-search-wrap{
   display:flex;
+  justify-content:flex-end;
+  margin-bottom:1rem;
+}
+
+.rdfs-drivers-search{
+  position:relative;
+  width:380px;
+}
+
+.rdfs-drivers-search-icon{
+  position:absolute;
+  left:16px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--rdfs-muted);
+  font-size:.95rem;
 }
 
 .rdfs-drivers-search input{
-  height:48px;
+  height:46px;
+  width:100%;
+  padding-left:44px;
+  padding-right:86px;
   border-radius:999px;
   border:1.5px solid var(--gray-300);
+  background:var(--gray-100);
+  font-size:.9rem;
+  transition:.2s ease;
+}
+
+.rdfs-drivers-search input::placeholder{
+  color:var(--rdfs-muted);
 }
 
 .rdfs-drivers-search input:focus{
+  outline:none;
+  background:#fff;
   border-color:var(--rdfs-accent);
-  box-shadow:0 0 0 3px rgba(37,99,235,.18);
+  box-shadow:0 0 0 4px rgba(37,99,235,.15);
 }
 
 .rdfs-drivers-search button{
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  height:34px;
+  padding:0 16px;
   border-radius:999px;
   font-weight:700;
+  font-size:.8rem;
   background:linear-gradient(135deg,var(--rdfs-accent),var(--rdfs-blue));
   border:none;
   color:#fff;
@@ -68,10 +129,6 @@
 }
 
 /* TABLE */
-.rdfs-drivers-table thead{
-  background:var(--gray-100);
-}
-
 .rdfs-drivers-table th{
   color:var(--rdfs-blue-dark);
   font-weight:700;
@@ -92,55 +149,42 @@
   border-radius:999px;
   font-size:.75rem;
 }
-
-/* ACTION BUTTONS */
-.rdfs-drivers-delete{
-  border-radius:999px;
-  font-weight:600;
-}
-
-.rdfs-drivers-back{
-  border-radius:999px;
-  font-weight:600;
-}
-
-/* PAGINATION */
-.rdfs-drivers-pagination .page-link{
-  border-radius:999px;
-  margin:0 2px;
-  color:var(--rdfs-blue);
-}
-
-.rdfs-drivers-pagination .active .page-link{
-  background:var(--rdfs-blue);
-  border-color:var(--rdfs-blue);
-}
 </style>
 
 <div class="rdfs-drivers-scope p-4">
 
-  <h3 class="rdfs-drivers-title mb-2">
-    <i class="bi bi-people-fill me-2"></i>
-    Registered Drivers
-  </h3>
-  <p class="text-muted mb-4">
-    View, search, and manage registered drivers in the system.
-  </p>
+  <!-- HEADER -->
+  <div class="rdfs-drivers-header">
+    <div>
+      <h3 class="rdfs-drivers-title mb-1">
+        <i class="bi bi-people-fill me-2"></i>
+        Registered Drivers
+      </h3>
+      <p class="rdfs-drivers-subtitle mb-0">
+        View, search, and manage registered drivers in the system.
+      </p>
+    </div>
+
+    <a href="{% url 'accounts:staff_dashboard' %}"
+       class="btn rdfs-drivers-back">
+      <i class="bi bi-arrow-left-circle me-1"></i>
+      Return to Dashboard
+    </a>
+  </div>
 
   <!-- SEARCH -->
-  <form method="get" class="rdfs-drivers-search mb-4" role="search">
-    <input
-      type="text"
-      name="q"
-      class="form-control me-2"
-      placeholder="Search driver by name, license number, or contact..."
-      value="{{ request.GET.q }}"
-    />
-    <button type="submit">
-      <i class="bi bi-search-heart-fill me-1"></i>
-      Search
-    </button>
-  </form>
+  <div class="rdfs-drivers-search-wrap">
+    <form method="get" class="rdfs-drivers-search" role="search">
+      <i class="bi bi-search rdfs-drivers-search-icon"></i>
+      <input
+        type="text"
+        name="q"
+        placeholder="Search by name, license, or contact…"
+        value="{{ request.GET.q }}"
+      />
+      <button type="submit">Search</button>
+    </form>
+  </div>
 
   <!-- MESSAGES -->
   {% if messages %}
@@ -176,47 +220,24 @@
           {% for driver in page_obj %}
           <tr>
             <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
-            <td>
-              <strong>
-                {{ driver.first_name }}
-                {{ driver.middle_name|default:"" }}
-                {{ driver.last_name }}
-              </strong>
-            </td>
+            <td><strong>{{ driver.first_name }} {{ driver.middle_name|default:"" }} {{ driver.last_name }}</strong></td>
             <td>{{ driver.license_number }}</td>
-            <td>
-              <span class="rdfs-drivers-badge">
-                {{ driver.license_type }}
-              </span>
-            </td>
-            <td>
-              {% if driver.license_expiry %}
-                {{ driver.license_expiry|date:"M d, Y" }}
-              {% else %}
-                <span class="text-muted">N/A</span>
-              {% endif %}
-            </td>
+            <td><span class="rdfs-drivers-badge">{{ driver.license_type }}</span></td>
+            <td>{{ driver.license_expiry|date:"M d, Y"|default:"N/A" }}</td>
             <td>{{ driver.mobile_number }}</td>
             <td>{{ driver.blood_type|default:"N/A" }}</td>
             <td>{{ driver.email }}</td>
             <td>{{ driver.created_at|date:"M d, Y" }}</td>
             <td>
               {% if user.is_superuser or user.role == 'admin' %}
-                <button class="btn btn-danger btn-sm rdfs-drivers-delete btn-delete-item"
+                <button class="btn btn-danger btn-sm btn-delete-item"
                         data-url="{% url 'vehicles:delete_driver' driver.id %}"
                         data-type="Driver">
-                  <i class="bi bi-trash-fill me-1"></i>
-                  Delete
+                  <i class="bi bi-trash-fill me-1"></i> Delete
                 </button>
               {% else %}
                 <span class="text-muted">No Action</span>
               {% endif %}
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="10" class="text-center text-muted py-3">
-              No drivers found.
             </td>
           </tr>
           {% endfor %}
@@ -227,56 +248,10 @@
       {% endif %}
 
     </div>
-
-    <!-- PAGINATION -->
-    {% if page_obj.has_other_pages %}
-    <div class="card-footer bg-light d-flex justify-content-between align-items-center">
-      <div>
-        Showing {{ page_obj.start_index }}–{{ page_obj.end_index }}
-        of {{ page_obj.paginator.count }} drivers
-      </div>
-      <nav class="rdfs-drivers-pagination">
-        <ul class="pagination mb-0">
-          {% if page_obj.has_previous %}
-            <li class="page-item">
-              <a class="page-link" href="?q={{ request.GET.q }}&page={{ page_obj.previous_page_number }}">&laquo; Prev</a>
-            </li>
-          {% else %}
-            <li class="page-item disabled"><span class="page-link">&laquo; Prev</span></li>
-          {% endif %}
-
-          {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-            {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
-              <li class="page-item">
-                <a class="page-link" href="?q={{ request.GET.q }}&page={{ num }}">{{ num }}</a>
-              </li>
-            {% endif %}
-          {% endfor %}
-
-          {% if page_obj.has_next %}
-            <li class="page-item">
-              <a class="page-link" href="?q={{ request.GET.q }}&page={{ page_obj.next_page_number }}">Next &raquo;</a>
-            </li>
-          {% else %}
-            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
-          {% endif %}
-        </ul>
-      </nav>
-    </div>
-    {% endif %}
-  </div>
-
-  <!-- BACK -->
-  <div class="mt-4 text-end">
-    <a href="{% url 'accounts:staff_dashboard' %}" class="btn btn-secondary btn-lg rdfs-drivers-back">
-      <i class="bi bi-arrow-left-circle-fill me-1"></i>
-      Back to Dashboard
-    </a>
   </div>
 
 </div>
+
 
 <script>
 /* DELETE HANDLER – unchanged, safe */

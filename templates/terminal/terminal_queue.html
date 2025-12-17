@@ -4,35 +4,136 @@
 {% block title %}Terminal Queue | RDFS{% endblock %}
 
 {% block content %}
-<div class="p-4">
-  <div class="card shadow-sm border-0">
+
+<style>
+/* =====================================================
+   RDFS – TERMINAL QUEUE (SCOPED)
+===================================================== */
+.rdfs-queue-scope{
+  --rdfs-blue:#112666;
+  --rdfs-blue-dark:#0c1c4a;
+  --rdfs-accent:#2563eb;
+  --rdfs-soft:#e8f4fd;
+
+  --gray-100:#f7fafc;
+  --gray-200:#edf2f7;
+
+  --shadow-md:0 8px 20px rgba(12,28,74,0.18);
+  --muted:#64748b;
+
+  font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+}
+
+/* HEADER */
+.rdfs-queue-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  margin-bottom:1.2rem;
+}
+
+.rdfs-queue-title{
+  font-weight:700;
+  color:var(--rdfs-blue-dark);
+}
+
+.rdfs-queue-subtitle{
+  font-size:.9rem;
+  color:var(--muted);
+}
+
+/* BACK BUTTON */
+.rdfs-queue-back{
+  border-radius:999px;
+  font-weight:600;
+  background:#fff;
+  color:var(--rdfs-blue-dark);
+  border:1.5px solid var(--rdfs-blue);
+  white-space:nowrap;
+}
+
+.rdfs-queue-back:hover{
+  background:var(--rdfs-soft);
+}
+
+/* CARD */
+.rdfs-queue-card{
+  border-radius:16px;
+  box-shadow:var(--shadow-md);
+}
+
+/* INFO BAR */
+.rdfs-queue-info{
+  background:var(--gray-100);
+  border-radius:10px;
+}
+
+/* TABLE */
+.rdfs-queue-table thead th{
+  background:#f1f5f9;
+  color:#0f172a;
+  font-weight:600;
+}
+</style>
+
+<div class="p-4 rdfs-queue-scope">
+
+  <!-- HEADER -->
+  <div class="rdfs-queue-header">
+    <div>
+      <h3 class="rdfs-queue-title mb-1">
+        <i class="bi bi-list-check me-2"></i>
+        Terminal Queue
+      </h3>
+      <p class="rdfs-queue-subtitle mb-0">
+        Live overview of active vehicles inside the terminal
+      </p>
+    </div>
+
+    <a hx-get="{% url 'accounts:staff_dashboard' %}"
+       hx-target="#main-content"
+       hx-swap="innerHTML transition:true"
+       class="btn rdfs-queue-back">
+      <i class="bi bi-arrow-left-circle me-1"></i>
+      Back to Dashboard
+    </a>
+  </div>
+
+  <!-- CARD -->
+  <div class="card border-0 rdfs-queue-card">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
       <div>
-        <h5 class="mb-0"><i class="bi bi-list-check me-2"></i> Terminal Queue</h5>
-        <small class="text-light opacity-75">Live overview of active vehicles inside the terminal</small>
+        <i class="bi bi-car-front-fill me-1"></i>
+        Active Queue
       </div>
       <a hx-get="{% url 'terminal:qr_scan_entry' %}" 
          hx-target="#main-content" 
          hx-swap="innerHTML transition:true"
          class="btn btn-light btn-sm">
-        <i class="bi bi-qr-code-scan me-1"></i> QR Scan Entry
+        <i class="bi bi-qr-code-scan me-1"></i>
+        QR Scan Entry
       </a>
     </div>
 
     <div class="card-body">
-      <!-- 🟩 Live Count -->
-      <div class="alert alert-info py-2 d-flex justify-content-between align-items-center">
+
+      <!-- LIVE COUNT -->
+      <div class="alert alert-info py-2 d-flex justify-content-between align-items-center rdfs-queue-info">
         <div>
           <i class="bi bi-car-front me-2"></i>
-          <strong>Currently Active Vehicles:</strong> <span id="vehicleCount">0</span>
+          <strong>Currently Active Vehicles:</strong>
+          <span id="vehicleCount">0</span>
         </div>
-        <small class="text-muted">Auto-refresh every 5 seconds</small>
+        <small class="text-muted">
+          Auto-refresh every 5 seconds
+        </small>
       </div>
 
-      <!-- 🟩 Table Container -->
+      <!-- TABLE -->
       <div class="table-responsive">
-        <table class="table table-striped align-middle" id="queue-table">
-          <thead class="table-primary">
+        <table class="table table-striped align-middle rdfs-queue-table" id="queue-table">
+          <thead>
             <tr>
               <th>#</th>
               <th>Plate Number</th>
@@ -44,30 +145,28 @@
             </tr>
           </thead>
           <tbody id="queue-body">
-            <tr><td colspan="7" class="text-center text-muted">Loading queue...</td></tr>
+            <tr>
+              <td colspan="7" class="text-center text-muted">
+                Loading queue...
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- 🟨 Empty State -->
+      <!-- EMPTY STATE -->
       <div id="no-data" class="alert alert-secondary text-center d-none mt-3">
-        <i class="bi bi-info-circle me-1"></i> No vehicles currently in queue.
+        <i class="bi bi-info-circle me-1"></i>
+        No vehicles currently in queue.
       </div>
+
     </div>
   </div>
 
-  <!-- Back Button -->
-  <div class="text-end mt-4">
-    <a hx-get="{% url 'accounts:staff_dashboard' %}"
-       hx-target="#main-content"
-       hx-swap="innerHTML transition:true"
-       class="btn btn-secondary btn-lg">
-      <i class="bi bi-arrow-left"></i> Back to Dashboard
-    </a>
-  </div>
 </div>
 
-<!-- 🟦 Live Refresh + Depart Button Script -->
+<!-- ================= JS (FULL, UNCHANGED LOGIC) ================= -->
+
 <script>
 async function fetchQueueData() {
   try {
@@ -94,8 +193,10 @@ async function fetchQueueData() {
             <td>${item.staff}</td>
             <td>${item.time}</td>
             <td>
-              <button class="btn btn-sm btn-outline-danger" onclick="markDeparted(${item.id})">
-                <i class="bi bi-box-arrow-right"></i> Departed
+              <button class="btn btn-sm btn-outline-danger"
+                      onclick="markDeparted(${item.id})">
+                <i class="bi bi-box-arrow-right"></i>
+                Departed
               </button>
             </td>
           </tr>
@@ -111,7 +212,6 @@ async function fetchQueueData() {
   }
 }
 
-// 🟥 AJAX call to mark vehicle as departed
 async function markDeparted(entryId) {
   if (!confirm("Mark this vehicle as departed?")) return;
 
@@ -128,7 +228,7 @@ async function markDeparted(entryId) {
       const row = document.getElementById(`row-${entryId}`);
       if (row) row.remove();
       alert(data.message);
-      fetchQueueData(); // refresh list
+      fetchQueueData();
     } else {
       alert(data.message || "Failed to mark as departed.");
     }
@@ -137,11 +237,10 @@ async function markDeparted(entryId) {
   }
 }
 
-// 🕒 Auto-refresh every 5 seconds
 fetchQueueData();
 setInterval(fetchQueueData, 5000);
 </script>
 
-<!-- CSRF Token (for AJAX) -->
 <form style="display:none;">{% csrf_token %}</form>
+
 {% endblock %}

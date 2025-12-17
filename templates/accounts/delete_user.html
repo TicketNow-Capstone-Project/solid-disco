@@ -41,6 +41,7 @@
 
 /* CARD */
 .rdfs-delete-card{
+  position:relative; /* REQUIRED for top-right cancel */
   max-width:460px;
   width:100%;
   background:var(--rdfs-card);
@@ -49,6 +50,16 @@
   text-align:center;
   border:1px solid var(--rdfs-border);
   box-shadow:var(--rdfs-shadow-md);
+}
+
+/* TOP-RIGHT CANCEL */
+.rdfs-cancel-top{
+  position:absolute;
+  top:1rem;
+  right:1rem;
+  z-index:10;
+  border-radius:999px;
+  font-weight:600;
 }
 
 /* ICON */
@@ -73,7 +84,7 @@
   line-height:1.6;
 }
 
-/* BUTTONS */
+/* DELETE BUTTON */
 .rdfs-delete-btn{
   background:linear-gradient(
     135deg,
@@ -92,16 +103,18 @@
   box-shadow:0 8px 18px rgba(220,38,38,.4);
   transform:translateY(-1px);
 }
-
-.rdfs-cancel-btn{
-  border-radius:999px;
-  font-weight:600;
-}
 </style>
 
 <div class="container rdfs-delete-page">
 
   <div class="rdfs-delete-card">
+
+    <!-- TOP RIGHT CANCEL -->
+    <a href="{% url 'accounts:manage_users' %}"
+       class="btn btn-outline-secondary btn-sm rdfs-cancel-top">
+      <i class="bi bi-x-circle-fill me-1"></i>
+      Cancel
+    </a>
 
     <!-- ICON -->
     <div class="rdfs-delete-icon">
@@ -125,21 +138,14 @@
     <form method="POST">
       {% csrf_token %}
 
-      <div class="d-grid gap-2 mt-4">
+      <div class="d-grid mt-4">
 
-        <!-- CONFIRM -->
+        <!-- CONFIRM DELETE -->
         <button type="submit"
                 class="btn rdfs-delete-btn">
           <i class="bi bi-trash-fill me-1"></i>
           Yes, Delete Account
         </button>
-
-        <!-- CANCEL -->
-        <a href="{% url 'accounts:manage_users' %}"
-           class="btn btn-outline-secondary btn-sm rdfs-cancel-btn">
-          <i class="bi bi-arrow-left-circle-fill me-1"></i>
-          Cancel
-        </a>
 
       </div>
     </form>

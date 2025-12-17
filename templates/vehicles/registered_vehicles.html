@@ -7,8 +7,7 @@
 
 <style>
 /* =====================================================
-   RDFS – REGISTERED VEHICLES (SCOPED STYLES ONLY)
-   Prefix: rdfs-vehicles-
+   RDFS – REGISTERED VEHICLES (SCOPED)
 ===================================================== */
 .rdfs-vehicles-scope{
   --rdfs-blue:#112666;
@@ -31,30 +30,92 @@
 }
 
 /* HEADER */
-.rdfs-vehicles-title{
-  font-weight:700;
-  color:var(--rdfs-blue);
+.rdfs-vehicles-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:1rem;
+  margin-bottom:1.25rem;
 }
 
-/* SEARCH */
-.rdfs-vehicles-search{
+.rdfs-vehicles-title{
+  font-weight:800;
+  color:var(--rdfs-blue-dark);
+}
+
+.rdfs-vehicles-subtitle{
+  font-size:.9rem;
+  color:var(--rdfs-muted);
+}
+
+/* RETURN BUTTON */
+.rdfs-vehicles-back{
+  border-radius:999px;
+  font-weight:600;
+  background:#fff;
+  color:var(--rdfs-blue-dark);
+  border:1.5px solid var(--rdfs-blue);
+  white-space:nowrap;
+}
+
+.rdfs-vehicles-back:hover{
+  background:var(--rdfs-soft);
+}
+
+/* SEARCH BAR */
+.rdfs-vehicles-search-wrap{
   display:flex;
+  justify-content:flex-end;
+  margin-bottom:1rem;
+}
+
+.rdfs-vehicles-search{
+  position:relative;
+  width:380px;
+}
+
+.rdfs-vehicles-search-icon{
+  position:absolute;
+  left:16px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--rdfs-muted);
+  font-size:.95rem;
 }
 
 .rdfs-vehicles-search input{
-  height:48px;
+  height:46px;
+  width:100%;
+  padding-left:44px;
+  padding-right:86px;
   border-radius:999px;
   border:1.5px solid var(--gray-300);
+  background:var(--gray-100);
+  font-size:.9rem;
+  transition:.2s ease;
+}
+
+.rdfs-vehicles-search input::placeholder{
+  color:var(--rdfs-muted);
 }
 
 .rdfs-vehicles-search input:focus{
+  outline:none;
+  background:#fff;
   border-color:var(--rdfs-accent);
-  box-shadow:0 0 0 3px rgba(37,99,235,.18);
+  box-shadow:0 0 0 4px rgba(37,99,235,.15);
 }
 
 .rdfs-vehicles-search button{
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  height:34px;
+  padding:0 16px;
   border-radius:999px;
   font-weight:700;
+  font-size:.8rem;
   background:linear-gradient(135deg,var(--rdfs-accent),var(--rdfs-blue));
   border:none;
   color:#fff;
@@ -66,56 +127,41 @@
   box-shadow:var(--shadow-md);
   border:1px solid var(--gray-200);
 }
-
-/* TABLE */
-.rdfs-vehicles-table thead{
-  background:var(--gray-100);
-}
-
-.rdfs-vehicles-table th{
-  color:var(--rdfs-blue-dark);
-  font-weight:700;
-  white-space:nowrap;
-}
-
-.rdfs-vehicles-table td{
-  vertical-align:middle;
-  font-size:.9rem;
-}
-
-/* ACTION BUTTONS */
-.rdfs-vehicles-delete{
-  border-radius:999px;
-  font-weight:600;
-}
-
-.rdfs-vehicles-qr{
-  border-radius:999px;
-  font-weight:600;
-}
-
-/* PAGINATION */
-.rdfs-vehicles-pagination .page-link{
-  border-radius:999px;
-  margin:0 2px;
-  color:var(--rdfs-blue);
-}
-
-.rdfs-vehicles-pagination .active .page-link{
-  background:var(--rdfs-blue);
-  border-color:var(--rdfs-blue);
-}
 </style>
 
 <div class="rdfs-vehicles-scope p-4">
 
-  <h3 class="rdfs-vehicles-title mb-2">
-    <i class="bi bi-truck-front-fill me-2"></i>
-    Registered Vehicles
-  </h3>
-  <p class="text-muted mb-4">
-    View, search, and manage registered vehicles in the system.
-  </p>
+  <!-- HEADER -->
+  <div class="rdfs-vehicles-header">
+    <div>
+      <h3 class="rdfs-vehicles-title mb-1">
+        <i class="bi bi-truck-front-fill me-2"></i>
+        Registered Vehicles
+      </h3>
+      <p class="rdfs-vehicles-subtitle mb-0">
+        View, search, and manage registered vehicles in the system.
+      </p>
+    </div>
+
+    <a href="{% url 'accounts:staff_dashboard' %}"
+       class="btn rdfs-vehicles-back">
+      <i class="bi bi-arrow-left-circle me-1"></i>
+      Return to Dashboard
+    </a>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="rdfs-vehicles-search-wrap">
+    <form class="rdfs-vehicles-search" onsubmit="return false;">
+      <i class="bi bi-search rdfs-vehicles-search-icon"></i>
+      <input
+        type="text"
+        id="rdfsVehicleSearch"
+        placeholder="Search by driver, plate, type, or name…"
+      />
+      <button type="submit">Search</button>
+    </form>
+  </div>
 
   <!-- MESSAGES -->
   {% if messages %}
@@ -127,31 +173,14 @@
     {% endfor %}
   {% endif %}
 
-  <!-- SEARCH -->
-  <form method="get"
-        class="rdfs-vehicles-search mb-3"
-        role="search"
-        onsubmit="return false;">
-    <input
-      type="text"
-      id="rdfsVehicleSearch"
-      class="form-control me-2"
-      placeholder="Search vehicle by driver, plate, type, or name..."
-    />
-    <button type="submit">
-      <i class="bi bi-search-heart-fill me-1"></i>
-      Search
-    </button>
-  </form>
-
-  <!-- TABLE CARD -->
+  <!-- TABLE -->
   <div class="card rdfs-vehicles-card">
     <div class="card-body table-responsive">
 
       {% if vehicles %}
-      <table class="table table-bordered table-hover align-middle rdfs-vehicles-table"
+      <table class="table table-bordered table-hover align-middle"
              id="rdfsVehicleTable">
-        <thead>
+        <thead class="table-light">
           <tr>
             <th>#</th>
             <th>Driver</th>
@@ -170,7 +199,7 @@
         <tbody>
           {% for vehicle in vehicles %}
           <tr>
-            <td>{{ forloop.counter0|add:vehicles.start_index }}</td>
+            <td>{{ forloop.counter }}</td>
             <td>
               {% if vehicle.assigned_driver %}
                 {{ vehicle.assigned_driver.first_name }}
@@ -186,20 +215,13 @@
             <td>{{ vehicle.or_number }}</td>
             <td>{{ vehicle.vin_number }}</td>
             <td>{{ vehicle.year_model }}</td>
-            <td>
-              {% if vehicle.registration_expiry %}
-                {{ vehicle.registration_expiry|date:"M d, Y" }}
-              {% else %}
-                <span class="text-muted">N/A</span>
-              {% endif %}
-            </td>
+            <td>{{ vehicle.registration_expiry|date:"M d, Y"|default:"N/A" }}</td>
             <td>
               {% if vehicle.qr_code %}
                 <a href="{% url 'vehicles:vehicle_qr' vehicle.id %}"
-                   class="btn btn-outline-secondary btn-sm rdfs-vehicles-qr"
-                   target="_blank">
-                  <i class="bi bi-printer-fill me-1"></i>
-                  View / Print
+                   target="_blank"
+                   class="btn btn-outline-secondary btn-sm rounded-pill">
+                  <i class="bi bi-printer-fill me-1"></i> View / Print
                 </a>
               {% else %}
                 <span class="text-muted">No QR</span>
@@ -207,80 +229,28 @@
             </td>
             <td>
               {% if user.is_superuser or user.role == 'admin' %}
-                <button class="btn btn-danger btn-sm rdfs-vehicles-delete btn-delete-item"
+                <button class="btn btn-danger btn-sm btn-delete-item"
                         data-url="{% url 'vehicles:delete_vehicle' vehicle.id %}"
                         data-type="Vehicle">
-                  <i class="bi bi-trash-fill me-1"></i>
-                  Delete
+                  <i class="bi bi-trash-fill me-1"></i> Delete
                 </button>
               {% else %}
                 <span class="text-muted">No Action</span>
               {% endif %}
             </td>
           </tr>
-          {% empty %}
-          <tr>
-            <td colspan="12" class="text-center text-muted py-3">
-              No vehicles found.
-            </td>
-          </tr>
           {% endfor %}
         </tbody>
       </table>
       {% else %}
-        <p class="text-center text-muted mb-0">
-          No vehicles registered yet.
-        </p>
+        <p class="text-center text-muted">No vehicles registered yet.</p>
       {% endif %}
 
     </div>
   </div>
 
-  <!-- PAGINATION -->
-  {% if vehicles.has_other_pages %}
-  <nav class="rdfs-vehicles-pagination mt-3">
-    <ul class="pagination justify-content-center">
-      {% if vehicles.has_previous %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ vehicles.previous_page_number }}">&laquo; Prev</a>
-        </li>
-      {% else %}
-        <li class="page-item disabled"><span class="page-link">&laquo; Prev</span></li>
-      {% endif %}
-
-      {% for i in vehicles.paginator.page_range %}
-        {% if vehicles.number == i %}
-          <li class="page-item active"><span class="page-link">{{ i }}</span></li>
-        {% else %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
-          </li>
-        {% endif %}
-      {% endfor %}
-
-      {% if vehicles.has_next %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ vehicles.next_page_number }}">Next &raquo;</a>
-        </li>
-      {% else %}
-        <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
-      {% endif %}
-    </ul>
-  </nav>
-  {% endif %}
-
-  <!-- BACK -->
-  <div class="mt-4 text-end">
-    <a href="{% url 'accounts:staff_dashboard' %}"
-       class="btn btn-secondary btn-lg">
-      <i class="bi bi-arrow-left-circle-fill me-1"></i>
-      Back to Dashboard
-    </a>
-  </div>
-
 </div>
 
-<!-- SEARCH FILTER + DELETE SCRIPT -->
 <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 <script>
 document.addEventListener("DOMContentLoaded",function(){
