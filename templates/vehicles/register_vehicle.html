@@ -6,27 +6,21 @@
 {% block content %}
 
 <style>
- /* =====================================================
-   RDFS – REGISTER VEHICLE
-===================================================== */
 :root{
   --rdfs-blue:#112666;
   --rdfs-blue-dark:#0c1c4a;
   --rdfs-accent:#2563eb;
   --rdfs-soft:#e8f4fd;
-
   --text:#0f172a;
   --muted:#64748b;
-
   --gray-200:#edf2f7;
   --gray-300:#e2e8f0;
-
   --shadow-sm:0 1px 3px rgba(0,0,0,.08);
   --shadow-md:0 8px 18px rgba(0,0,0,.12);
 }
 
 body{
-  background:linear-gradient(180deg,#ffffff 0%,#f2f6ff 100%) !important;
+  background:linear-gradient(180deg,#ffffff 0%,#f2f6ff 100%);
   font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
 }
 
@@ -77,127 +71,254 @@ body{
 .section-box{
   background:#fff;
   border-radius:18px;
-  padding:2rem;
+  padding:1.8rem;
+  box-shadow:var(--shadow-md);
   margin-bottom:2rem;
   border:1px solid var(--gray-200);
-  box-shadow:var(--shadow-md);
-  transition:.2s ease;
-}
-.section-box:hover{
-  transform:translateY(-2px);
 }
 
-/* SECTION TITLE */
 .section-title{
-  font-size:1.25rem;
   font-weight:800;
+  font-size:1.2rem;
   color:var(--rdfs-blue-dark);
-  margin-bottom:1.4rem;
+  margin-bottom:1rem;
+  padding-bottom:0.75rem;
+  border-bottom: 2px solid var(--gray-200);
+}
+
+/* FORM ROWS */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -10px;
+  margin-left: -10px;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  padding-right: 10px;
+  padding-left: 10px;
+  margin-bottom: 1rem;
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  .col-md-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+  }
+  .col-md-3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
 }
 
 /* LABELS */
-.form-group label{
-  font-size:.9rem;
-  font-weight:600;
-  color:var(--text);
+.form-label {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  display: inline-block;
 }
-.required::after{
-  content:" *";
-  color:#dc3545;
+
+.required::after {
+  content: " *";
+  color: #dc3545;
 }
 
 /* INPUTS */
-.form-group input,
-.form-group select{
-  height:48px !important;
-  border-radius:10px;
-  border:1.5px solid var(--gray-300);
-  padding:10px 14px;
-  transition:.2s;
+input, select {
+  width: 100%;
+  height: 50px !important;
+  border-radius: 10px !important;
+  border: 1.5px solid #cfd8e2 !important;
+  padding: 12px 14px !important;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
 }
-.form-group input:focus,
-.form-group select:focus{
-  border-color:var(--rdfs-accent);
-  box-shadow:0 0 0 3px rgba(37,99,235,.18);
+
+input:focus, select:focus {
+  border-color: var(--rdfs-accent) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+  outline: none;
 }
 
 /* DATE PICKER */
-.date-wrapper{ position:relative; max-width:260px; }
-.date-wrapper input{
-  background-image:url("https://cdn-icons-png.flaticon.com/512/747/747310.png");
-  background-repeat:no-repeat;
-  background-size:20px;
-  background-position:right 12px center;
-  cursor:pointer;
+.date-wrapper { 
+  position: relative;
+  width: 100%;
 }
 
-/* ==========================================
-   RDFS – CUSTOM CALENDAR (REFINED)
-========================================== */
-
-.custom-calendar{
-  position:absolute;
-  top:54px;
-  width:300px;
-  background:#ffffff;
-  border-radius:14px;
-  padding:12px;
-  border:1px solid var(--gray-300);
-  box-shadow:0 8px 20px rgba(17,38,102,.18);
-  display:none;
-  z-index:9999;
-  animation:fadeIn .15s ease-out;
+.date-wrapper input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364708b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+  cursor: pointer;
+  padding-right: 40px !important;
 }
 
-/* Fade animation */
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(-6px)}
-  to{opacity:1;transform:translateY(0)}
+/* BUTTONS */
+.btn-submit {
+  background: linear-gradient(135deg, var(--rdfs-accent), var(--rdfs-blue));
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 2rem;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* HEADER */
-.cal-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  background:linear-gradient(135deg,var(--rdfs-blue),var(--rdfs-accent));
-  padding:10px;
-  border-radius:10px;
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-.cal-header select{
-  border:none;
-  background:#ffffff;
-  border-radius:8px;
-  padding:5px 8px;
-  font-weight:700;
-  font-size:14px;
-  color:var(--rdfs-blue-dark);
-  box-shadow:0 1px 3px rgba(0,0,0,.15);
-  cursor:pointer;
+.btn-submit:active {
+  transform: translateY(0);
 }
 
-/* WEEKDAY LABELS */
-.cal-days{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:4px;
-  margin-top:10px;
-  text-align:center;
-  font-weight:700;
-  font-size:13px;
-  color:var(--rdfs-blue-dark);
+/* FORM VALIDATION */
+.is-invalid {
+  border-color: #dc3545 !important;
+  padding-right: calc(1.5em + 0.75rem) !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
 }
 
-/* GRID */
-.cal-grid{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:4px;
-  margin-top:6px;
+.invalid-feedback {
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.875em;
+  color: #dc3545;
+  display: none;
 }
 
-/* DAY CELL */
+.was-validated .form-control:invalid ~ .invalid-feedback,
+.was-validated .form-control:invalid ~ .invalid-tooltip,
+.form-control.is-invalid ~ .invalid-feedback,
+.form-control.is-invalid ~ .invalid-tooltip {
+  display: block;
+}
+
+/* CUSTOM CALENDAR */
+.custom-calendar {
+  position: absolute;
+  top: 60px;
+  width: 330px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-300);
+  padding: 12px;
+  display: none;
+  z-index: 999;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cal-header {
+  display: flex;
+  justify-content: space-between;
+  background: linear-gradient(135deg, var(--rdfs-blue), var(--rdfs-accent));
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.cal-header select {
+  border: none;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-weight: 600;
+  color: var(--rdfs-blue-dark);
+  background: #fff;
+  cursor: pointer;
+}
+
+.cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--rdfs-blue-dark);
+  font-size: 0.9em;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-day {
+  padding: 8px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cal-day:hover {
+  background-color: var(--rdfs-soft);
+}
+
+.cal-day.today {
+  font-weight: bold;
+  border: 2px solid var(--rdfs-blue);
+}
+
+.cal-day.selected {
+  background: var(--rdfs-blue);
+  color: white;
+  font-weight: bold;
+}
+
+.cal-day.other-month {
+  color: #adb5bd;
+  cursor: default;
+}
+
+.cal-day.other-month:hover {
+  background: transparent;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .section-box {
+    padding: 1.25rem;
+  }
+  
+  .form-group {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .rdfs-page-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .rdfs-page-title {
+    font-size: 1.4rem;
+  }
+}
 .cal-day{
   height:40px;
   line-height:40px;
@@ -242,161 +363,318 @@ body{
 }
 </style>
 
-
 <div class="container py-4 form-container">
-
- <div class="rdfs-page-header">
+  <div class="rdfs-page-header">
     <div>
-      <div class="rdfs-page-title">
-        <i class="bi bi-truck-front-fill me-2"></i> Register Vehicle
-      </div>
-      <div class="rdfs-page-sub">
-        Add a new vehicle to the RDFS system
-      </div>
+      <h1 class="rdfs-page-title">Register New Vehicle</h1>
+      <p class="rdfs-page-sub">Fill in the details below to register a new vehicle</p>
     </div>
-
-    <a href="{% url 'accounts:staff_dashboard' %}" class="rdfs-return-btn">
-      <i class="bi bi-arrow-left-circle me-1"></i> Dashboard
+    <a href="{% url 'vehicles:registered_vehicles' %}" class="rdfs-return-btn">
+      ← Back to Vehicles
     </a>
   </div>
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    {% endfor %}
-  {% endif %}
 
-  {% if form.non_field_errors %}
-    <div class="alert alert-danger"><strong>Error:</strong> {{ form.non_field_errors }}</div>
-  {% endif %}
-
-
-  <form method="POST" enctype="multipart/form-data"
-        hx-post="{% url 'vehicles:register_vehicle' %}"
-        hx-target="#main-content"
-        hx-swap="innerHTML transition:true"
-        id="vehicleForm">
-
+  <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
     {% csrf_token %}
 
-        <!-- VEHICLE DETAILS -->
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        <strong>Error:</strong> {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <!-- Basic Information -->
     <div class="section-box">
-      <div class="section-title">Vehicle Details</div>
+      <h2 class="section-title">Basic Information</h2>
 
-      <div class="row g-3">
-
-        <div class="col-md-6 form-group">
-          <label class="required">Vehicle Name</label>
-          {{ form.vehicle_name }}
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="{{ form.vehicle_name.id_for_label }}" class="form-label">
+            Vehicle Name
+            <span class="text-muted">(Optional)</span>
+          </label>
+          <input type="text" 
+                 name="{{ form.vehicle_name.name }}"
+                 id="{{ form.vehicle_name.id_for_label }}"
+                 class="form-control {% if form.vehicle_name.errors %}is-invalid{% endif %}"
+                 placeholder="e.g. Toyota Grandia 2023"
+                 value="{{ form.vehicle_name.value|default:'' }}">
+          {% if form.vehicle_name.errors %}
+            <div class="invalid-feedback">
+              {{ form.vehicle_name.errors.0 }}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Enter the vehicle's model and make</small>
         </div>
 
-        <div class="col-md-6 form-group">
-          <label class="required">Vehicle Type</label>
+        <div class="form-group col-md-6">
+          <label for="{{ form.vehicle_type.id_for_label }}" class="form-label required">
+            Vehicle Type
+          </label>
           {{ form.vehicle_type }}
+          {% if form.vehicle_type.errors %}
+            <div class="invalid-feedback">
+              {{ form.vehicle_type.errors.0 }}
+            </div>
+          {% else %}
+            <div class="invalid-feedback">
+              Please select the vehicle type.
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Select the type of vehicle</small>
         </div>
+      </div>
 
-        <div class="col-md-6 form-group">
-          <label class="required">Ownership Type</label>
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="{{ form.assigned_driver.id_for_label }}" class="form-label required">
+            Assigned Driver
+          </label>
+          {{ form.assigned_driver }}
+          {% if form.assigned_driver.errors %}
+            <div class="invalid-feedback">
+              {{ form.assigned_driver.errors.0 }}
+            </div>
+          {% else %}
+            <div class="invalid-feedback">
+              Please select the driver assigned to this vehicle.
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Select the driver assigned to this vehicle</small>
+        </div>
+        
+        <div class="form-group col-md-6">
+          <label for="{{ form.ownership_type.id_for_label }}" class="form-label required">
+            Ownership Type
+          </label>
           {{ form.ownership_type }}
+          {% if form.ownership_type.errors %}
+            <div class="invalid-feedback">
+              {{ form.ownership_type.errors.0 }}
+            </div>
+          {% else %}
+            <div class="invalid-feedback">
+              Please select the ownership type.
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Select the ownership type</small>
         </div>
+      </div>
 
-        <div class="col-md-6 form-group">
-          <label class="required">Route</label>
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="{{ form.route.id_for_label }}" class="form-label">
+            Route
+            <span class="text-muted">(Optional)</span>
+          </label>
           {{ form.route }}
+          {% if form.route.errors %}
+            <div class="invalid-feedback">
+              {{ form.route.errors.0 }}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Select the regular route for this vehicle</small>
         </div>
-
-        <div class="col-md-6 form-group">
-          <label class="required">Seat Capacity</label>
-          {{ form.seat_capacity }}
+        
+        <div class="form-group col-md-6">
+          <label for="{{ form.seat_capacity.id_for_label }}" class="form-label">
+            Seat Capacity
+            <span class="text-muted">(Optional)</span>
+          </label>
+          <input type="number" 
+                 name="{{ form.seat_capacity.name }}"
+                 id="{{ form.seat_capacity.id_for_label }}"
+                 class="form-control {% if form.seat_capacity.errors %}is-invalid{% endif %}"
+                 placeholder="e.g. 12"
+                 min="1"
+                 value="{{ form.seat_capacity.value|default:'' }}">
+          {% if form.seat_capacity.errors %}
+            <div class="invalid-feedback">
+              {{ form.seat_capacity.errors.0 }}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Enter the maximum number of passengers</small>
         </div>
-
       </div>
     </div>
 
-
-    <!-- REGISTRATION DETAILS -->
+    <!-- Registration Information -->
     <div class="section-box">
-      <div class="section-title">Registration Details</div>
+      <h2 class="section-title">Registration Information</h2>
 
-      <div class="row g-3">
-
-        <div class="col-md-6 form-group">
-          <label class="required">Registration Number</label>
-          {{ form.registration_number }}
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="{{ form.cr_number.id_for_label }}" class="form-label required">
+            CR Number
+          </label>
+          <input type="text" 
+                 name="{{ form.cr_number.name }}"
+                 id="{{ form.cr_number.id_for_label }}"
+                 class="form-control {% if form.cr_number.errors %}is-invalid{% endif %}"
+                 placeholder="e.g. 123456789012"
+                 value="{{ form.cr_number.value|default:'' }}"
+                 required>
+          {% if form.cr_number.errors %}
+            <div class="invalid-feedback">
+              {{ form.cr_number.errors.0 }}
+            </div>
+          {% else %}
+            <div class="invalid-feedback">
+              Please provide a valid CR number.
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Enter the Certificate of Registration number</small>
         </div>
-
-        <div class="col-md-4 form-group date-wrapper">
-          <label class="required">Registration Expiry</label>
-          {{ form.registration_expiry }}
-          <div id="calendar_regexpiry" class="custom-calendar"></div>
+        
+        <div class="form-group col-md-6">
+          <label for="{{ form.or_number.id_for_label }}" class="form-label required">
+            OR Number
+          </label>
+          <input type="text" 
+                 name="{{ form.or_number.name }}"
+                 id="{{ form.or_number.id_for_label }}"
+                 class="form-control {% if form.or_number.errors %}is-invalid{% endif %}"
+                 placeholder="e.g. 123456789012"
+                 value="{{ form.or_number.value|default:'' }}"
+                 required>
+          {% if form.or_number.errors %}
+            <div class="invalid-feedback">
+              {{ form.or_number.errors.0 }}
+            </div>
+          {% else %}
+            <div class="invalid-feedback">
+              Please provide a valid OR number.
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Enter the Official Receipt number</small>
         </div>
+      </div>
 
-        <div class="col-md-6 form-group">
-          <label class="required">Year Model</label>
-
-          <!-- Replaced NumberInput with safe frontend-only dropdown -->
-          <select id="id_year_model" name="year_model" class="form-select year-select"></select>
-
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="{{ form.vin_number.id_for_label }}" class="form-label required">
+            VIN Number
+          </label>
+          <input type="text" 
+                 name="{{ form.vin_number.name }}"
+                 id="{{ form.vin_number.id_for_label }}"
+                 class="form-control {% if form.vin_number.errors %}is-invalid{% endif %}"
+                 placeholder="e.g. JT2BF22K1W0123456"
+                 value="{{ form.vin_number.value|default:'' }}"
+                 required>
+          {% if form.vin_number.errors %}
+            <div class="invalid-feedback">
+              {{ form.vin_number.errors.0 }}
+            </div>
+          {% else %}
+            <div class="invalid-feedback">
+              Please provide a valid 17-character VIN number.
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Enter the 17-character Vehicle Identification Number</small>
         </div>
-
-        <div class="col-md-6 form-group">
-          <label class="required">License Plate</label>
-          {{ form.license_plate }}
+        
+        <div class="form-group col-md-6">
+          <label for="{{ form.year_model.id_for_label }}" class="form-label required">
+            Year Model
+          </label>
+          {{ form.year_model }}
+          {% if form.year_model.errors %}
+            <div class="invalid-feedback">
+              {{ form.year_model.errors.0 }}
+            </div>
+          {% else %}
+            <div class="invalid-feedback">
+              Please select the vehicle's year model.
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Select the vehicle's manufacturing year</small>
         </div>
+      </div>
 
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="{{ form.registration_number.id_for_label }}" class="form-label required">
+            Registration Number
+          </label>
+          <input type="text" 
+                 name="{{ form.registration_number.name }}"
+                 id="{{ form.registration_number.id_for_label }}"
+                 class="form-control {% if form.registration_number.errors %}is-invalid{% endif %}"
+                 placeholder="e.g. NX123456"
+                 value="{{ form.registration_number.value|default:'' }}"
+                 required>
+          {% if form.registration_number.errors %}
+            <div class="invalid-feedback">
+              {{ form.registration_number.errors.0 }}
+            </div>
+          {% else %}
+            <div class="invalid-feedback">
+              Please provide a valid registration number.
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Enter the vehicle's registration number</small>
+        </div>
+        
+        <div class="form-group col-md-6">
+          <div class="date-wrapper">
+            <label for="{{ form.registration_expiry.id_for_label }}" class="form-label required">
+              Registration Expiry
+            </label>
+            <input type="text" 
+                   name="{{ form.registration_expiry.name }}"
+                   id="{{ form.registration_expiry.id_for_label }}"
+                   class="form-control {% if form.registration_expiry.errors %}is-invalid{% endif %}"
+                   placeholder="YYYY-MM-DD"
+                   value="{{ form.registration_expiry.value|default:'' }}"
+                   autocomplete="off"
+                   required>
+            {% if form.registration_expiry.errors %}
+              <div class="invalid-feedback">
+                {{ form.registration_expiry.errors.0 }}
+              </div>
+            {% else %}
+              <div class="invalid-feedback">
+                Please select the registration expiry date.
+              </div>
+            {% endif %}
+            <div id="calendar_regexpiry" class="custom-calendar"></div>
+            <small class="form-text text-muted">Click to select the registration expiry date</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-md-6">
+          <label for="{{ form.license_plate.id_for_label }}" class="form-label required">
+            License Plate
+          </label>
+          <input type="text" 
+                 name="{{ form.license_plate.name }}"
+                 id="{{ form.license_plate.id_for_label }}"
+                 class="form-control {% if form.license_plate.errors %}is-invalid{% endif %}"
+                 placeholder="e.g. ABC123"
+                 value="{{ form.license_plate.value|default:'' }}"
+                 required>
+          {% if form.license_plate.errors %}
+            <div class="invalid-feedback">
+              {{ form.license_plate.errors.0 }}
+            </div>
+          {% else %}
+            <div class="invalid-feedback">
+              Please provide a valid license plate number.
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Enter the vehicle's license plate number</small>
+        </div>
       </div>
     </div>
 
-        <!-- VEHICLE IDENTIFICATION -->
-    <div class="section-box">
-      <div class="section-title">Vehicle Identification</div>
-
-      <div class="row g-3">
-
-        <div class="col-md-6 form-group">
-          <label class="required">CR Number</label>
-          {{ form.cr_number }}
-        </div>
-
-        <div class="col-md-6 form-group">
-          <label class="required">OR Number</label>
-          {{ form.or_number }}
-        </div>
-
-        <div class="col-md-6 form-group">
-          <label class="required">VIN Number</label>
-          {{ form.vin_number }}
-        </div>
-
-      </div>
-    </div>
-
-
-    <!-- DRIVER ASSIGNMENT -->
-    <div class="section-box">
-      <div class="section-title">Driver Assignment</div>
-
-      <div class="form-group">
-        <label class="required">Assigned Driver</label>
-        {{ form.assigned_driver }}
-      </div>
-
-    </div>
-
-
-    <!-- FOOTER BUTTONS -->
-    <div class="d-flex justify-content-between mt-4">
-
-      
-
-      <button type="submit" class="btn btn-success px-4">
-        <i class="bi bi-check-circle-fill me-1"></i> Register Vehicle
+    <div class="d-flex justify-content-end mt-4">
+      <button type="submit" class="btn-submit">
+        Register Vehicle
       </button>
-
     </div>
-
   </form>
 </div>
 

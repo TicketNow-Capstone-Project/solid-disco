@@ -341,13 +341,21 @@ input:focus, select:focus{
   {% endif %}
 
   {% if form.non_field_errors %}
-    <div class="alert alert-danger"><strong>Error:</strong> {{ form.non_field_errors }}</div>
+    <div class="alert alert-danger">
+      <strong>Form Errors:</strong>
+      <ul class="mb-0">
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
   {% endif %}
 
   <form method="POST" enctype="multipart/form-data"
         hx-post="{% url 'vehicles:register_driver' %}"
         hx-target="#main-content"
         hx-swap="innerHTML transition:true"
+        novalidate
         id="driverForm">
     {% csrf_token %}
 
@@ -359,23 +367,57 @@ input:focus, select:focus{
       <div class="row g-3">
 
         <div class="col-md-3">
-          <label class="form-label required">First Name</label>
-          {{ form.first_name }}
+          <label for="id_first_name" class="form-label required">First Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" 
+                 id="id_first_name" name="first_name" 
+                 value="{{ form.first_name.value|default:'' }}" 
+                 placeholder="Enter first name"
+                 required>
+          {% if form.first_name.errors %}
+            <div class="invalid-feedback">
+              {{ form.first_name.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-3">
-          <label class="form-label">Middle Name</label>
-          {{ form.middle_name }}
+          <label for="id_middle_name" class="form-label">Middle Name</label>
+          <input type="text" class="form-control {% if form.middle_name.errors %}is-invalid{% endif %}" 
+                 id="id_middle_name" name="middle_name" 
+                 value="{{ form.middle_name.value|default:'' }}"
+                 placeholder="Enter middle name (optional)">
+          {% if form.middle_name.errors %}
+            <div class="invalid-feedback">
+              {{ form.middle_name.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-3">
-          <label class="form-label required">Last Name</label>
-          {{ form.last_name }}
+          <label for="id_last_name" class="form-label required">Last Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" 
+                 id="id_last_name" name="last_name" 
+                 value="{{ form.last_name.value|default:'' }}" 
+                 placeholder="Enter last name"
+                 required>
+          {% if form.last_name.errors %}
+            <div class="invalid-feedback">
+              {{ form.last_name.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-3">
-          <label class="form-label">Suffix</label>
-          {{ form.suffix }}
+          <label for="id_suffix" class="form-label">Suffix</label>
+          <input type="text" class="form-control {% if form.suffix.errors %}is-invalid{% endif %}" 
+                 id="id_suffix" name="suffix" 
+                 value="{{ form.suffix.value|default:'' }}"
+                 placeholder="e.g., Jr., Sr., III">
+          {% if form.suffix.errors %}
+            <div class="invalid-feedback">
+              {{ form.suffix.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
       </div>
@@ -391,13 +433,39 @@ input:focus, select:focus{
         </div>
 
         <div class="col-md-4">
-          <label class="form-label required">Birth Place</label>
-          {{ form.birth_place }}
+          <label for="id_birth_place" class="form-label required">Birth Place</label>
+          <input type="text" class="form-control {% if form.birth_place.errors %}is-invalid{% endif %}" 
+                 id="id_birth_place" name="birth_place" 
+                 value="{{ form.birth_place.value|default:'' }}" 
+                 placeholder="City/Municipality, Province"
+                 required>
+          {% if form.birth_place.errors %}
+            <div class="invalid-feedback">
+              {{ form.birth_place.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-4">
-          <label class="form-label required">Blood Type</label>
-          {{ form.blood_type }}
+          <label for="id_blood_type" class="form-label required">Blood Type</label>
+          <select class="form-select {% if form.blood_type.errors %}is-invalid{% endif %}" 
+                 id="id_blood_type" name="blood_type" required>
+            <option value="" disabled {% if not form.blood_type.value %}selected{% endif %}>Select blood type</option>
+            <option value="A+" {% if form.blood_type.value == 'A+' %}selected{% endif %}>A+</option>
+            <option value="A-" {% if form.blood_type.value == 'A-' %}selected{% endif %}>A-</option>
+            <option value="B+" {% if form.blood_type.value == 'B+' %}selected{% endif %}>B+</option>
+            <option value="B-" {% if form.blood_type.value == 'B-' %}selected{% endif %}>B-</option>
+            <option value="AB+" {% if form.blood_type.value == 'AB+' %}selected{% endif %}>AB+</option>
+            <option value="AB-" {% if form.blood_type.value == 'AB-' %}selected{% endif %}>AB-</option>
+            <option value="O+" {% if form.blood_type.value == 'O+' %}selected{% endif %}>O+</option>
+            <option value="O-" {% if form.blood_type.value == 'O-' %}selected{% endif %}>O-</option>
+            <option value="N/A" {% if form.blood_type.value == 'N/A' %}selected{% endif %}>Prefer not to say</option>
+          </select>
+          {% if form.blood_type.errors %}
+            <div class="invalid-feedback">
+              {{ form.blood_type.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
       </div>
@@ -410,13 +478,32 @@ input:focus, select:focus{
 
       <div class="row g-3">
         <div class="col-md-6">
-          <label class="form-label required">Mobile Number</label>
-          {{ form.mobile_number }}
+          <label for="id_mobile_number" class="form-label required">Mobile Number <span class="text-danger">*</span></label>
+          <input type="tel" class="form-control {% if form.mobile_number.errors %}is-invalid{% endif %}" 
+                 id="id_mobile_number" name="mobile_number" 
+                 value="{{ form.mobile_number.value|default:'' }}" 
+                 placeholder="e.g., 09123456789 or +639123456789"
+                 required>
+          <small class="form-text text-muted">Format: 09123456789 or +639123456789</small>
+          {% if form.mobile_number.errors %}
+            <div class="invalid-feedback">
+              {{ form.mobile_number.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-6">
-          <label class="form-label required">Email Address</label>
-          {{ form.email }}
+          <label for="id_email" class="form-label required">Email Address <span class="text-danger">*</span></label>
+          <input type="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                 id="id_email" name="email" 
+                 value="{{ form.email.value|default:'' }}" 
+                 placeholder="e.g., juan.delacruz@example.com"
+                 required>
+          {% if form.email.errors %}
+            <div class="invalid-feedback">
+              {{ form.email.errors.0 }}
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -429,18 +516,48 @@ input:focus, select:focus{
       <div class="row g-3">
 
         <div class="col-md-4">
-          <label class="form-label required">Street</label>
-          {{ form.street }}
+          <label for="id_street" class="form-label required">Street</label>
+          <input type="text" class="form-control {% if form.street.errors %}is-invalid{% endif %}" 
+                 id="id_street" name="street" 
+                 value="{{ form.street.value|default:'' }}" 
+                 placeholder="e.g., 123 Main Street"
+                 required>
+          {% if form.street.errors %}
+            <div class="invalid-feedback">
+              {{ form.street.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-4">
-          <label class="form-label required">Barangay</label>
-          {{ form.barangay }}
+          <label for="id_barangay" class="form-label required">Barangay</label>
+          <input type="text" class="form-control {% if form.barangay.errors %}is-invalid{% endif %}" 
+                 id="id_barangay" name="barangay" 
+                 value="{{ form.barangay.value|default:'' }}" 
+                 placeholder="e.g., Barangay 123"
+                 required>
+          {% if form.barangay.errors %}
+            <div class="invalid-feedback">
+              {{ form.barangay.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-4">
-          <label class="form-label required">ZIP Code</label>
-          {{ form.zip_code }}
+          <label for="id_zip_code" class="form-label required">ZIP Code</label>
+          <input type="text" class="form-control {% if form.zip_code.errors %}is-invalid{% endif %}" 
+                 id="id_zip_code" name="zip_code" 
+                 value="{{ form.zip_code.value|default:'' }}" 
+                 placeholder="e.g., 1000"
+                 pattern="[0-9]{4}"
+                 title="Please enter a valid 4-digit ZIP code"
+                 required>
+          <small class="form-text text-muted">4-digit ZIP code</small>
+          {% if form.zip_code.errors %}
+            <div class="invalid-feedback">
+              {{ form.zip_code.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
       </div>
@@ -448,13 +565,31 @@ input:focus, select:focus{
       <div class="row g-3 mt-1">
 
         <div class="col-md-6">
-          <label class="form-label required">City / Municipality</label>
-          {{ form.city_municipality }}
+          <label for="id_city_municipality" class="form-label required">City / Municipality</label>
+          <input type="text" class="form-control {% if form.city_municipality.errors %}is-invalid{% endif %}" 
+                 id="id_city_municipality" name="city_municipality" 
+                 value="{{ form.city_municipality.value|default:'' }}" 
+                 placeholder="e.g., Manila, Quezon City"
+                 required>
+          {% if form.city_municipality.errors %}
+            <div class="invalid-feedback">
+              {{ form.city_municipality.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-6">
-          <label class="form-label required">Province</label>
-          {{ form.province }}
+          <label for="id_province" class="form-label required">Province</label>
+          <input type="text" class="form-control {% if form.province.errors %}is-invalid{% endif %}" 
+                 id="id_province" name="province" 
+                 value="{{ form.province.value|default:'' }}" 
+                 placeholder="e.g., Metro Manila, Bulacan"
+                 required>
+          {% if form.province.errors %}
+            <div class="invalid-feedback">
+              {{ form.province.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
       </div>
@@ -468,8 +603,18 @@ input:focus, select:focus{
       <div class="row g-3">
 
         <div class="col-md-4">
-          <label class="form-label required">License Number</label>
-          {{ form.license_number }}
+          <label for="id_license_number" class="form-label required">License Number <span class="text-danger">*</span></label>
+          <input type="text" class="form-control {% if form.license_number.errors %}is-invalid{% endif %}" 
+                 id="id_license_number" name="license_number" 
+                 value="{{ form.license_number.value|default:'' }}" 
+                 placeholder="Enter license number"
+                 required>
+          <small class="form-text text-muted">Enter your driver's license number (minimum 4 characters)</small>
+          {% if form.license_number.errors %}
+            <div class="invalid-feedback">
+              {{ form.license_number.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-4">
@@ -481,8 +626,18 @@ input:focus, select:focus{
         </div>
 
         <div class="col-md-4">
-          <label class="form-label required">License Type</label>
-          {{ form.license_type }}
+          <label for="id_license_type" class="form-label required">License Type <span class="text-danger">*</span></label>
+          <select class="form-select {% if form.license_type.errors %}is-invalid{% endif %}" 
+                 id="id_license_type" name="license_type" required>
+            {% for value, label in form.fields.license_type.choices %}
+              <option value="{{ value }}" {% if form.license_type.value == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          {% if form.license_type.errors %}
+            <div class="invalid-feedback">
+              {{ form.license_type.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
       </div>
@@ -496,18 +651,46 @@ input:focus, select:focus{
       <div class="row g-3">
 
         <div class="col-md-4">
-          <label class="form-label required">Contact Name</label>
-          {{ form.emergency_contact_name }}
+          <label for="id_emergency_contact_name" class="form-label required">Contact Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control {% if form.emergency_contact_name.errors %}is-invalid{% endif %}" 
+                 id="id_emergency_contact_name" name="emergency_contact_name" 
+                 value="{{ form.emergency_contact_name.value|default:'' }}" 
+                 placeholder="Full name of emergency contact"
+                 required>
+          {% if form.emergency_contact_name.errors %}
+            <div class="invalid-feedback">
+              {{ form.emergency_contact_name.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-4">
-          <label class="form-label required">Contact Number</label>
-          {{ form.emergency_contact_number }}
+          <label for="id_emergency_contact_number" class="form-label required">Contact Number <span class="text-danger">*</span></label>
+          <input type="tel" class="form-control {% if form.emergency_contact_number.errors %}is-invalid{% endif %}" 
+                 id="id_emergency_contact_number" name="emergency_contact_number" 
+                 value="{{ form.emergency_contact_number.value|default:'' }}" 
+                 placeholder="e.g., 09123456789 or +639123456789"
+                 required>
+          <small class="form-text text-muted">Format: 09123456789 or +639123456789</small>
+          {% if form.emergency_contact_number.errors %}
+            <div class="invalid-feedback">
+              {{ form.emergency_contact_number.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
         <div class="col-md-4">
-          <label class="form-label required">Relationship</label>
-          {{ form.emergency_contact_relationship }}
+          <label for="id_emergency_contact_relationship" class="form-label required">Relationship</label>
+          <input type="text" class="form-control {% if form.emergency_contact_relationship.errors %}is-invalid{% endif %}" 
+                 id="id_emergency_contact_relationship" name="emergency_contact_relationship" 
+                 value="{{ form.emergency_contact_relationship.value|default:'' }}" 
+                 placeholder="e.g., Spouse, Parent, Sibling"
+                 required>
+          {% if form.emergency_contact_relationship.errors %}
+            <div class="invalid-feedback">
+              {{ form.emergency_contact_relationship.errors.0 }}
+            </div>
+          {% endif %}
         </div>
 
       </div>

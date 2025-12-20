@@ -1,6 +1,7 @@
 from django import forms
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from datetime import date
 import re
 from .models import Driver, Vehicle, Deposit, Wallet, Route
@@ -15,11 +16,16 @@ class FullVehicleDetailsForm(forms.Form):
 # ======================================================
 # VEHICLE REGISTRATION FORM
 # ======================================================
+import re
+from datetime import date
+from django import forms
+from django.core.exceptions import ValidationError
+
+from .models import Vehicle, Route, Driver
+
+
 class VehicleRegistrationForm(forms.ModelForm):
-    VIN_PATTERN = r"^[A-HJ-NPR-Z0-9]{17}$"  # 17 chars, excludes I, O, Q
-    PLATE_PATTERN = r"^[A-Z]{3}\s?\d{3,4}$"  # ABC 1234
-    OR_CR_PATTERN = r"^[A-Z0-9]{6,12}$"      # 6–12 alphanumeric
-    REG_NUM_PATTERN = r"^[A-Z0-9\-]{6,12}$"  # Alphanumeric registration
+    # All pattern validations removed
 
     class Meta:
         model = Vehicle
@@ -39,142 +45,105 @@ class VehicleRegistrationForm(forms.ModelForm):
             'seat_capacity',
         ]
         widgets = {
-            'vehicle_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter vehicle name (optional)'
-            }),
-            'vehicle_type': forms.Select(attrs={
-                'class': 'form-select',
-                'required': 'required'
-            }),
-            'ownership_type': forms.Select(attrs={
-                'class': 'form-select',
-                'required': 'required'
-            }),
-            'assigned_driver': forms.Select(attrs={
-                'class': 'form-select searchable-select',
-                'required': 'required'
-            }),
-            'route': forms.Select(attrs={
-                'class': 'form-select searchable-select',
-                'required': 'required'
-            }),
-            'cr_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'CR Number',
-                'required': 'required'
-            }),
-            'or_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'OR Number',
-                'required': 'required'
-            }),
-            'vin_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': '17-character VIN',
-                'required': 'required'
-            }),
-            'year_model': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g. 2024',
-                'min': '1900',
-                'max': '2100',
-                'required': 'required'
-            }),
-            'registration_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Registration Number',
-                'required': 'required'
-            }),
-            'registration_expiry': forms.DateInput(attrs={
-                'type': 'date',
-                'class': 'form-control',
-                'required': 'required'
-            }),
-            'license_plate': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'ABC 1234',
-                'required': 'required'
-            }),
-            'seat_capacity': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 1,
-                'placeholder': 'Number of seats'
-            }),
+            'registration_expiry': forms.DateInput(attrs={'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # ✅ Load active routes only
-        self.fields['route'].queryset = Route.objects.filter(active=True).order_by('origin', 'destination')
-        self.fields['route'].label_from_instance = lambda obj: f"{obj.origin} → {obj.destination}"
-        self.fields['assigned_driver'].queryset = Driver.objects.all().order_by('first_name')
-        self.fields['assigned_driver'].label_from_instance = lambda obj: f"{obj.first_name} {obj.last_name} ({obj.driver_id})"
+        
+        # Set required fields
+        required_fields = [
+            'vehicle_type', 'ownership_type', 'assigned_driver', 
+            'cr_number', 'or_number', 'vin_number', 'year_model',
+            'registration_number', 'registration_expiry', 'license_plate'
+        ]
+        
+        # Set all required fields
+        for field_name in required_fields:
+            self.fields[field_name].required = True
+            
+        # Set optional fields
         self.fields['vehicle_name'].required = False
+        self.fields['route'].required = False
+        self.fields['seat_capacity'].required = False
+        
+        # Add form-control class to all fields
+        for field_name, field in self.fields.items():
+            if 'class' in field.widget.attrs:
+                field.widget.attrs['class'] += ' form-control'
+            else:
+                field.widget.attrs['class'] = 'form-control'
+        self.fields['route'].queryset = Route.objects.filter(active=True)
+        self.fields['assigned_driver'].queryset = Driver.objects.all()
 
-    # ==================================================
-    # Validation methods
-    # ==================================================
-    def clean_seat_capacity(self):
-        seat_capacity = self.cleaned_data.get('seat_capacity')
-        vehicle_type = self.cleaned_data.get('vehicle_type')
-
-        if not seat_capacity:
-            raise ValidationError("Seat capacity is required.")
-        if seat_capacity < 1:
-            raise ValidationError("Seat capacity must be at least 1.")
-
-        settings = SystemSettings.get_solo()
-        limits = {
-            'jeepney': getattr(settings, 'jeepney_max_seats', 25),
-            'van': getattr(settings, 'van_max_seats', 15),
-            'bus': getattr(settings, 'bus_max_seats', 60),
-        }
-
-        if vehicle_type:
-            vehicle_type = vehicle_type.lower()
-            max_allowed = limits.get(vehicle_type)
-            if max_allowed and seat_capacity > max_allowed:
-                raise ValidationError(
-                    f"{vehicle_type.title()} seat capacity cannot exceed {max_allowed} seats (LTO limit)."
-                )
-        return seat_capacity
-
+    # --------------------------------------------------
+    # SIMPLIFIED FIELD VALIDATION
+    # --------------------------------------------------
     def clean_cr_number(self):
-        cr = self.cleaned_data.get('cr_number', '').upper()
-        if not re.match(self.OR_CR_PATTERN, cr):
-            raise ValidationError("CR number must be 6–12 alphanumeric characters.")
-        return cr
+        value = self.cleaned_data.get('cr_number')
+        if not value or not str(value).strip():
+            raise ValidationError("CR number is required.")
+        return str(value).strip().upper()
 
     def clean_or_number(self):
-        or_num = self.cleaned_data.get('or_number', '').upper()
-        if not re.match(self.OR_CR_PATTERN, or_num):
-            raise ValidationError("OR number must be 6–12 alphanumeric characters.")
-        return or_num
+        value = self.cleaned_data.get('or_number')
+        if not value or not str(value).strip():
+            raise ValidationError("OR number is required.")
+        return str(value).strip().upper()
 
     def clean_vin_number(self):
-        vin = self.cleaned_data.get('vin_number', '').upper()
-        if not re.match(self.VIN_PATTERN, vin):
-            raise ValidationError("VIN must be exactly 17 alphanumeric characters (excluding I, O, Q).")
-        return vin
+        value = self.cleaned_data.get('vin_number')
+        if not value or not str(value).strip():
+            raise ValidationError("VIN number is required.")
+        return str(value).strip().upper()
 
-    def clean_registration_number(self):
-        reg = self.cleaned_data.get('registration_number', '').upper()
-        if not re.match(self.REG_NUM_PATTERN, reg):
-            raise ValidationError("Registration number must be 6–12 alphanumeric characters.")
-        return reg
+    def clean_year_model(self):
+        year = self.cleaned_data.get('year_model')
+        if not year:
+            raise ValidationError("Year model is required.")
+        try:
+            year = int(year)
+            current_year = timezone.now().year
+            if year < 1886 or year > current_year + 1:
+                raise ValidationError(f"Year must be between 1886 and {current_year + 1}.")
+            return year
+        except (ValueError, TypeError):
+            raise ValidationError("Please enter a valid year.")
+
+    def clean_seat_capacity(self):
+        seats = self.cleaned_data.get('seat_capacity')
+        if seats is not None and str(seats).strip():
+            try:
+                seats = int(seats)
+                if seats <= 0:
+                    raise ValidationError("Seat capacity must be greater than zero.")
+                return seats
+            except (ValueError, TypeError):
+                raise ValidationError("Please enter a valid number of seats.")
+        return None
 
     def clean_registration_expiry(self):
         expiry = self.cleaned_data.get('registration_expiry')
-        if expiry and expiry < date.today():
-            raise ValidationError("Registration has already expired.")
+        if not expiry:
+            raise ValidationError("Registration expiry date is required.")
         return expiry
 
     def clean_license_plate(self):
-        plate = self.cleaned_data.get('license_plate', '').upper()
-        if not re.match(self.PLATE_PATTERN, plate):
-            raise ValidationError("License plate must follow format: ABC 1234.")
-        return plate
+        license_plate = self.cleaned_data.get('license_plate')
+        if not license_plate or not str(license_plate).strip():
+            raise ValidationError("License plate is required.")
+        return str(license_plate).strip().upper()
+
+    def clean_registration_number(self):
+        reg_num = self.cleaned_data.get('registration_number')
+        if not reg_num or not str(reg_num).strip():
+            raise ValidationError("Registration number is required.")
+        return str(reg_num).strip().upper()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Add any cross-field validation here if needed
+        return cleaned_data
 
 
 # ======================================================
@@ -191,8 +160,12 @@ class DriverRegistrationForm(forms.ModelForm):
     ]
 
     LICENSE_TYPE_CHOICES = [
-        ('Professional Driver\'s License', 'Professional Driver\'s License'),
-        ('Non-Professional Driver\'s License', 'Non-Professional Driver\'s License'),
+        ('', 'Select License Type'),
+        ('Student Permit', 'Student Permit'),
+        ('Non-Professional', 'Non-Professional'),
+        ('Professional', 'Professional'),
+        ('Conductor\'s License', 'Conductor\'s License'),
+        ('Other', 'Other')
     ]
 
     class Meta:
@@ -232,11 +205,77 @@ class DriverRegistrationForm(forms.ModelForm):
             label="License Type"
         )
 
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name')
+        if not first_name or not first_name.strip():
+            raise ValidationError("First name is required.")
+        first_name = first_name.strip()
+        if len(first_name) < 2:
+            raise ValidationError("First name must be at least 2 characters long.")
+        return first_name
+
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get('last_name')
+        if not last_name or not last_name.strip():
+            raise ValidationError("Last name is required.")
+        last_name = last_name.strip()
+        if len(last_name) < 2:
+            raise ValidationError("Last name must be at least 2 characters long.")
+        return last_name
+
+    def clean_mobile_number(self):
+        mobile_number = self.cleaned_data.get('mobile_number')
+        if not mobile_number or not mobile_number.strip():
+            raise ValidationError("Mobile number is required.")
+            
+        # Just strip whitespace, no format validation
+        return mobile_number.strip()
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not email or not email.strip():
+            raise ValidationError("Email address is required.")
+            
+        # Just strip whitespace, no format validation
+        return email.strip()
+
+    def clean_license_number(self):
+        license_number = self.cleaned_data.get('license_number')
+        if not license_number or not license_number.strip():
+            raise ValidationError("License number is required.")
+            
+        # Just strip whitespace, no format validation
+        return license_number.strip()
+
     def clean_license_expiry(self):
         expiry = self.cleaned_data.get('license_expiry')
-        if expiry and expiry < date.today():
-            raise ValidationError("Driver's license is expired. Please renew before registering.")
+        if not expiry:
+            raise ValidationError("License expiry date is required.")
         return expiry
+
+    def clean_emergency_contact_number(self):
+        contact_number = self.cleaned_data.get('emergency_contact_number')
+        if not contact_number or not contact_number.strip():
+            raise ValidationError("Emergency contact number is required.")
+        contact_number = contact_number.strip()
+        if not re.match(r'^(09|\+639)\d{9}$', contact_number):
+            raise ValidationError("Please en    ter a valid Philippine mobile number (e.g., 09123456789 or +639123456789).")
+        return contact_number
+
+    def clean_birth_date(self):
+        birth_date = self.cleaned_data.get('birth_date')
+        if not birth_date:
+            raise ValidationError("Birth date is required.")
+        return birth_date
+        
+    def clean_emergency_contact_name(self):
+        contact_name = self.cleaned_data.get('emergency_contact_name')
+        if not contact_name or not contact_name.strip():
+            raise ValidationError("Emergency contact name is required.")
+        contact_name = contact_name.strip()
+        if len(contact_name) < 2:
+            raise ValidationError("Emergency contact name must be at least 2 characters long.")
+        return contact_name
 
 
 # ======================================================
