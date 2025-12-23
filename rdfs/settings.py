@@ -144,6 +144,20 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 900  # 15 minutes (auto logout)
 SESSION_SAVE_EVERY_REQUEST = True
 
+# --- Holiday Schedule Configuration ---
+HOLIDAY_SCHEDULE_ENABLED = env.bool('HOLIDAY_SCHEDULE_ENABLED', default=True)
+HOLIDAY_REDUCED_HOURS = env.bool('HOLIDAY_REDUCED_HOURS', default=True)
+HOLIDAY_FEE_MULTIPLIER = env.float('HOLIDAY_FEE_MULTIPLIER', default=1.5)
+
+# Holiday dates (can be overridden via environment)
+DEFAULT_HOLIDAYS = [
+    '2025-12-25',  # Christmas Day
+    '2025-12-30',  # Rizal Day
+    '2025-12-31',  # New Year's Eve
+    '2026-01-01',  # New Year's Day
+]
+HOLIDAY_DATES = env.list('HOLIDAY_DATES', default=DEFAULT_HOLIDAYS)
+
 # --- Security (toggle True when using HTTPS on Render) ---
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False

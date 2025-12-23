@@ -95,3 +95,26 @@ class SystemSettings(models.Model):
     def get_solo(cls):
         obj, _ = cls.objects.get_or_create(id=1)
         return obj
+
+def is_holiday_today():
+    """Check if today is a configured holiday."""
+    from django.conf import settings
+    from django.utils import timezone
+    
+    if not getattr(settings, 'HOLIDAY_SCHEDULE_ENABLED', True):
+        return False
+    
+    today = timezone.localdate().strftime('%Y-%m-%d')
+    holiday_dates = getattr(settings, 'HOLIDAY_DATES', [])
+    
+    return today in holiday_dates
+
+
+def get_holiday_fee_multiplier():
+    """Get the fee multiplier for holidays."""
+    from django.conf import settings
+    
+    if is_holiday_today():
+        return getattr(settings, 'HOLIDAY_FEE_MULTIPLIER', 1.5)
+    
+    return 1.0
