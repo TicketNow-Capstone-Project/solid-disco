@@ -46,10 +46,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Third-party
-    "cloudinary",
-    "cloudinary_storage",
-
     # Local apps
     "accounts",
     "main",
@@ -62,7 +58,6 @@ INSTALLED_APPS = [
 # =====================================================
 # STORAGE
 # =====================================================
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -114,7 +109,11 @@ TEMPLATES = [
 # DATABASE (FORCE POSTGRESQL ON RAILWAY)
 # =====================================================
 DATABASES = {
-    "default": env.db("DATABASE_URL")
+    #"default": env.db("DATABASE_URL")
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
 }
 
 # This will CRASH if DATABASE_URL is missing — which is GOOD.
@@ -178,3 +177,6 @@ if IS_PRODUCTION:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
